@@ -25,6 +25,8 @@ game.koepknack.name: 'Knack (31)'
 game.koepknack.description: 'Tausche Karten Richtung 31 – die schlechteste Hand verliert ein Leben.'
 game.blackjack.name: 'Black Jack'
 game.blackjack.description: 'Setze deine Chips und schlage die Bank in fünf Runden.'
+game.maumau.name: 'Mau-Mau'
+game.maumau.description: 'Farbe oder Wert bedienen, 7 straft, Bube wünscht – wer zuerst fertig ist, gewinnt.'
 
 # --- Lobby ---
 lobby.status.waiting: 'wartet auf Spieler'

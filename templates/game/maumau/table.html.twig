@@ -1,0 +1,106 @@
+{% trans_default_domain 'maumau' %}
+<div class="space-y-6">
+    {# ---------- players ---------- #}
+    <div class="flex flex-wrap justify-center gap-3">
+        {% for p in view.players %}
+            <div class="flex items-center gap-2 rounded-2xl bg-cream px-4 py-2.5 {{ p.current ? 'ring-2 ring-softblue-300' }}">
+                <span class="size-2.5 rounded-full" style="background-color: {{ p.color }}"></span>
+                <span class="text-base font-extrabold text-warmgray-700">{{ p.nickname }}</span>
+                <span class="inline-flex items-center gap-1 text-sm font-extrabold text-warmgray-400">
+                    {% include 'icons/card-fan.svg.twig' with {class: 'size-4'} only %}
+                    {{ p.cardCount }}
+                </span>
+            </div>
+        {% endfor %}
+    </div>
+
+    {# ---------- table: draw pile + discard ---------- #}
+    <div class="rounded-3xl bg-cream p-5">
+        <div class="flex items-center justify-center gap-6">
+            <div class="text-center">
+                {% if view.canDraw %}
+                    <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}">
+                        <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
+                        <input type="hidden" name="action" value="draw">
+                        <button type="submit" class="block rounded-xl transition hover:-translate-y-1 hover:shadow-lifted"
+                                title="{{ 'maumau.draw'|trans }}">
+                            {% include 'components/card.html.twig' with {back: true} only %}
+                        </button>
+                    </form>
+                {% else %}
+                    {% include 'components/card.html.twig' with {back: true, class: 'opacity-60'} only %}
+                {% endif %}
+                <p class="mt-1.5 text-xs font-extrabold uppercase tracking-wide text-warmgray-400">
+                    {{ 'maumau.pile'|trans({'%count%': view.drawCount}) }}
+                </p>
+            </div>
+            <div class="text-center">
+                {% include 'components/card.html.twig' with view.top only %}
+                <p class="mt-1.5 text-xs font-extrabold uppercase tracking-wide text-warmgray-400">{{ 'maumau.discard'|trans }}</p>
+            </div>
+        </div>
+
+        <div class="mt-3 flex flex-wrap items-center justify-center gap-3 text-base font-extrabold">
+            {% if view.wishedSuit is not null %}
+                <span class="rounded-xl bg-white px-3 py-1.5 shadow-soft {{ view.wishedSuitRed ? 'text-terracotta-500' : 'text-warmgray-800' }}">
+                    {{ 'maumau.wished'|trans }} {{ view.wishedSuit }}
+                </span>
+            {% endif %}
+            {% if view.pendingDraw > 0 %}
+                <span class="rounded-xl bg-terracotta-100 px-3 py-1.5 text-terracotta-700 shadow-soft">
+                    {{ 'maumau.pending_draw'|trans({'%count%': view.pendingDraw}) }}
+                </span>
+            {% endif %}
+        </div>
+    </div>
+
+    {# ---------- own hand ---------- #}
+    {% if view.hand is not empty %}
+        <div>
+            <p class="mb-3 text-center text-sm font-extrabold uppercase tracking-wide text-warmgray-400">{{ 'maumau.your_hand'|trans }}</p>
+            <div class="flex flex-wrap justify-center gap-3">
+                {% for card in view.hand %}
+                    {% if card.playable %}
+                        <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}" class="text-center">
+                            <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
+                            <input type="hidden" name="action" value="play">
+                            <input type="hidden" name="card" value="{{ card.index }}">
+                            {% if card.isJack %}
+                                <span class="block rounded-xl ring-2 ring-sunny-300">
+                                    {% include 'components/card.html.twig' with card only %}
+                                </span>
+                                <span class="mt-1.5 flex justify-center gap-1">
+                                    {% for suit in view.suits %}
+                                        <button type="submit" name="wish" value="{{ suit.value }}"
+                                                title="{{ 'maumau.wish'|trans }} {{ suit.symbol }}"
+                                                class="rounded-lg bg-white px-1.5 py-0.5 text-sm font-extrabold shadow-soft transition hover:shadow-lifted
+                                                       {{ suit.red ? 'text-terracotta-500' : 'text-warmgray-800' }}">
+                                            {{ suit.symbol }}
+                                        </button>
+                                    {% endfor %}
+                                </span>
+                            {% else %}
+                                <button type="submit" class="block rounded-xl transition hover:-translate-y-1.5 hover:shadow-lifted">
+                                    {% include 'components/card.html.twig' with card only %}
+                                </button>
+                            {% endif %}
+                        </form>
+                    {% else %}
+                        {% include 'components/card.html.twig' with card|merge({class: view.myTurn ? 'opacity-40' : ''}) only %}
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
+    {# ---------- actions ---------- #}
+    {% if view.canPass %}
+        <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}" class="text-center">
+            <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
+            <input type="hidden" name="action" value="pass">
+            <button type="submit" class="rounded-2xl bg-white px-7 py-3 text-lg font-extrabold text-warmgray-700 shadow-soft transition hover:shadow-lifted">
+                {{ 'maumau.pass'|trans }}
+            </button>
+        </form>
+    {% endif %}
+</div>

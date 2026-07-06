@@ -1,0 +1,34 @@
+# --- Tisch ---
+maumau.your_hand: 'Deine Hand'
+maumau.pile: 'Nachziehstapel (%count%)'
+maumau.discard: 'Ablage'
+maumau.draw: 'Karte ziehen'
+maumau.pass: 'Passen'
+maumau.wish: 'Wünschen'
+maumau.wished: 'Gewünschte Farbe:'
+maumau.pending_draw: 'Zieh %count% oder lege eine 7!'
+
+# --- Spielverlauf ---
+log.maumau.started: 'Mau-Mau startet – Farbe oder Wert bedienen.'
+log.maumau.played: '%player% legt %suit% %rank%.'
+log.maumau.wished: '%player% wünscht sich %suit%.'
+log.maumau.skipped: '%player% muss aussetzen.'
+log.maumau.penalty: '%player% zieht %count% Strafkarten.'
+log.maumau.drew: '%player% zieht eine Karte.'
+log.maumau.passed: '%player% passt.'
+log.maumau.reshuffled: 'Die Ablage wurde zum neuen Nachziehstapel gemischt.'
+log.maumau.won: '%player% legt die letzte Karte und gewinnt!'
+
+# --- Fehler ---
+error.maumau.unknown_card: 'Unbekannte Karte.'
+error.maumau.not_playable: 'Diese Karte kannst du gerade nicht legen.'
+error.maumau.wish_required: 'Wähle eine Wunschfarbe für deinen Buben.'
+error.maumau.already_drawn: 'Du hast schon gezogen – lege eine Karte oder passe.'
+error.maumau.draw_first: 'Zieh zuerst eine Karte.'
+
+# --- Spielanleitung ---
+rules: |-
+    Bediene die oberste Karte der Ablage mit gleicher Farbe oder gleichem Wert.
+    Eine 7 lässt den Nächsten zwei Karten ziehen (stapelbar), eine 8 lässt ihn aussetzen, mit einem Buben wünschst du dir eine Farbe.
+    Kannst du nicht legen, ziehe eine Karte – passt sie immer noch nicht, passe.
+    Wer zuerst alle Karten ablegt, gewinnt.

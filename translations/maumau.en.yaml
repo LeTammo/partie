@@ -1,0 +1,34 @@
+# --- Table ---
+maumau.your_hand: 'Your hand'
+maumau.pile: 'Draw pile (%count%)'
+maumau.discard: 'Discard'
+maumau.draw: 'Draw a card'
+maumau.pass: 'Pass'
+maumau.wish: 'Wish'
+maumau.wished: 'Wished suit:'
+maumau.pending_draw: 'Draw %count% or play a 7!'
+
+# --- Game log ---
+log.maumau.started: 'Mau-Mau starts – match suit or rank.'
+log.maumau.played: '%player% plays %suit% %rank%.'
+log.maumau.wished: '%player% wishes %suit%.'
+log.maumau.skipped: '%player% is skipped.'
+log.maumau.penalty: '%player% draws %count% penalty cards.'
+log.maumau.drew: '%player% draws a card.'
+log.maumau.passed: '%player% passes.'
+log.maumau.reshuffled: 'The discard pile was shuffled into a new draw pile.'
+log.maumau.won: '%player% played the last card and wins!'
+
+# --- Errors ---
+error.maumau.unknown_card: 'Unknown card.'
+error.maumau.not_playable: 'This card cannot be played right now.'
+error.maumau.wish_required: 'Pick a suit for your jack.'
+error.maumau.already_drawn: 'You already drew – play a card or pass.'
+error.maumau.draw_first: 'Draw a card first.'
+
+# --- How to play ---
+rules: |-
+    Match the top card of the discard pile by suit or rank.
+    A 7 makes the next player draw two (stackable), an 8 skips them, a jack lets you wish a suit.
+    If you cannot play, draw a card – if it still does not fit, pass.
+    The first player to empty their hand wins.
