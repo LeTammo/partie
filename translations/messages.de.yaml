@@ -17,6 +17,8 @@ game.checkers.name: 'Dame'
 game.checkers.description: 'Springen, schlagen und Damen krönen auf dem 8x8-Brett.'
 game.tictactoe.name: 'Tic Tac Toe'
 game.tictactoe.description: 'Drei in einer Reihe gewinnt. Schnell und klassisch.'
+game.connectfour.name: 'Vier gewinnt'
+game.connectfour.description: 'Steine einwerfen und vor dem Gegner vier verbinden.'
 game.yahtzee.name: 'Kniffel'
 game.yahtzee.description: 'Fünf Würfel, drei Würfe, fülle deinen Spielzettel.'
 

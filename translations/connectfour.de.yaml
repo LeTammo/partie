@@ -1,0 +1,15 @@
+# --- Brett ---
+connectfour.drop: 'In Spalte %column% einwerfen'
+
+# --- Spielverlauf ---
+log.connectfour.dropped: '%player% wirft einen Stein in Spalte %column%.'
+log.connectfour.won: '%player% hat vier verbunden!'
+
+# --- Fehler ---
+error.column_full: 'Diese Spalte ist voll.'
+
+# --- Spielanleitung ---
+rules: |-
+    Werft abwechselnd einen Stein in eine Spalte – er fällt so tief wie möglich.
+    Wer zuerst vier eigene Steine in einer Linie verbindet – waagerecht, senkrecht oder diagonal – gewinnt.
+    Ist das Brett voll, endet die Partie unentschieden.

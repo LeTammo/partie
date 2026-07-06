@@ -17,6 +17,8 @@ game.checkers.name: 'Checkers'
 game.checkers.description: 'Jump, capture and crown your kings on the 8x8 board.'
 game.tictactoe.name: 'Tic Tac Toe'
 game.tictactoe.description: 'Three in a row wins. Quick and classic.'
+game.connectfour.name: 'Connect Four'
+game.connectfour.description: 'Drop discs, connect four in a line before your rival.'
 game.yahtzee.name: 'Yahtzee'
 game.yahtzee.description: 'Roll five dice, hold the good ones, fill your scorecard.'
 
