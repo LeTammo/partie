@@ -1,0 +1,41 @@
+# --- Table ---
+blackjack.round: 'Round %round% / %total%'
+blackjack.dealer: 'Dealer'
+blackjack.shows: 'shows %value%'
+blackjack.waiting: 'waiting…'
+blackjack.broke: 'out of chips'
+blackjack.bet_label: 'Bet: %amount%'
+blackjack.bust: 'Bust!'
+blackjack.blackjack: 'Blackjack!'
+blackjack.hit: 'Hit'
+blackjack.stand: 'Stand'
+blackjack.double: 'Double'
+
+# --- Game log ---
+log.blackjack.round_started: 'Round %round% of %total% – place your bets.'
+log.blackjack.bet: '%player% bets %amount% chips.'
+log.blackjack.dealt: 'Cards are dealt – the dealer shows %upcard%.'
+log.blackjack.hit: '%player% hits and now has %value%.'
+log.blackjack.stand: '%player% stands at %value%.'
+log.blackjack.double: '%player% doubles down and has %value%.'
+log.blackjack.bust: '%player% busts!'
+log.blackjack.dealer: 'The dealer finishes with %value%.'
+log.blackjack.blackjack: '%player% has Blackjack and cashes 3:2 (%chips% chips).'
+log.blackjack.won_round: '%player% beats the dealer (%chips% chips).'
+log.blackjack.push: '%player% pushes – the bet is returned (%chips% chips).'
+log.blackjack.lost: '%player% loses the bet (%chips% chips).'
+log.blackjack.final: 'Final chips – %chips%.'
+log.blackjack.won: '%player% wins with %chips% chips!'
+
+# --- Errors ---
+error.blackjack.no_betting: 'This is not the betting phase.'
+error.blackjack.invalid_bet: 'That bet is not possible.'
+error.blackjack.bet_first: 'Wait for the betting phase to finish.'
+error.blackjack.cannot_double: 'Doubling is only possible on your first two cards with enough chips.'
+
+# --- How to play ---
+rules: |-
+    Each round you first place a bet, then everyone gets two cards – the dealer shows one.
+    Get closer to 21 than the dealer without going over. Aces count 1 or 11, face cards 10.
+    "Hit" draws a card, "Stand" ends your turn, "Double" doubles your bet for exactly one more card.
+    Blackjack (21 with two cards) pays 3:2. After five rounds, the player with the most chips wins.

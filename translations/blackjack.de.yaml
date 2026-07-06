@@ -1,0 +1,41 @@
+# --- Tisch ---
+blackjack.round: 'Runde %round% / %total%'
+blackjack.dealer: 'Bank'
+blackjack.shows: 'zeigt %value%'
+blackjack.waiting: 'wartet…'
+blackjack.broke: 'keine Chips mehr'
+blackjack.bet_label: 'Einsatz: %amount%'
+blackjack.bust: 'Überkauft!'
+blackjack.blackjack: 'Black Jack!'
+blackjack.hit: 'Karte'
+blackjack.stand: 'Halten'
+blackjack.double: 'Verdoppeln'
+
+# --- Spielverlauf ---
+log.blackjack.round_started: 'Runde %round% von %total% – Einsätze bitte.'
+log.blackjack.bet: '%player% setzt %amount% Chips.'
+log.blackjack.dealt: 'Die Karten sind verteilt – die Bank zeigt %upcard%.'
+log.blackjack.hit: '%player% nimmt eine Karte und hat jetzt %value%.'
+log.blackjack.stand: '%player% hält bei %value%.'
+log.blackjack.double: '%player% verdoppelt und hat %value%.'
+log.blackjack.bust: '%player% hat sich überkauft!'
+log.blackjack.dealer: 'Die Bank hört bei %value% auf.'
+log.blackjack.blackjack: '%player% hat Black Jack und kassiert 3:2 (%chips% Chips).'
+log.blackjack.won_round: '%player% schlägt die Bank (%chips% Chips).'
+log.blackjack.push: '%player% – unentschieden, der Einsatz geht zurück (%chips% Chips).'
+log.blackjack.lost: '%player% verliert den Einsatz (%chips% Chips).'
+log.blackjack.final: 'Endstand – %chips%.'
+log.blackjack.won: '%player% gewinnt mit %chips% Chips!'
+
+# --- Fehler ---
+error.blackjack.no_betting: 'Gerade läuft keine Einsatzphase.'
+error.blackjack.invalid_bet: 'Dieser Einsatz ist nicht möglich.'
+error.blackjack.bet_first: 'Warte, bis die Einsatzphase vorbei ist.'
+error.blackjack.cannot_double: 'Verdoppeln geht nur mit den ersten zwei Karten und genug Chips.'
+
+# --- Spielanleitung ---
+rules: |-
+    Jede Runde setzt du zuerst Chips, dann bekommen alle zwei Karten – die Bank zeigt eine.
+    Komm näher an 21 als die Bank, ohne dich zu überkaufen. Ass zählt 1 oder 11, Bilder 10.
+    „Karte" zieht eine Karte, „Halten" beendet deinen Zug, „Verdoppeln" verdoppelt den Einsatz für genau eine weitere Karte.
+    Black Jack (21 mit zwei Karten) zahlt 3:2. Nach fünf Runden gewinnt, wer die meisten Chips hat.
