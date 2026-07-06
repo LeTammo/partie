@@ -21,6 +21,8 @@ game.connectfour.name: 'Vier gewinnt'
 game.connectfour.description: 'Steine einwerfen und vor dem Gegner vier verbinden.'
 game.yahtzee.name: 'Kniffel'
 game.yahtzee.description: 'Fünf Würfel, drei Würfe, fülle deinen Spielzettel.'
+game.koepknack.name: 'Knack (31)'
+game.koepknack.description: 'Tausche Karten Richtung 31 – die schlechteste Hand verliert ein Leben.'
 
 # --- Lobby ---
 lobby.status.waiting: 'wartet auf Spieler'

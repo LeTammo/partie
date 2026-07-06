@@ -1,0 +1,39 @@
+# --- Tisch ---
+koepknack.round: 'Runde %round%'
+koepknack.middle: 'Karten in der Mitte'
+koepknack.your_hand: 'Deine Hand'
+koepknack.value: 'Wert: %value%'
+koepknack.swap: 'Tauschen'
+koepknack.swap_all: 'Alle tauschen'
+koepknack.pass: 'Schieben'
+koepknack.close: 'Zumachen'
+koepknack.closed_by: '%player% hat zugemacht – alle sind noch einmal dran!'
+koepknack.swimming: 'schwimmt'
+koepknack.out: 'raus'
+
+# --- Spielverlauf ---
+log.koepknack.round_started: 'Runde %round% – frische Karten für alle.'
+log.koepknack.swapped: '%player% tauscht eine Karte.'
+log.koepknack.swapped_all: '%player% tauscht die ganze Hand.'
+log.koepknack.passed: '%player% schiebt.'
+log.koepknack.middle_refreshed: 'Alle haben geschoben – drei neue Karten in der Mitte.'
+log.koepknack.closed: '%player% macht zu – alle sind noch einmal dran.'
+log.koepknack.knack: '%player% hat 31 – Knack!'
+log.koepknack.fire: '%player% hat drei Asse – Feuer!'
+log.koepknack.round_result: 'Aufdecken – %values%.'
+log.koepknack.lost_life: '%player% verliert ein Leben (noch %lives%).'
+log.koepknack.swims: '%player% schwimmt jetzt!'
+log.koepknack.eliminated: '%player% ist untergegangen und raus.'
+log.koepknack.won: '%player% bleibt als Letzte:r übrig und gewinnt!'
+
+# --- Fehler ---
+error.koepknack.select_cards: 'Wähle zuerst eine Handkarte und eine Karte aus der Mitte.'
+error.koepknack.already_closed: 'In dieser Runde wurde schon zugemacht.'
+
+# --- Spielanleitung ---
+rules: |-
+    Du hältst drei Karten und sammelst Punkte in einer Farbe – Ass zählt 11, Bilder 10. Drei Gleiche zählen 30,5.
+    Bist du dran: Tausche eine Karte oder alle drei mit der Mitte, schiebe oder mache zu.
+    Nach dem Zumachen ist jeder noch genau einmal dran, dann verliert die niedrigste Hand ein Leben.
+    31 Punkte („Knack") beenden die Runde sofort. Ohne Leben schwimmst du – verlierst du nochmal, bist du raus.
+    Wer als Letzte:r übrig bleibt, gewinnt.

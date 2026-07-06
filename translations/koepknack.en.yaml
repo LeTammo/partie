@@ -1,0 +1,39 @@
+# --- Table ---
+koepknack.round: 'Round %round%'
+koepknack.middle: 'Middle cards'
+koepknack.your_hand: 'Your hand'
+koepknack.value: 'Value: %value%'
+koepknack.swap: 'Swap one'
+koepknack.swap_all: 'Swap all'
+koepknack.pass: 'Pass'
+koepknack.close: 'Knock'
+koepknack.closed_by: '%player% knocked – one last turn for everyone!'
+koepknack.swimming: 'swimming'
+koepknack.out: 'out'
+
+# --- Game log ---
+log.koepknack.round_started: 'Round %round% – fresh cards for everyone.'
+log.koepknack.swapped: '%player% swapped a card.'
+log.koepknack.swapped_all: '%player% swapped the whole hand.'
+log.koepknack.passed: '%player% passed.'
+log.koepknack.middle_refreshed: 'Everyone passed – three fresh middle cards.'
+log.koepknack.closed: '%player% knocked – one last turn for everyone.'
+log.koepknack.knack: '%player% has 31 – Knack!'
+log.koepknack.fire: '%player% has three aces – fire!'
+log.koepknack.round_result: 'Showdown – %values%.'
+log.koepknack.lost_life: '%player% loses a life (%lives% left).'
+log.koepknack.swims: '%player% is swimming now!'
+log.koepknack.eliminated: '%player% went under and is out.'
+log.koepknack.won: '%player% is the last one standing and wins!'
+
+# --- Errors ---
+error.koepknack.select_cards: 'Pick one of your cards and one middle card first.'
+error.koepknack.already_closed: 'Someone already knocked this round.'
+
+# --- How to play ---
+rules: |-
+    You hold three cards and collect points in one suit – ace counts 11, face cards 10. Three of a kind counts 30.5.
+    On your turn, swap one card or all three with the middle, pass, or knock.
+    After someone knocks, everyone gets exactly one more turn, then the lowest hand loses a life.
+    31 points ("Knack") ends the round immediately. Out of lives you are swimming – lose again and you are out.
+    The last player standing wins.
