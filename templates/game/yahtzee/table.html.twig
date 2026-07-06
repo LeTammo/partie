@@ -1,0 +1,119 @@
+{% trans_default_domain 'yahtzee' %}
+<div class="space-y-6">
+    {# ---------- dice tray ---------- #}
+    <div class="rounded-3xl bg-cream p-5">
+        <div class="flex flex-wrap items-start justify-center gap-3">
+            {% for die in view.dice %}
+                {% if die.lockable %}
+                    <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}">
+                        <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
+                        <input type="hidden" name="action" value="toggle">
+                        <input type="hidden" name="die" value="{{ die.index }}">
+                        <button type="submit" title="{{ (die.locked ? 'yahtzee.release' : 'yahtzee.hold')|trans }}"
+                                class="block rounded-2xl shadow-soft transition hover:shadow-lifted
+                                       {{ die.locked ? 'ring-2 ring-softblue-300' : '' }}">
+                            {% include 'components/die.html.twig' with {value: die.value, face: view.dieFace, pip: view.diePip, class: 'size-20'} only %}
+                        </button>
+                        {% if die.locked %}<p class="mt-1 text-center text-xs font-extrabold uppercase text-softblue-500">{{ 'yahtzee.held'|trans }}</p>{% endif %}
+                    </form>
+                {% else %}
+                    <div>
+                        <div class="rounded-2xl shadow-soft {{ die.locked ? 'ring-2 ring-softblue-300' : '' }} {{ not view.hasRolled ? 'opacity-30' }}">
+                            {% include 'components/die.html.twig' with {value: die.value, face: view.dieFace, pip: view.diePip, class: 'size-20'} only %}
+                        </div>
+                        {% if die.locked %}<p class="mt-1 text-center text-xs font-extrabold uppercase text-softblue-500">{{ 'yahtzee.held'|trans }}</p>{% endif %}
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+
+        <div class="mt-4 text-center">
+            {% if view.canRoll %}
+                <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}">
+                    <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
+                    <input type="hidden" name="action" value="roll">
+                    <button type="submit" class="inline-flex items-center gap-2 rounded-2xl bg-terracotta-300 px-8 py-3 text-lg font-extrabold text-white shadow-soft transition hover:bg-terracotta-200 hover:text-terracotta-700 hover:shadow-lifted">
+                        {% include 'icons/die.svg.twig' with {class: 'size-5'} only %}
+                        {{ 'yahtzee.roll'|trans }}
+                        <span class="opacity-80">({{ 'yahtzee.rolls_left'|trans({'%count%': view.rollsLeft}) }})</span>
+                    </button>
+                </form>
+            {% elseif view.myTurn %}
+                <p class="text-base font-extrabold text-warmgray-500">{{ 'yahtzee.no_rolls_left'|trans }}</p>
+            {% endif %}
+        </div>
+    </div>
+
+    {# ---------- scorecard ---------- #}
+    <div>
+        {% set multiplayer = state.players|length > 1 %}
+        <div class="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-4">
+            {% for row in view.rows %}
+                {% set categoryLabel = ('yahtzee.category.' ~ row.category)|trans %}
+                <div class="rounded-2xl bg-cream p-3">
+                    <p class="text-xs font-extrabold uppercase tracking-wide text-warmgray-500">
+                        <span data-tip="{{ ('yahtzee.hint.' ~ row.category)|trans }}" tabindex="0" class="underline decoration-dotted decoration-warmgray-300 underline-offset-4">{{ categoryLabel }}</span>
+                    </p>
+                    <div class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5">
+                        {% for cell in row.cells %}
+                            {% set player = state.players[loop.index0] %}
+                            <span class="inline-flex items-center gap-1.5">
+                                {% if multiplayer %}
+                                    <span class="size-2.5 shrink-0 rounded-full" title="{{ player.nickname }}" style="background-color: {{ player.color }}"></span>
+                                {% endif %}
+                                {% if cell.score is not null %}
+                                    <span class="text-xl font-extrabold text-warmgray-700">{{ cell.score }}</span>
+                                {% elseif cell.potential is not null and view.canScore %}
+                                    <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}" class="inline">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
+                                        <input type="hidden" name="action" value="score">
+                                        <input type="hidden" name="category" value="{{ row.category }}">
+                                        <button type="submit" title="{{ 'yahtzee.score_action'|trans({'%points%': cell.potential, '%category%': categoryLabel}) }}"
+                                                class="rounded-xl bg-sage-100 px-3 py-1 text-lg font-extrabold text-sage-700 shadow-soft transition hover:bg-sage-200 hover:shadow-lifted">
+                                            +{{ cell.potential }}
+                                        </button>
+                                    </form>
+                                {% else %}
+                                    <span class="text-xl font-extrabold text-warmgray-300">·</span>
+                                {% endif %}
+                            </span>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% if row.category == 'sixes' %}
+                    <div class="rounded-2xl bg-warmgray-100 p-3">
+                        <p class="text-xs font-extrabold uppercase tracking-wide text-warmgray-500">{{ 'yahtzee.upper_bonus'|trans }}</p>
+                        <div class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5">
+                            {% for sub in view.upperSubtotals %}
+                                {% set player = state.players[loop.index0] %}
+                                <span class="inline-flex items-center gap-1.5 text-lg font-extrabold text-warmgray-500">
+                                    {% if multiplayer %}
+                                        <span class="size-2.5 shrink-0 rounded-full" title="{{ player.nickname }}" style="background-color: {{ player.color }}"></span>
+                                    {% endif %}
+                                    {{ sub.subtotal }}{{ sub.bonus > 0 ? ' +' ~ sub.bonus }}
+                                </span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+
+        {# ---------- totals ---------- #}
+        <div class="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-softblue-100 px-5 py-3">
+            <span class="text-sm font-extrabold uppercase tracking-wide text-softblue-700">{{ 'yahtzee.total'|trans }}</span>
+            <span class="flex flex-wrap items-center gap-x-6 gap-y-2">
+                {% for total in view.totals %}
+                    {% set player = state.players[loop.index0] %}
+                    <span class="inline-flex items-center gap-2 text-2xl font-extrabold text-softblue-700"
+                          {% if multiplayer %}title="{{ player.nickname }}"{% endif %}>
+                        {% if multiplayer %}
+                            <span class="size-3 shrink-0 rounded-full" style="background-color: {{ player.color }}"></span>
+                        {% endif %}
+                        {{ total }}
+                    </span>
+                {% endfor %}
+            </span>
+        </div>
+    </div>
+</div>

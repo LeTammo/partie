@@ -15,6 +15,8 @@ home.players_range: '%min%–%max% Spieler'
 # --- Games ---
 game.checkers.name: 'Dame'
 game.checkers.description: 'Springen, schlagen und Damen krönen auf dem 8x8-Brett.'
+game.yahtzee.name: 'Kniffel'
+game.yahtzee.description: 'Fünf Würfel, drei Würfe, fülle deinen Spielzettel.'
 
 # --- Lobby ---
 lobby.status.waiting: 'wartet auf Spieler'

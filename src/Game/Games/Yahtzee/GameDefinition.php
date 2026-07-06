@@ -1,0 +1,203 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Game\Games\Yahtzee;
+
+use App\Game\Core\Exception\InvalidMoveException;
+use App\Game\Core\Model\Dice;
+use App\Game\Core\Model\GameState;
+use App\Game\Core\Service\GameEngineInterface;
+
+final class GameDefinition implements GameEngineInterface
+{
+    private const int DICE_COUNT = 5;
+    private const int ROLLS_PER_TURN = 3;
+
+    public function __construct(
+        private readonly GameRules $rules,
+        private readonly GameRenderer $renderer,
+    ) {
+    }
+
+    public function getId(): string
+    {
+        return 'yahtzee';
+    }
+
+    public function getName(): string
+    {
+        return 'game.yahtzee.name';
+    }
+
+    public function getDescription(): string
+    {
+        return 'game.yahtzee.description';
+    }
+
+    public function getIcon(): string
+    {
+        return 'die';
+    }
+
+    public function getMinPlayers(): int
+    {
+        return 1;
+    }
+
+    public function getMaxPlayers(): int
+    {
+        return 6;
+    }
+
+    public function createInitialState(array $players): GameState
+    {
+        $state = new GameState($this->getId(), $players);
+
+        for ($i = 0; $i < self::DICE_COUNT; ++$i) {
+            $state->dice[] = new Dice(maxFaces: 6);
+        }
+
+        $emptyCard = array_fill_keys(GameRules::allCategories(), null);
+        foreach ($players as $player) {
+            $state->data['scorecards'][$player->id] = $emptyCard;
+        }
+        $state->data['rollsLeft'] = self::ROLLS_PER_TURN;
+        $state->data['hasRolled'] = false;
+
+        return $state;
+    }
+
+    public function applyMove(GameState $state, string $playerId, array $payload): void
+    {
+        if (!$state->isPlayersTurn($playerId)) {
+            throw new InvalidMoveException('error.not_your_turn');
+        }
+
+        match ($payload['action'] ?? '') {
+            'roll' => $this->roll($state),
+            'toggle' => $this->toggleLock($state, (int) ($payload['die'] ?? -1)),
+            'score' => $this->scoreCategory($state, $playerId, (string) ($payload['category'] ?? '')),
+            default => throw new InvalidMoveException('error.unknown_action'),
+        };
+    }
+
+    public function getTemplate(): string
+    {
+        return 'game/yahtzee/table.html.twig';
+    }
+
+    public function buildView(GameState $state, ?string $viewerId): array
+    {
+        return $this->renderer->buildView($state, $viewerId);
+    }
+
+    private function roll(GameState $state): void
+    {
+        if ($state->data['rollsLeft'] <= 0) {
+            throw new InvalidMoveException('error.yahtzee.no_rolls_left', domain: 'yahtzee');
+        }
+
+        foreach ($state->dice as $die) {
+            $die->roll();
+        }
+        --$state->data['rollsLeft'];
+        $state->data['hasRolled'] = true;
+
+        $values = implode(' ', array_map(static fn (Dice $d): int => $d->value, $state->dice));
+        $state->logGameEvent('log.yahtzee.rolled', [
+            '%player%' => $state->currentPlayer()->nickname,
+            '%values%' => $values,
+            '%left%' => $state->data['rollsLeft'],
+        ]);
+    }
+
+    private function toggleLock(GameState $state, int $index): void
+    {
+        if (!$state->data['hasRolled']) {
+            throw new InvalidMoveException('error.yahtzee.roll_first', domain: 'yahtzee');
+        }
+        if (!isset($state->dice[$index])) {
+            throw new InvalidMoveException('error.yahtzee.unknown_die', domain: 'yahtzee');
+        }
+        if ($state->data['rollsLeft'] <= 0) {
+            throw new InvalidMoveException('error.yahtzee.no_rolls_hold', domain: 'yahtzee');
+        }
+
+        $state->dice[$index]->toggleLock();
+    }
+
+    private function scoreCategory(GameState $state, string $playerId, string $category): void
+    {
+        if (!$state->data['hasRolled']) {
+            throw new InvalidMoveException('error.yahtzee.roll_first', domain: 'yahtzee');
+        }
+
+        $scorecard = &$state->data['scorecards'][$playerId];
+        if (!\array_key_exists($category, $scorecard)) {
+            throw new InvalidMoveException('error.yahtzee.unknown_category', domain: 'yahtzee');
+        }
+        if (null !== $scorecard[$category]) {
+            throw new InvalidMoveException('error.yahtzee.category_filled', domain: 'yahtzee');
+        }
+
+        $values = array_map(static fn (Dice $d): int => $d->value, $state->dice);
+        $points = $this->rules->score($category, $values);
+        $scorecard[$category] = $points;
+
+        $player = $state->currentPlayer();
+        $state->logGameEvent('log.yahtzee.scored', [
+            '%player%' => $player->nickname,
+            '%points%' => $points,
+            '%category%' => 't:yahtzee:yahtzee.category.'.$category,
+        ]);
+
+        foreach ($state->dice as $die) {
+            $die->locked = false;
+            $die->value = 1;
+        }
+        $state->data['rollsLeft'] = self::ROLLS_PER_TURN;
+        $state->data['hasRolled'] = false;
+
+        if ($this->isGameComplete($state)) {
+            $this->finishGame($state);
+
+            return;
+        }
+
+        $state->advanceTurn();
+    }
+
+    private function isGameComplete(GameState $state): bool
+    {
+        foreach ($state->data['scorecards'] as $scorecard) {
+            if (!$this->rules->isComplete($scorecard)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private function finishGame(GameState $state): void
+    {
+        $best = null;
+        $bestScore = -1;
+        $totals = [];
+
+        foreach ($state->players as $player) {
+            $total = $this->rules->total($state->data['scorecards'][$player->id]);
+            $totals[] = sprintf('%s: %d', $player->nickname, $total);
+            if ($total > $bestScore) {
+                $bestScore = $total;
+                $best = $player;
+            }
+        }
+
+        $state->finish($best?->id);
+        $state->logGameEvent('log.yahtzee.final', ['%scores%' => implode(', ', $totals)]);
+        if (null !== $best) {
+            $state->logGameEvent('log.yahtzee.won', ['%player%' => $best->nickname, '%points%' => $bestScore]);
+        }
+    }
+}

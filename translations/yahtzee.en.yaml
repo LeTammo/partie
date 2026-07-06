@@ -1,0 +1,62 @@
+# --- Table ---
+yahtzee.category: 'Category'
+yahtzee.roll: 'Roll the dice'
+yahtzee.rolls_left: '%count% left'
+yahtzee.no_rolls_left: 'No rolls left – pick a category!'
+yahtzee.held: 'held'
+yahtzee.hold: 'Hold this die'
+yahtzee.release: 'Release this die'
+yahtzee.score_action: 'Score %points% points on %category%'
+yahtzee.upper_bonus: 'Upper bonus (63 → +35)'
+yahtzee.total: 'Total'
+
+# --- Categories ---
+yahtzee.category.ones: 'Ones'
+yahtzee.category.twos: 'Twos'
+yahtzee.category.threes: 'Threes'
+yahtzee.category.fours: 'Fours'
+yahtzee.category.fives: 'Fives'
+yahtzee.category.sixes: 'Sixes'
+yahtzee.category.three_of_a_kind: 'Three of a Kind'
+yahtzee.category.four_of_a_kind: 'Four of a Kind'
+yahtzee.category.full_house: 'Full House'
+yahtzee.category.small_straight: 'Small Straight'
+yahtzee.category.large_straight: 'Large Straight'
+yahtzee.category.yahtzee: 'Yahtzee'
+yahtzee.category.chance: 'Chance'
+
+# --- Category tooltips ---
+yahtzee.hint.ones: 'Sum of all dice showing 1.'
+yahtzee.hint.twos: 'Sum of all dice showing 2.'
+yahtzee.hint.threes: 'Sum of all dice showing 3.'
+yahtzee.hint.fours: 'Sum of all dice showing 4.'
+yahtzee.hint.fives: 'Sum of all dice showing 5.'
+yahtzee.hint.sixes: 'Sum of all dice showing 6.'
+yahtzee.hint.three_of_a_kind: 'At least three equal dice – scores the sum of all five dice.'
+yahtzee.hint.four_of_a_kind: 'At least four equal dice – scores the sum of all five dice.'
+yahtzee.hint.full_house: 'Three of a kind plus a pair – 25 points.'
+yahtzee.hint.small_straight: 'Four consecutive dice (e.g. 2-3-4-5) – 30 points.'
+yahtzee.hint.large_straight: 'Five consecutive dice – 40 points.'
+yahtzee.hint.yahtzee: 'All five dice equal – 50 points.'
+yahtzee.hint.chance: 'Anything goes – sum of all five dice.'
+
+# --- Game log ---
+log.yahtzee.rolled: '%player% rolled %values% (%left% roll(s) left).'
+log.yahtzee.scored: '%player% scored %points% points on "%category%".'
+log.yahtzee.final: 'Final scores – %scores%.'
+log.yahtzee.won: '%player% wins with %points% points!'
+
+# --- Errors ---
+error.yahtzee.no_rolls_left: 'No rolls left – pick a category to score.'
+error.yahtzee.roll_first: 'Roll the dice first.'
+error.yahtzee.unknown_die: 'Unknown die.'
+error.yahtzee.no_rolls_hold: 'No rolls left – holding dice has no effect now.'
+error.yahtzee.unknown_category: 'Unknown category.'
+error.yahtzee.category_filled: 'That category is already filled.'
+
+# --- How to play ---
+rules: |-
+    On your turn you have up to three rolls. After each roll, click dice to hold them.
+    Then score your dice in a free category – each category can only be used once.
+    The upper section (Ones to Sixes) pays a +35 bonus once you reach 63 points there.
+    After 13 rounds, the highest total score wins.
