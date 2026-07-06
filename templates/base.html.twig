@@ -1,9 +1,18 @@
 <!DOCTYPE html>
-<html>
+<html lang="{{ app.request.locale }}" class="h-full">
     <head>
         <meta charset="UTF-8">
-        <title>{% block title %}Welcome!{% endblock %}</title>
-        <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>⚫️</text><text y=%221.3em%22 x=%220.2em%22 font-size=%2276%22 fill=%22%23fff%22>sf</text></svg>">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>{% block title %}Partie · {{ 'app.title'|trans }}{% endblock %}</title>
+        <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 48 48%22><rect x=%222%22 y=%222%22 width=%2244%22 height=%2244%22 rx=%2212%22 fill=%22%238fb3d9%22/><circle cx=%2214%22 cy=%2214%22 r=%224.5%22 fill=%22%23faf7f2%22/><circle cx=%2234%22 cy=%2214%22 r=%224.5%22 fill=%22%23faf7f2%22/><circle cx=%2224%22 cy=%2224%22 r=%224.5%22 fill=%22%23faf7f2%22/><circle cx=%2214%22 cy=%2234%22 r=%224.5%22 fill=%22%23faf7f2%22/><circle cx=%2234%22 cy=%2234%22 r=%224.5%22 fill=%22%23faf7f2%22/></svg>">
+
+        <meta name="turbo-refresh-method" content="morph">
+        <meta name="turbo-refresh-scroll" content="preserve">
+
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+
         {% block stylesheets %}
         {% endblock %}
 
@@ -18,7 +27,42 @@
         <script src="https://cdn.jsdelivr.net/npm/frankenphp-hot-reload/+esm" type="module"></script>
         {% endif %}
     </head>
-    <body>
-        {% block body %}{% endblock %}
+    <body class="min-h-full bg-cream text-warmgray-800 font-sans antialiased">
+        <header class="bg-white/60 shadow-soft backdrop-blur">
+            <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
+                <a href="{{ path('app_home') }}" class="flex items-center gap-2 text-xl font-extrabold tracking-tight text-warmgray-800">
+                    <span class="grid size-9 place-items-center rounded-2xl bg-softblue-100 text-softblue-700 shadow-soft">
+                        {% include 'icons/die.svg.twig' with {class: 'size-5'} only %}
+                    </span>
+                    Partie
+                </a>
+                <div class="flex items-center gap-4">
+                    <nav class="flex rounded-2xl bg-cream p-1 inset-shadow-soft" aria-label="{{ 'app.language'|trans }}">
+                        {% for locale in ['de', 'en'] %}
+                            <a href="{{ path('app_locale', {locale: locale}) }}"
+                               class="rounded-xl px-2.5 py-1 text-xs font-extrabold uppercase transition
+                                      {{ app.request.locale == locale ? 'bg-white text-softblue-500 shadow-soft' : 'text-warmgray-400 hover:text-warmgray-700' }}">
+                                {{ locale }}
+                            </a>
+                        {% endfor %}
+                    </nav>
+                </div>
+            </div>
+        </header>
+
+        <main class="mx-auto max-w-6xl px-4 py-8">
+            {% for message in app.flashes('error') %}
+                <div class="mb-6 rounded-2xl bg-terracotta-50 px-4 py-3 text-sm font-semibold text-terracotta-700 shadow-soft">
+                    {{ message }}
+                </div>
+            {% endfor %}
+            {% for message in app.flashes('success') %}
+                <div class="mb-6 rounded-2xl bg-sage-50 px-4 py-3 text-sm font-semibold text-sage-700 shadow-soft">
+                    {{ message }}
+                </div>
+            {% endfor %}
+
+            {% block body %}{% endblock %}
+        </main>
     </body>
 </html>

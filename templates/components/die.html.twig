@@ -1,0 +1,16 @@
+{# Params: value (1-6), face (fill color), pip (pip color), class (CSS classes) #}
+{% set layouts = [
+    [[24, 24]],
+    [[14, 14], [34, 34]],
+    [[14, 14], [24, 24], [34, 34]],
+    [[14, 14], [34, 14], [14, 34], [34, 34]],
+    [[14, 14], [34, 14], [24, 24], [14, 34], [34, 34]],
+    [[14, 13], [34, 13], [14, 24], [34, 24], [14, 35], [34, 35]],
+] %}
+<svg viewBox="0 0 48 48" class="{{ class|default('size-10') }}" role="img" aria-label="{{ value }}">
+    <rect x="2" y="2" width="44" height="44" rx="10" fill="{{ face|default('#ffffff') }}"/>
+    <rect x="2" y="2" width="44" height="44" rx="10" fill="none" stroke="rgba(0,0,0,0.08)" stroke-width="1.5"/>
+    {% for pos in layouts[value - 1] %}
+        <circle cx="{{ pos[0] }}" cy="{{ pos[1] }}" r="4.4" fill="{{ pip|default('#5b5348') }}"/>
+    {% endfor %}
+</svg>

@@ -1,0 +1,18 @@
+# --- Board ---
+checkers.must_continue: 'Keep jumping with the same piece!'
+
+# --- Game log ---
+log.checkers.moved: '%player% moved a piece.'
+log.checkers.captured: '%player% captured a piece!'
+log.checkers.king: '%player% got a king!'
+
+# --- Errors ---
+error.checkers.no_piece: 'There is no piece of yours on that square.'
+error.checkers.must_continue: 'You must continue jumping with the same piece.'
+
+# --- How to play ---
+rules: |-
+    Your pieces move diagonally forward onto free dark squares.
+    Capture enemy pieces by jumping over them diagonally. After a capture you must keep jumping with the same piece as long as more captures are possible.
+    A piece that reaches the far side is crowned a king and may also move backwards.
+    Whoever runs out of pieces or possible moves loses.

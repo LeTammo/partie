@@ -1,0 +1,81 @@
+# --- App shell ---
+app.title: 'Gemütliche Brettspiele'
+app.language: 'Sprache'
+
+# --- Home / dashboard ---
+home.title: 'Spiel auswählen'
+home.create.title: 'Lobby erstellen'
+home.create.button: 'Lobby erstellen'
+home.join.title: 'Mit Code beitreten'
+home.join.button: 'Beitreten'
+home.nickname: 'Dein Nickname'
+home.players_exact: '%min% Spieler'
+home.players_range: '%min%–%max% Spieler'
+
+# --- Games ---
+game.checkers.name: 'Dame'
+game.checkers.description: 'Springen, schlagen und Damen krönen auf dem 8x8-Brett.'
+
+# --- Lobby ---
+lobby.status.waiting: 'wartet auf Spieler'
+lobby.status.running: 'Spiel läuft'
+lobby.status.finished: 'Spiel beendet'
+lobby.invite_code: 'Einladungscode'
+lobby.copy_link: 'Einladungslink kopieren'
+lobby.copied: 'Kopiert!'
+lobby.waiting.heading: 'Warten, bis alle da sind…'
+lobby.waiting.seats: '%taken% / %max% Plätze belegt · mindestens %min% zum Starten'
+lobby.waiting.host_hint: 'Der Host startet das Spiel gleich'
+lobby.join.button: 'Platz nehmen'
+lobby.start.button: 'Spiel starten'
+lobby.finished.draw: 'Unentschieden!'
+lobby.finished.winner: '%player% gewinnt!'
+lobby.finished.again: 'Noch ein Spiel'
+lobby.turn.you: 'Du bist dran, %player%!'
+lobby.turn.waiting: 'Warten auf %player%…'
+lobby.rules: 'Spielanleitung'
+
+# --- Sidebar ---
+players.title: 'Spieler'
+players.you: '(du)'
+players.host: 'Host'
+players.turn: 'Am Zug'
+players.winner: 'Sieger'
+log.title: 'Ereignisse'
+log.empty: 'Noch ist nichts passiert'
+
+# --- game log ---
+log.game_started: '%game% gestartet – viel Spaß!'
+log.won: '%player% gewinnt das Spiel!'
+log.draw_full: 'Das Brett ist voll – unentschieden.'
+
+# --- errors ---
+error.not_your_turn: 'Du bist nicht am Zug.'
+error.move_not_allowed: 'Dieser Zug ist nicht erlaubt.'
+error.unknown_action: 'Unbekannte Aktion.'
+error.match_started: 'Diese Partie hat schon begonnen.'
+error.lobby_full: 'Diese Lobby ist schon voll.'
+error.host_only: 'Nur der Host kann das Spiel starten.'
+error.already_running: 'Das Spiel läuft bereits.'
+error.min_players: '%game% braucht mindestens %count% Spieler.'
+error.nickname_length: 'Bitte wähle einen Nickname mit 1 bis 20 Zeichen.'
+error.lobby_not_found: 'Die Lobby „%code%" existiert nicht (mehr).'
+error.unknown_game: 'Unbekanntes Spiel.'
+error.spectator: 'Du schaust bei dieser Partie nur zu.'
+error.not_running: 'Das Spiel läuft gerade nicht.'
+
+# --- Spielkarten ---
+card.joker: 'Joker'
+card.rank.2: '2'
+card.rank.3: '3'
+card.rank.4: '4'
+card.rank.5: '5'
+card.rank.6: '6'
+card.rank.7: '7'
+card.rank.8: '8'
+card.rank.9: '9'
+card.rank.10: '10'
+card.rank.jack: 'B'
+card.rank.queen: 'D'
+card.rank.king: 'K'
+card.rank.ace: 'A'

@@ -1,0 +1,81 @@
+# --- App shell ---
+app.title: 'Cozy Board Games'
+app.language: 'Language'
+
+# --- Home / dashboard ---
+home.title: 'Pick a game'
+home.create.title: 'Create a lobby'
+home.create.button: 'Create lobby'
+home.join.title: 'Join with a code'
+home.join.button: 'Join lobby'
+home.nickname: 'Your nickname'
+home.players_exact: '%min% players'
+home.players_range: '%min%–%max% players'
+
+# --- Games ---
+game.checkers.name: 'Checkers'
+game.checkers.description: 'Jump, capture and crown your kings on the 8x8 board.'
+
+# --- Lobby ---
+lobby.status.waiting: 'waiting for players'
+lobby.status.running: 'game in progress'
+lobby.status.finished: 'game over'
+lobby.invite_code: 'invite code'
+lobby.copy_link: 'Copy invite link'
+lobby.copied: 'Copied!'
+lobby.waiting.heading: 'Waiting for everyone to arrive…'
+lobby.waiting.seats: '%taken% / %max% seats taken · needs at least %min% to start'
+lobby.waiting.host_hint: 'The host will start the game soon'
+lobby.join.button: 'Take a seat'
+lobby.start.button: 'Start the game'
+lobby.finished.draw: "It's a draw!"
+lobby.finished.winner: '%player% wins!'
+lobby.finished.again: 'Play another game'
+lobby.turn.you: "It's your turn, %player%!"
+lobby.turn.waiting: 'Waiting for %player%…'
+lobby.rules: 'How to play'
+
+# --- Sidebar ---
+players.title: 'Players'
+players.you: '(you)'
+players.host: 'Host'
+players.turn: 'Their turn'
+players.winner: 'Winner'
+log.title: 'Events'
+log.empty: 'Nothing happened yet'
+
+# --- Shared game log ---
+log.game_started: '%game% started – have fun!'
+log.won: '%player% wins the game!'
+log.draw_full: 'The board is full – it is a draw.'
+
+# --- Shared errors ---
+error.not_your_turn: 'It is not your turn.'
+error.move_not_allowed: 'That move is not allowed.'
+error.unknown_action: 'Unknown action.'
+error.match_started: 'This match has already started.'
+error.lobby_full: 'This lobby is already full.'
+error.host_only: 'Only the host can start the game.'
+error.already_running: 'The game is already running.'
+error.min_players: '%game% needs at least %count% players.'
+error.nickname_length: 'Please pick a nickname between 1 and 20 characters.'
+error.lobby_not_found: 'Lobby "%code%" does not exist (anymore).'
+error.unknown_game: 'Unknown game.'
+error.spectator: 'You are only spectating this match.'
+error.not_running: 'The game is not running.'
+
+# --- Playing cards ---
+card.joker: 'Joker'
+card.rank.2: '2'
+card.rank.3: '3'
+card.rank.4: '4'
+card.rank.5: '5'
+card.rank.6: '6'
+card.rank.7: '7'
+card.rank.8: '8'
+card.rank.9: '9'
+card.rank.10: '10'
+card.rank.jack: 'J'
+card.rank.queen: 'Q'
+card.rank.king: 'K'
+card.rank.ace: 'A'

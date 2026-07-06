@@ -1,0 +1,145 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Partie · {{ game.name|trans }} · {{ lobby.code }}{% endblock %}
+
+{% block body %}
+    <div {{ turbo_stream_listen(topic) }}></div>
+
+    <div id="lobby-{{ lobby.code }}" class="grid gap-6 lg:grid-cols-[1fr_300px]">
+
+        {# =================== main column =================== #}
+        <div class="space-y-6">
+            {% if lobby.status.value == 'waiting' %}
+                {# ---------- waiting room ---------- #}
+                <div class="rounded-3xl bg-white p-8 text-center shadow-soft">
+                    <h2 class="text-2xl font-extrabold">{{ 'lobby.waiting.heading'|trans }}</h2>
+                    <p class="mt-2 text-base font-semibold text-warmgray-400">
+                        {{ 'lobby.waiting.seats'|trans({'%taken%': lobby.players|length, '%max%': game.maxPlayers, '%min%': game.minPlayers}) }}
+                    </p>
+
+                    {% if me is null %}
+                        <form method="post" action="{{ path('app_lobby_join') }}" class="mx-auto mt-6 flex max-w-sm flex-col gap-3 sm:flex-row">
+                            <input type="hidden" name="_token" value="{{ csrf_token('lobby') }}">
+                            <input type="hidden" name="code" value="{{ lobby.code }}">
+                            <input type="text" name="nickname" placeholder="{{ 'home.nickname'|trans }}" maxlength="20" required
+                                   data-controller="nickname" data-action="input->nickname#save"
+                                   class="w-full rounded-2xl bg-cream px-5 py-3 text-lg font-semibold inset-shadow-soft placeholder:text-warmgray-300 focus:outline-none focus:ring-2 focus:ring-softblue-300">
+                            <button type="submit" class="shrink-0 rounded-2xl bg-softblue-300 px-6 py-3 text-lg font-extrabold text-softblue-700 shadow-soft transition hover:bg-softblue-200">
+                                {{ 'lobby.join.button'|trans }}
+                            </button>
+                        </form>
+                    {% elseif lobby.isHost(me.id) %}
+                        <form method="post" action="{{ path('app_lobby_start', {code: lobby.code}) }}" class="mt-6">
+                            <input type="hidden" name="_token" value="{{ csrf_token('lobby') }}">
+                            <button type="submit"
+                                    {% if lobby.players|length < game.minPlayers %}disabled{% endif %}
+                                    class="rounded-2xl bg-sage-300 px-10 py-4 text-xl font-extrabold text-sage-700 shadow-soft transition hover:bg-sage-200 hover:shadow-lifted disabled:cursor-not-allowed disabled:opacity-40">
+                                {{ 'lobby.start.button'|trans }}
+                            </button>
+                        </form>
+                    {% else %}
+                        <p class="mt-6 text-base font-semibold text-warmgray-400">{{ 'lobby.waiting.host_hint'|trans }}</p>
+                    {% endif %}
+                </div>
+            {% else %}
+                {# ---------- finished banner ---------- #}
+                {% if lobby.state.status.value == 'finished' %}
+                    <div class="rounded-3xl bg-sage-50 p-6 text-center shadow-soft">
+                        <span class="inline-grid size-14 place-items-center rounded-2xl bg-white text-sage-500 shadow-soft">
+                            {% include 'icons/trophy.svg.twig' with {class: 'size-7'} only %}
+                        </span>
+                        {% if lobby.state.draw %}
+                            <h2 class="mt-2 text-2xl font-extrabold text-sage-700">{{ 'lobby.finished.draw'|trans }}</h2>
+                        {% else %}
+                            {% set winner = lobby.state.playerById(lobby.state.winnerId) %}
+                            <h2 class="mt-2 text-2xl font-extrabold text-sage-700">{{ 'lobby.finished.winner'|trans({'%player%': winner.nickname}) }}</h2>
+                        {% endif %}
+                        <a href="{{ path('app_home') }}" class="mt-4 inline-block rounded-2xl bg-white px-7 py-3 text-lg font-extrabold text-warmgray-700 shadow-soft transition hover:shadow-lifted">
+                            {{ 'lobby.finished.again'|trans }} →
+                        </a>
+                    </div>
+                {% elseif me is not null and lobby.state.isPlayersTurn(me.id) %}
+                    <div class="rounded-3xl bg-softblue-50 px-6 py-4 text-center text-lg font-extrabold text-softblue-700 shadow-soft">
+                        {{ 'lobby.turn.you'|trans({'%player%': me.nickname}) }}
+                    </div>
+                {% else %}
+                    <div class="rounded-3xl bg-white px-6 py-4 text-center text-lg font-extrabold text-warmgray-400 shadow-soft">
+                        {{ 'lobby.turn.waiting'|trans({'%player%': lobby.state.currentPlayer.nickname}) }}
+                    </div>
+                {% endif %}
+
+                {# ---------- the actual game ---------- #}
+                <div id="game-area" class="rounded-3xl bg-white p-6 shadow-soft">
+                    {% include game.template with {lobby: lobby, state: lobby.state, me: me, view: view} %}
+                </div>
+            {% endif %}
+        </div>
+
+        {# =================== sidebar =================== #}
+        <aside class="space-y-6">
+            {# ---------- game & invite ---------- #}
+            <div class="rounded-3xl bg-white p-5 shadow-soft">
+                <div class="flex items-center gap-3">
+                    <span class="grid size-12 shrink-0 place-items-center rounded-2xl bg-cream text-warmgray-500 shadow-soft">
+                        {% include 'icons/' ~ game.icon ~ '.svg.twig' with {class: 'size-6'} only %}
+                    </span>
+                    <div class="min-w-0">
+                        <h1 class="truncate text-lg font-extrabold leading-tight">{{ game.name|trans }}</h1>
+                        <p class="text-xs font-bold uppercase tracking-wide text-warmgray-400">
+                            {{ ('lobby.status.' ~ lobby.status.value)|trans }}
+                        </p>
+                    </div>
+                    <button type="button" popovertarget="game-rules" aria-label="{{ 'lobby.rules'|trans }}" title="{{ 'lobby.rules'|trans }}"
+                            class="ml-auto grid size-10 shrink-0 place-items-center rounded-2xl bg-cream text-lg font-extrabold text-softblue-500 shadow-soft transition hover:shadow-lifted">
+                        ?
+                    </button>
+                </div>
+                <div class="mt-4 rounded-2xl bg-cream p-3 text-center">
+                    <p class="text-xs font-bold uppercase tracking-wide text-warmgray-400">{{ 'lobby.invite_code'|trans }}</p>
+                    <p class="select-all text-3xl font-extrabold tracking-[0.3em] text-softblue-500">{{ lobby.code }}</p>
+                    <button type="button"
+                            data-controller="clipboard"
+                            data-clipboard-text-value="{{ url('app_lobby_show', {code: lobby.code}) }}"
+                            data-action="clipboard#copy"
+                            class="mt-2 inline-flex items-center rounded-xl bg-white px-4 py-2 text-sm font-bold text-warmgray-500 shadow-soft transition hover:shadow-lifted">
+                        <span data-clipboard-target="idle" class="inline-flex items-center gap-1.5">
+                            {% include 'icons/copy.svg.twig' with {class: 'size-4'} only %}
+                            {{ 'lobby.copy_link'|trans }}
+                        </span>
+                        <span data-clipboard-target="done" style="display: none" class="inline-flex items-center gap-1.5 text-sage-700">
+                            {% include 'icons/check.svg.twig' with {class: 'size-4'} only %}
+                            {{ 'lobby.copied'|trans }}
+                        </span>
+                    </button>
+                </div>
+            </div>
+
+            {% include 'game/_players.html.twig' %}
+            {% include 'game/_log.html.twig' %}
+        </aside>
+    </div>
+
+    {# ---------- game rules popover ---------- #}
+    <div id="game-rules" popover
+         class="m-auto max-h-[85vh] w-[min(92vw,30rem)] overflow-y-auto rounded-3xl bg-white p-6 shadow-lifted backdrop:bg-warmgray-800/40">
+        <div class="flex items-center gap-3">
+            <span class="grid size-12 shrink-0 place-items-center rounded-2xl bg-cream text-warmgray-500 shadow-soft">
+                {% include 'icons/' ~ game.icon ~ '.svg.twig' with {class: 'size-6'} only %}
+            </span>
+            <h2 class="text-xl font-extrabold">{{ game.name|trans }}</h2>
+            <button type="button" popovertarget="game-rules" popovertargetaction="hide" aria-label="✕"
+                    class="ml-auto grid size-9 shrink-0 place-items-center rounded-2xl bg-cream font-extrabold text-warmgray-500 shadow-soft transition hover:shadow-lifted">
+                ✕
+            </button>
+        </div>
+        <p class="mt-4 text-base font-semibold text-warmgray-500">{{ game.description|trans }}</p>
+        <ul class="mt-4 space-y-2.5">
+            {% for line in ('rules'|trans({}, game.id))|split('\n')|filter(l => l is not empty) %}
+                <li class="flex gap-2.5 text-base font-semibold leading-snug text-warmgray-700">
+                    <span class="text-softblue-500">•</span>
+                    <span>{{ line }}</span>
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+{% endblock %}

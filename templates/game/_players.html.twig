@@ -1,0 +1,36 @@
+<div class="rounded-3xl bg-white p-5 shadow-soft">
+    <h3 class="text-xs font-extrabold uppercase tracking-wide text-warmgray-400">{{ 'players.title'|trans }}</h3>
+    <ul class="mt-3 space-y-2">
+        {% for player in lobby.players %}
+            {% set isTurn = lobby.state is not null
+                and lobby.state.status.value == 'running'
+                and lobby.state.currentPlayer.id == player.id %}
+            <li class="flex items-center gap-3 rounded-2xl px-3 py-2 {{ isTurn ? 'bg-softblue-50 ring-2 ring-softblue-200' : 'bg-cream' }}">
+                <span class="size-3.5 shrink-0 rounded-full" style="background-color: {{ player.color }}"></span>
+                <span class="truncate font-bold">
+                    {{ player.nickname }}
+                    {% if me is defined and me is not null and me.id == player.id %}
+                        <span class="text-warmgray-400">{{ 'players.you'|trans }}</span>
+                    {% endif %}
+                </span>
+                <span class="ml-auto flex items-center gap-1.5">
+                    {% if lobby.isHost(player.id) %}
+                        <span title="{{ 'players.host'|trans }}" class="text-softblue-300">
+                            {% include 'icons/star.svg.twig' with {class: 'size-4'} only %}
+                        </span>
+                    {% endif %}
+                    {% if isTurn %}
+                        <span title="{{ 'players.turn'|trans }}" class="text-softblue-500">
+                            {% include 'icons/target.svg.twig' with {class: 'size-4'} only %}
+                        </span>
+                    {% endif %}
+                    {% if lobby.state is not null and lobby.state.winnerId == player.id %}
+                        <span title="{{ 'players.winner'|trans }}" class="text-sage-500">
+                            {% include 'icons/trophy.svg.twig' with {class: 'size-4'} only %}
+                        </span>
+                    {% endif %}
+                </span>
+            </li>
+        {% endfor %}
+    </ul>
+</div>

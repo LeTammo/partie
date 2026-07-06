@@ -1,0 +1,18 @@
+# --- Brett ---
+checkers.must_continue: 'Spring mit demselben Stein weiter!'
+
+# --- Spielverlauf ---
+log.checkers.moved: '%player% zieht einen Stein.'
+log.checkers.captured: '%player% schlägt einen Stein!'
+log.checkers.king: '%player% bekommt eine Dame!'
+
+# --- Fehler ---
+error.checkers.no_piece: 'Auf diesem Feld steht kein Stein von dir.'
+error.checkers.must_continue: 'Du musst mit demselben Stein weiterspringen.'
+
+# --- Spielanleitung ---
+rules: |-
+    Deine Steine ziehen diagonal vorwärts auf freie dunkle Felder.
+    Gegnerische Steine schlägst du, indem du sie diagonal überspringst. Nach einem Sprung musst du mit demselben Stein weiterspringen, solange weitere Schläge möglich sind.
+    Erreicht ein Stein die gegenüberliegende Seite, wird er zur Dame und darf auch rückwärts ziehen.
+    Wer keine Steine oder keine Züge mehr hat, verliert.
