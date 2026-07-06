@@ -1,0 +1,14 @@
+# --- Brett ---
+tictactoe.place: 'Auf %x%/%y% setzen'
+
+# --- Spielverlauf ---
+log.tictactoe.placed: '%player% setzt ein %symbol% auf %x%/%y%.'
+
+# --- Fehler ---
+error.cell_taken: 'Dieses Feld ist schon belegt.'
+
+# --- Spielanleitung ---
+rules: |-
+    Setzt abwechselnd euer Symbol auf ein freies Feld.
+    Wer zuerst drei eigene Symbole in einer Reihe hat – waagerecht, senkrecht oder diagonal – gewinnt.
+    Ist das Brett voll, endet die Partie unentschieden.

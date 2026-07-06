@@ -1,0 +1,14 @@
+# --- Board ---
+tictactoe.place: 'Place at %x%/%y%'
+
+# --- Game log ---
+log.tictactoe.placed: '%player% placed an %symbol% at %x%/%y%.'
+
+# --- Errors ---
+error.cell_taken: 'That cell is already taken.'
+
+# --- How to play ---
+rules: |-
+    Take turns placing your symbol on a free cell.
+    The first player with three of their symbols in a row – horizontally, vertically or diagonally – wins.
+    If the board fills up, the game is a draw.
