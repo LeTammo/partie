@@ -1,5 +1,9 @@
 framework:
     default_locale: en
+    enabled_locales: ['en', 'de']
+    # Pick the UI language from the browser's Accept-Language header
+    set_locale_from_accept_language: true
+    set_content_language_from_locale: true
     translator:
         default_path: '%kernel.project_dir%/translations'
         providers:

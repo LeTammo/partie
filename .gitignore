@@ -18,3 +18,9 @@
 /public/assets/
 /assets/vendor/
 ###< symfony/asset-mapper ###
+
+# Local Mercure hub binary
+/tools/
+
+.DS_Store
+.idea
