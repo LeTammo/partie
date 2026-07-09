@@ -20,8 +20,11 @@ final readonly class GameRenderer
     public function buildView(GameState $state, ?string $viewerId): array
     {
         $running = GameStatus::Running === $state->status;
-        $myTurn = null !== $viewerId && $running && $state->isPlayersTurn($viewerId);
         $phase = $state->data['phase'];
+        $myTurn = null !== $viewerId && $running && $state->isPlayersTurn($viewerId)
+            && \in_array($phase, ['betting', 'playing'], true);
+        $holeCardHidden = 'playing' === $phase
+            || ('dealer' === $phase && !($state->data['dealerRevealed'] ?? true));
 
         $players = [];
         foreach ($state->players as $player) {
@@ -43,7 +46,7 @@ final readonly class GameRenderer
 
         $dealerCards = [];
         foreach ($state->data['dealer'] as $i => $card) {
-            $dealerCards[] = $i > 0 && 'playing' === $phase
+            $dealerCards[] = $i > 0 && $holeCardHidden
                 ? ['back' => true]
                 : CardPresenter::view($card);
         }
@@ -69,9 +72,12 @@ final readonly class GameRenderer
             'myTurn' => $myTurn,
             'players' => $players,
             'dealer' => $dealerCards,
-            'dealerUpValue' => 'playing' === $phase && [] !== $state->data['dealer']
-                ? $this->rules->value([$state->data['dealer'][0]])
+            'dealerUpValue' => [] !== $state->data['dealer']
+                ? $this->rules->value($holeCardHidden ? [$state->data['dealer'][0]] : $state->data['dealer'])
                 : null,
+            'dealerActing' => \in_array($phase, ['dealer', 'settle'], true),
+            'autoPending' => $running && \in_array($phase, ['dealer', 'settle', 'roundend'], true),
+            'autoStep' => $state->data['autoStep'] ?? 0,
             'betOptions' => $betOptions,
             'canDouble' => $canDouble,
         ];

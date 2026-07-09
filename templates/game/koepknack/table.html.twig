@@ -3,7 +3,7 @@
     {# ---------- players & lives ---------- #}
     <div class="flex flex-wrap justify-center gap-3">
         {% for p in view.players %}
-            <div class="rounded-2xl bg-cream px-4 py-2.5 text-center {{ p.current ? 'ring-2 ring-softblue-300' }} {{ p.eliminated ? 'opacity-40' }}">
+            <div class="rounded-2xl bg-cream px-4 py-2.5 text-center transition {{ p.current ? 'ring-2 ring-softblue-300' }} {{ p.eliminated ? 'opacity-40' }}">
                 <p class="flex items-center justify-center gap-1.5 text-base font-extrabold text-warmgray-700">
                     <span class="size-2.5 rounded-full" style="background-color: {{ p.color }}"></span>
                     {{ p.nickname }}
@@ -23,7 +23,7 @@
     </div>
 
     {% if view.closed %}
-        <p class="rounded-2xl bg-sunny-100 px-4 py-2.5 text-center text-base font-extrabold text-warmgray-700">
+        <p class="anim-rise rounded-2xl bg-sunny-100 px-4 py-2.5 text-center text-base font-extrabold text-warmgray-700">
             {{ 'koepknack.closed_by'|trans({'%player%': view.closerName}) }}
         </p>
     {% endif %}
@@ -38,16 +38,18 @@
             </p>
             <div class="flex justify-center gap-3">
                 {% for card in view.middle %}
-                    {% if view.canAct %}
-                        <label class="cursor-pointer">
-                            <input type="radio" name="middle" value="{{ loop.index0 }}" class="peer sr-only">
-                            <span class="block rounded-xl transition peer-checked:-translate-y-1.5 peer-checked:ring-4 peer-checked:ring-softblue-300">
-                                {% include 'components/card.html.twig' with card only %}
-                            </span>
-                        </label>
-                    {% else %}
-                        {% include 'components/card.html.twig' with card only %}
-                    {% endif %}
+                    {% set identity = card.joker ? 'joker' : card.rank ~ '-' ~ card.suit %}
+                    <label class="{{ view.canAct ? 'cursor-pointer' }}">
+                        <input type="radio" name="middle" value="{{ loop.index0 }}" class="peer sr-only"
+                               {% if not view.canAct %}disabled{% endif %}>
+                        <span class="block rounded-xl transition peer-checked:-translate-y-1.5 peer-checked:ring-4 peer-checked:ring-softblue-300">
+                            {% include 'components/card.html.twig' with card|merge({
+                                key: 'kk-mid-' ~ loop.index0 ~ '-' ~ identity,
+                                flip: 'kk-' ~ identity,
+                                exit: ['fly-left', 'fade', 'fly-right'][loop.index0 % 3],
+                            }) only %}
+                        </span>
+                    </label>
                 {% endfor %}
             </div>
         </div>
@@ -60,16 +62,18 @@
                 </p>
                 <div class="flex justify-center gap-3">
                     {% for card in view.hand %}
-                        {% if view.canAct %}
-                            <label class="cursor-pointer">
-                                <input type="radio" name="hand" value="{{ loop.index0 }}" class="peer sr-only">
-                                <span class="block rounded-xl transition peer-checked:-translate-y-1.5 peer-checked:ring-4 peer-checked:ring-sage-300">
-                                    {% include 'components/card.html.twig' with card only %}
-                                </span>
-                            </label>
-                        {% else %}
-                            {% include 'components/card.html.twig' with card only %}
-                        {% endif %}
+                        {% set identity = card.joker ? 'joker' : card.rank ~ '-' ~ card.suit %}
+                        <label class="{{ view.canAct ? 'cursor-pointer' }}">
+                            <input type="radio" name="hand" value="{{ loop.index0 }}" class="peer sr-only"
+                                   {% if not view.canAct %}disabled{% endif %}>
+                            <span class="block rounded-xl transition peer-checked:-translate-y-1.5 peer-checked:ring-4 peer-checked:ring-sage-300">
+                                {% include 'components/card.html.twig' with card|merge({
+                                    key: 'kk-hand-' ~ loop.index0 ~ '-' ~ identity,
+                                    flip: 'kk-' ~ identity,
+                                    exit: ['fly-right', 'fade', 'fly-left'][loop.index0 % 3],
+                                }) only %}
+                            </span>
+                        </label>
                     {% endfor %}
                 </div>
             </div>

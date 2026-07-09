@@ -1,7 +1,13 @@
 {% trans_default_domain 'blackjack' %}
 <div class="space-y-6">
+    {% if view.autoPending %}
+        <div data-controller="autoplay"
+             data-autoplay-url-value="{{ path('app_game_tick', {code: lobby.code}) }}"
+             data-autoplay-token-value="{{ csrf_token('game') }}"
+             data-autoplay-step-value="{{ view.autoStep }}"></div>
+    {% endif %}
     {# ---------- dealer ---------- #}
-    <div class="rounded-3xl bg-cream p-5">
+    <div class="rounded-3xl bg-cream p-5 transition {{ view.dealerActing ? 'ring-2 ring-softblue-300' }}">
         <p class="mb-3 text-center text-sm font-extrabold uppercase tracking-wide text-warmgray-400">
             {{ 'blackjack.round'|trans({'%round%': view.round, '%total%': view.roundsTotal}) }} · {{ 'blackjack.dealer'|trans }}
             {% if view.dealerUpValue is not null %}· {{ 'blackjack.shows'|trans({'%value%': view.dealerUpValue}) }}{% endif %}
@@ -12,7 +18,8 @@
                 {% include 'components/card.html.twig' with {back: true, class: 'opacity-40'} only %}
             {% else %}
                 {% for card in view.dealer %}
-                    {% include 'components/card.html.twig' with card only %}
+                    {% set cardKey = 'dealer-' ~ loop.index0 ~ '-' ~ (card.back|default(false) ? 'back' : (card.joker ? 'joker' : card.rank ~ '-' ~ card.suit)) %}
+                    {% include 'components/card.html.twig' with card|merge({key: cardKey, flip: cardKey}) only %}
                 {% endfor %}
             {% endif %}
         </div>
@@ -21,7 +28,7 @@
     {# ---------- players ---------- #}
     <div class="grid gap-3 sm:grid-cols-2 {{ view.players|length > 2 ? 'lg:grid-cols-3' }}">
         {% for p in view.players %}
-            <div class="rounded-3xl bg-white p-4 shadow-soft {{ p.current ? 'ring-2 ring-softblue-300' }} {{ p.broke ? 'opacity-40' }}">
+            <div class="rounded-3xl bg-white p-4 shadow-soft transition {{ p.current ? 'ring-2 ring-softblue-300' }} {{ p.broke ? 'opacity-40' }}">
                 <div class="flex items-center justify-between gap-2">
                     <p class="flex items-center gap-1.5 text-base font-extrabold text-warmgray-700">
                         <span class="size-2.5 rounded-full" style="background-color: {{ p.color }}"></span>
@@ -34,7 +41,8 @@
                 </div>
                 <div class="mt-3 flex min-h-24 flex-wrap gap-2">
                     {% for card in p.cards %}
-                        {% include 'components/card.html.twig' with card only %}
+                        {% set cardKey = 'seat-' ~ loop.parent.loop.index0 ~ '-' ~ loop.index0 ~ '-' ~ (card.back|default(false) ? 'back' : (card.joker ? 'joker' : card.rank ~ '-' ~ card.suit)) %}
+                        {% include 'components/card.html.twig' with card|merge({key: cardKey, flip: cardKey}) only %}
                     {% else %}
                         <p class="self-center text-sm font-bold text-warmgray-300">
                             {{ p.broke ? 'blackjack.broke'|trans : 'blackjack.waiting'|trans }}
@@ -46,9 +54,9 @@
                         {% if p.bet is not null %}{{ 'blackjack.bet_label'|trans({'%amount%': p.bet}) }}{% endif %}
                     </span>
                     {% if p.bust %}
-                        <span class="text-terracotta-500">{{ 'blackjack.bust'|trans }}</span>
+                        <span class="anim-pop text-terracotta-500">{{ 'blackjack.bust'|trans }}</span>
                     {% elseif p.blackjack %}
-                        <span class="text-sunny-500">{{ 'blackjack.blackjack'|trans }}</span>
+                        <span class="anim-pop text-sunny-500">{{ 'blackjack.blackjack'|trans }}</span>
                     {% elseif p.value is not null %}
                         <span class="text-warmgray-600">{{ p.value }}</span>
                     {% endif %}

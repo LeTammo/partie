@@ -7,10 +7,12 @@ namespace App\Game\Games\Blackjack;
 use App\Game\Core\Card\DeckFactory;
 use App\Game\Core\Exception\InvalidMoveException;
 use App\Game\Core\Model\GameState;
+use App\Game\Core\Model\GameStatus;
 use App\Game\Core\Model\Player;
+use App\Game\Core\Service\AutoPlayingEngineInterface;
 use App\Game\Core\Service\GameEngineInterface;
 
-final class GameDefinition implements GameEngineInterface
+final class GameDefinition implements GameEngineInterface, AutoPlayingEngineInterface
 {
     private const int START_CHIPS = 100;
     private const int ROUNDS = 5;
@@ -60,6 +62,7 @@ final class GameDefinition implements GameEngineInterface
         }
         $state->data['round'] = 0;
         $state->data['roundsTotal'] = self::ROUNDS;
+        $state->data['autoStep'] = 0;
 
         $this->startRound($state);
 
@@ -190,7 +193,86 @@ final class GameDefinition implements GameEngineInterface
                 return;
             }
         }
-        $this->settle($state);
+
+        $state->data['phase'] = 'dealer';
+        $state->data['dealerRevealed'] = false;
+        $state->data['settleIndex'] = 0;
+    }
+
+    public function hasAutoStep(GameState $state): bool
+    {
+        return GameStatus::Running === $state->status
+            && \in_array($state->data['phase'], ['dealer', 'settle', 'roundend'], true);
+    }
+
+    public function applyAutoStep(GameState $state): void
+    {
+        $state->data['autoStep'] = ($state->data['autoStep'] ?? 0) + 1;
+
+        match ($state->data['phase']) {
+            'dealer' => $this->dealerStep($state),
+            'settle' => $this->settleStep($state),
+            'roundend' => $this->roundEndStep($state),
+            default => null,
+        };
+    }
+
+    private function dealerStep(GameState $state): void
+    {
+        $dealer = &$state->data['dealer'];
+
+        if (!$state->data['dealerRevealed']) {
+            $state->data['dealerRevealed'] = true;
+            $state->logGameEvent('log.blackjack.reveal', ['%value%' => $this->rules->value($dealer)]);
+
+            return;
+        }
+
+        if ($this->rules->value($dealer) < GameRules::DEALER_STANDS_AT) {
+            $dealer[] = array_pop($state->data['deck']);
+            $state->logGameEvent('log.blackjack.dealer_draw', ['%value%' => $this->rules->value($dealer)]);
+
+            return;
+        }
+
+        $state->logGameEvent('log.blackjack.dealer', ['%value%' => $this->rules->value($dealer)]);
+        $state->data['phase'] = 'settle';
+    }
+
+    private function settleStep(GameState $state): void
+    {
+        $index = $state->data['settleIndex'];
+        while ($index < \count($state->players) && null === $state->data['bets'][$state->players[$index]->id]) {
+            ++$index;
+        }
+
+        if ($index >= \count($state->players)) {
+            $state->data['phase'] = 'roundend';
+
+            return;
+        }
+
+        $this->settlePlayer($state, $state->players[$index]);
+        $state->data['settleIndex'] = $index + 1;
+    }
+
+    private function roundEndStep(GameState $state): void
+    {
+        $anyoneCanBet = false;
+        foreach ($state->players as $player) {
+            if ($state->data['chips'][$player->id] >= GameRules::MIN_BET) {
+                $anyoneCanBet = true;
+                break;
+            }
+        }
+
+        if ($state->data['round'] >= self::ROUNDS || !$anyoneCanBet) {
+            $this->finishGame($state);
+
+            return;
+        }
+
+        $this->startRound($state);
     }
 
     private function deal(GameState $state): void
@@ -210,70 +292,47 @@ final class GameDefinition implements GameEngineInterface
         $this->advanceOrSettle($state);
     }
 
-    private function settle(GameState $state): void
+    private function settlePlayer(GameState $state, Player $player): void
     {
-        $dealer = &$state->data['dealer'];
-        while ($this->rules->value($dealer) < GameRules::DEALER_STANDS_AT) {
-            $dealer[] = array_pop($state->data['deck']);
-        }
+        $dealer = $state->data['dealer'];
         $dealerValue = $this->rules->value($dealer);
         $dealerBust = $dealerValue > 21;
         $dealerBlackjack = $this->rules->isBlackjack($dealer);
-        $state->logGameEvent('log.blackjack.dealer', ['%value%' => $dealerValue]);
 
-        foreach ($state->players as $player) {
-            $bet = $state->data['bets'][$player->id];
-            if (null === $bet) {
-                continue;
-            }
-            $hand = $state->data['hands'][$player->id];
-            $value = $this->rules->value($hand);
+        $bet = $state->data['bets'][$player->id];
+        $hand = $state->data['hands'][$player->id];
+        $value = $this->rules->value($hand);
 
-            if ($this->rules->isBust($hand)) {
-                $key = 'log.blackjack.lost';
-                $payout = 0;
-            } elseif ($this->rules->isBlackjack($hand)) {
-                $payout = $dealerBlackjack ? $bet : $bet + (int) floor($bet * 1.5);
-                $key = $dealerBlackjack ? 'log.blackjack.push' : 'log.blackjack.blackjack';
-            } elseif ($dealerBust || $value > $dealerValue) {
-                $payout = $bet * 2;
-                $key = 'log.blackjack.won_round';
-            } elseif ($value === $dealerValue) {
-                $payout = $bet;
-                $key = 'log.blackjack.push';
-            } else {
-                $payout = 0;
-                $key = 'log.blackjack.lost';
-            }
-
-            $state->data['chips'][$player->id] += $payout;
-            $state->logGameEvent($key, [
-                '%player%' => $player->nickname,
-                '%chips%' => $state->data['chips'][$player->id],
-            ]);
+        if ($this->rules->isBust($hand)) {
+            $key = 'log.blackjack.lost';
+            $payout = 0;
+        } elseif ($this->rules->isBlackjack($hand)) {
+            $payout = $dealerBlackjack ? $bet : $bet + (int) floor($bet * 1.5);
+            $key = $dealerBlackjack ? 'log.blackjack.push' : 'log.blackjack.blackjack';
+        } elseif ($dealerBust || $value > $dealerValue) {
+            $payout = $bet * 2;
+            $key = 'log.blackjack.won_round';
+        } elseif ($value === $dealerValue) {
+            $payout = $bet;
+            $key = 'log.blackjack.push';
+        } else {
+            $payout = 0;
+            $key = 'log.blackjack.lost';
         }
 
-        $anyoneCanBet = false;
-        foreach ($state->players as $player) {
-            if ($state->data['chips'][$player->id] >= GameRules::MIN_BET) {
-                $anyoneCanBet = true;
-                break;
-            }
-        }
-
-        if ($state->data['round'] >= self::ROUNDS || !$anyoneCanBet) {
-            $this->finishGame($state);
-
-            return;
-        }
-
-        $this->startRound($state);
+        $state->data['chips'][$player->id] += $payout;
+        $state->logGameEvent($key, [
+            '%player%' => $player->nickname,
+            '%chips%' => $state->data['chips'][$player->id],
+        ]);
     }
 
     private function startRound(GameState $state): void
     {
         ++$state->data['round'];
         $state->data['phase'] = 'betting';
+        $state->data['dealerRevealed'] = false;
+        $state->data['settleIndex'] = 0;
         $state->data['deck'] = DeckFactory::deck52();
         $state->data['dealer'] = [];
         foreach ($state->players as $player) {
@@ -326,11 +385,7 @@ final class GameDefinition implements GameEngineInterface
         }
     }
 
-    /**
-     * Players keyed by their seat index, so the caller can set currentTurnIndex directly.
-     *
-     * @return array<int, Player>
-     */
+    /** @return array<int, Player> */
     private function playersInBettingOrder(GameState $state): array
     {
         return array_filter($state->players, function ($player) use ($state) {

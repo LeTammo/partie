@@ -5,7 +5,6 @@
     {% else %}
         <ol class="mt-3 max-h-80 space-y-1.5 overflow-y-auto pr-1 text-sm font-semibold text-warmgray-500">
             {% for entry in lobby.state.log %}
-                {# Params prefixed with "t:" are translation keys themselves ("t:domain:key" for non-"messages" domains). #}
                 {% set params = {} %}
                 {% for key, value in entry.params %}
                     {% if (value ~ '') starts with 't:' %}
@@ -16,7 +15,8 @@
                     {% endif %}
                     {% set params = params|merge({(key): value}) %}
                 {% endfor %}
-                <li class="rounded-xl bg-cream px-3 py-1.5 {{ loop.first ? 'text-warmgray-700 ring-1 ring-warmgray-200' }}">
+                <li id="log-{{ entry.seq|default('legacy-' ~ loop.index) }}"
+                    class="anim-rise rounded-xl bg-cream px-3 py-1.5 transition {{ loop.first ? 'text-warmgray-700 ring-1 ring-warmgray-200' }}">
                     {{ entry.key|trans(params, entry.domain|default('messages')) }}
                 </li>
             {% endfor %}

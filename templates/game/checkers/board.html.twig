@@ -4,7 +4,7 @@
      data-checkers-moves-value="{{ view.moves|json_encode|e('html_attr') }}">
 
     {% if view.mustContinue %}
-        <p class="mb-3 rounded-2xl bg-terracotta-50 px-4 py-2 text-center text-base font-extrabold text-terracotta-700 shadow-soft">
+        <p class="anim-rise mb-3 rounded-2xl bg-terracotta-50 px-4 py-2 text-center text-base font-extrabold text-terracotta-700 shadow-soft">
             {{ 'checkers.must_continue'|trans }}
         </p>
     {% endif %}
@@ -28,7 +28,8 @@
                                {{ cell.dark ? 'bg-warmgray-300/80' : 'bg-cream' }}
                                {{ cell.selectable ? 'cursor-pointer hover:brightness-105' : 'cursor-default' }}">
                     {% if cell.outer %}
-                        <span class="grid size-8 place-items-center rounded-full shadow-soft sm:size-11
+                        <span data-flip-id="piece-{{ cell.tokenId }}" data-flip-exit="fade"
+                              class="grid size-8 place-items-center rounded-full shadow-soft sm:size-11
                                      {{ cell.selectable ? 'ring-2 ring-white/80' }}"
                               style="background-color: {{ cell.outer }}">
                             {% if cell.king %}

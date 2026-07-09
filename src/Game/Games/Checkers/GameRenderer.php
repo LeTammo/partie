@@ -59,6 +59,7 @@ final readonly class GameRenderer
                     'x' => $x,
                     'y' => $y,
                     'dark' => $this->rules->isDarkSquare($x, $y),
+                    'tokenId' => null !== $token && isset($token->id) ? $token->id : $x.'-'.$y,
                     'outer' => $token?->outerColor,
                     'inner' => $token?->innerColor,
                     'king' => GameRules::KING === $token?->variant,

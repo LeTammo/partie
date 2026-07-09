@@ -44,8 +44,8 @@
             {% else %}
                 {# ---------- finished banner ---------- #}
                 {% if lobby.state.status.value == 'finished' %}
-                    <div class="rounded-3xl bg-sage-50 p-6 text-center shadow-soft">
-                        <span class="inline-grid size-14 place-items-center rounded-2xl bg-white text-sage-500 shadow-soft">
+                    <div class="anim-rise rounded-3xl bg-sage-50 p-6 text-center shadow-soft">
+                        <span class="anim-pop inline-grid size-14 place-items-center rounded-2xl bg-white text-sage-500 shadow-soft">
                             {% include 'icons/trophy.svg.twig' with {class: 'size-7'} only %}
                         </span>
                         {% if lobby.state.draw %}
@@ -59,11 +59,14 @@
                         </a>
                     </div>
                 {% elseif me is not null and lobby.state.isPlayersTurn(me.id) %}
-                    <div class="rounded-3xl bg-softblue-50 px-6 py-4 text-center text-lg font-extrabold text-softblue-700 shadow-soft">
+                    {# keyed by the player at turn: a turn change swaps the node and replays the animation #}
+                    <div id="turn-{{ lobby.state.currentPlayer.id }}"
+                         class="anim-rise rounded-3xl bg-softblue-50 px-6 py-4 text-center text-lg font-extrabold text-softblue-700 shadow-soft">
                         {{ 'lobby.turn.you'|trans({'%player%': me.nickname}) }}
                     </div>
                 {% else %}
-                    <div class="rounded-3xl bg-white px-6 py-4 text-center text-lg font-extrabold text-warmgray-400 shadow-soft">
+                    <div id="turn-{{ lobby.state.currentPlayer.id }}"
+                         class="anim-rise rounded-3xl bg-white px-6 py-4 text-center text-lg font-extrabold text-warmgray-400 shadow-soft">
                         {{ 'lobby.turn.waiting'|trans({'%player%': lobby.state.currentPlayer.nickname}) }}
                     </div>
                 {% endif %}

@@ -4,26 +4,22 @@
     <div class="rounded-3xl bg-cream p-5">
         <div class="flex flex-wrap items-start justify-center gap-3">
             {% for die in view.dice %}
-                {% if die.lockable %}
-                    <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}">
-                        <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
-                        <input type="hidden" name="action" value="toggle">
-                        <input type="hidden" name="die" value="{{ die.index }}">
-                        <button type="submit" title="{{ (die.locked ? 'yahtzee.release' : 'yahtzee.hold')|trans }}"
-                                class="block rounded-2xl shadow-soft transition hover:shadow-lifted
-                                       {{ die.locked ? 'ring-2 ring-softblue-300' : '' }}">
+                <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}">
+                    <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
+                    <input type="hidden" name="action" value="toggle">
+                    <input type="hidden" name="die" value="{{ die.index }}">
+                    <button type="submit" {% if not die.lockable %}disabled{% endif %}
+                            title="{{ (die.locked ? 'yahtzee.release' : 'yahtzee.hold')|trans }}"
+                            class="block rounded-2xl shadow-soft transition enabled:hover:shadow-lifted
+                                   {{ die.locked ? 'ring-2 ring-softblue-300' : '' }}
+                                   {{ not view.hasRolled ? 'opacity-30' }}">
+                        {# keyed by value: a new value swaps the node and replays the roll animation #}
+                        <span id="die-{{ die.index }}-{{ die.value }}" class="anim-roll block">
                             {% include 'components/die.html.twig' with {value: die.value, face: view.dieFace, pip: view.diePip, class: 'size-20'} only %}
-                        </button>
-                        {% if die.locked %}<p class="mt-1 text-center text-xs font-extrabold uppercase text-softblue-500">{{ 'yahtzee.held'|trans }}</p>{% endif %}
-                    </form>
-                {% else %}
-                    <div>
-                        <div class="rounded-2xl shadow-soft {{ die.locked ? 'ring-2 ring-softblue-300' : '' }} {{ not view.hasRolled ? 'opacity-30' }}">
-                            {% include 'components/die.html.twig' with {value: die.value, face: view.dieFace, pip: view.diePip, class: 'size-20'} only %}
-                        </div>
-                        {% if die.locked %}<p class="mt-1 text-center text-xs font-extrabold uppercase text-softblue-500">{{ 'yahtzee.held'|trans }}</p>{% endif %}
-                    </div>
-                {% endif %}
+                        </span>
+                    </button>
+                    {% if die.locked %}<p class="mt-1 text-center text-xs font-extrabold uppercase text-softblue-500">{{ 'yahtzee.held'|trans }}</p>{% endif %}
+                </form>
             {% endfor %}
         </div>
 
@@ -62,7 +58,7 @@
                                     <span class="size-2.5 shrink-0 rounded-full" title="{{ player.nickname }}" style="background-color: {{ player.color }}"></span>
                                 {% endif %}
                                 {% if cell.score is not null %}
-                                    <span class="text-xl font-extrabold text-warmgray-700">{{ cell.score }}</span>
+                                    <span class="anim-pop text-xl font-extrabold text-warmgray-700">{{ cell.score }}</span>
                                 {% elseif cell.potential is not null and view.canScore %}
                                     <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}" class="inline">
                                         <input type="hidden" name="_token" value="{{ csrf_token('game') }}">

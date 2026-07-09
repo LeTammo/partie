@@ -25,7 +25,7 @@
                 {% for cell in row %}
                     <div class="grid size-10 place-items-center rounded-full bg-white/70 sm:size-12">
                         {% if cell.outer %}
-                            <span class="grid size-9 place-items-center rounded-full shadow-soft sm:size-11" style="background-color: {{ cell.outer }}">
+                            <span class="anim-drop grid size-9 place-items-center rounded-full shadow-soft sm:size-11" style="background-color: {{ cell.outer }}">
                                 <span class="size-4 rounded-full sm:size-5" style="background-color: {{ cell.inner }}"></span>
                             </span>
                         {% endif %}

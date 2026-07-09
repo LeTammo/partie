@@ -26,18 +26,12 @@ final class GameState
 
     public bool $draw = false;
 
-    /**
-     * Newest log first. Each entry is a translation key plus parameters, translated at render time
-     * in the entry's translation domain; parameter values prefixed with "t:" (or "t:domain:") are
-     * translation keys themselves.
-     *
-     * @var list<array{key: string, domain: string, params: array<string, string|int>}>
-     */
+    /** @var list<array{key: string, domain: string, seq: int, params: array<string, string|int>}> */
     public array $log = [];
 
-    /**
-     * @param list<Player> $players in seat order
-     */
+    private int $logSeq = 0;
+
+    /** @param list<Player> $players in seat order */
     public function __construct(
         public readonly string $gameId,
         public array $players,
@@ -66,20 +60,17 @@ final class GameState
     }
 
     /**
+     * @param string $key
      * @param array<string, string|int> $params
-     * @param string                    $domain translation domain of the key ("messages" or a game id)
+     * @param string $domain
      */
     public function logEvent(string $key, array $params = [], string $domain = 'messages'): void
     {
-        array_unshift($this->log, ['key' => $key, 'domain' => $domain, 'params' => $params]);
+        array_unshift($this->log, ['key' => $key, 'domain' => $domain, 'seq' => ++$this->logSeq, 'params' => $params]);
         $this->log = \array_slice($this->log, 0, self::MAX_LOG_ENTRIES);
     }
 
-    /**
-     * Logs an event whose key lives in this game's own translation domain.
-     *
-     * @param array<string, string|int> $params
-     */
+    /** @param array<string, string|int> $params */
     public function logGameEvent(string $key, array $params = []): void
     {
         $this->logEvent($key, $params, $this->gameId);

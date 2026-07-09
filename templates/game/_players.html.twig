@@ -5,7 +5,7 @@
             {% set isTurn = lobby.state is not null
                 and lobby.state.status.value == 'running'
                 and lobby.state.currentPlayer.id == player.id %}
-            <li class="flex items-center gap-3 rounded-2xl px-3 py-2 {{ isTurn ? 'bg-softblue-50 ring-2 ring-softblue-200' : 'bg-cream' }}">
+            <li class="flex items-center gap-3 rounded-2xl px-3 py-2 transition {{ isTurn ? 'bg-softblue-50 ring-2 ring-softblue-200' : 'bg-cream' }}">
                 <span class="size-3.5 shrink-0 rounded-full" style="background-color: {{ player.color }}"></span>
                 <span class="truncate font-bold">
                     {{ player.nickname }}

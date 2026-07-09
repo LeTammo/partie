@@ -7,6 +7,7 @@ namespace App\Controller;
 use App\Game\Core\Exception\GameException;
 use App\Game\Core\Exception\InvalidMoveException;
 use App\Game\Core\Model\GameStatus;
+use App\Game\Core\Service\AutoPlayingEngineInterface;
 use App\Game\Core\Service\GameBroadcaster;
 use App\Game\Core\Service\GameRegistry;
 use App\Game\Core\Service\LobbyManager;
@@ -65,5 +66,39 @@ final class GameController extends AbstractController
         }
 
         return $this->redirectToRoute('app_lobby_show', ['code' => $code]);
+    }
+
+    #[Route('/lobby/{code}/tick', name: 'app_game_tick', requirements: ['code' => '[A-Za-z0-9]{6}'], methods: ['POST'])]
+    public function tick(string $code, Request $request): Response
+    {
+        if (!$this->isCsrfTokenValid('game', (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Invalid CSRF token.');
+        }
+
+        try {
+            $lobby = $this->lobbyManager->getLobby($code);
+        } catch (GameException) {
+            return new Response(status: Response::HTTP_NO_CONTENT);
+        }
+
+        $game = $this->games->get($lobby->gameId);
+        $state = $lobby->state;
+
+        if (!$game instanceof AutoPlayingEngineInterface
+            || null === $state
+            || !$game->hasAutoStep($state)
+            || ($state->data['autoStep'] ?? 0) !== $request->request->getInt('step', -1)) {
+            return new Response(status: Response::HTTP_NO_CONTENT);
+        }
+
+        $game->applyAutoStep($state);
+        if (GameStatus::Finished === $state->status) {
+            $lobby->status = GameStatus::Finished;
+        }
+
+        $this->lobbyManager->save($lobby);
+        $this->broadcaster->broadcast($lobby);
+
+        return new Response(status: Response::HTTP_NO_CONTENT);
     }
 }

@@ -5,6 +5,7 @@ maumau.discard: 'Ablage'
 maumau.draw: 'Karte ziehen'
 maumau.pass: 'Passen'
 maumau.wish: 'Wünschen'
+maumau.wish_prompt: 'Wunschfarbe für deinen Buben wählen'
 maumau.wished: 'Gewünschte Farbe:'
 maumau.pending_draw: 'Zieh %count% oder lege eine 7!'
 

@@ -5,6 +5,7 @@ maumau.discard: 'Discard'
 maumau.draw: 'Draw a card'
 maumau.pass: 'Pass'
 maumau.wish: 'Wish'
+maumau.wish_prompt: 'Pick a wish suit for your jack'
 maumau.wished: 'Wished suit:'
 maumau.pending_draw: 'Draw %count% or play a 7!'
 
