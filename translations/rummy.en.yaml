@@ -1,0 +1,50 @@
+# --- Table ---
+rummy.your_hand: 'Your hand'
+rummy.stock: 'Stock (%count%)'
+rummy.discard: 'Discard'
+rummy.draw: 'Draw from the stock'
+rummy.take_discard: 'Take the discard'
+rummy.melds: 'Melds on the table'
+rummy.meld: 'Meld selection'
+rummy.layoff: 'Lay off selected card here'
+rummy.discard_action: 'Discard selection'
+rummy.takeback: 'Take melds back'
+rummy.opened: 'opened'
+rummy.initial_progress: 'first meld: %points% / 40 points'
+rummy.type_set: 'set'
+rummy.type_run: 'run'
+
+# --- Game log ---
+log.rummy.started: 'Rummy starts – first meld needs 40 points.'
+log.rummy.drew: '%player% draws from the stock.'
+log.rummy.took_discard: '%player% takes the discard.'
+log.rummy.melded: '%player% melds %points% points.'
+log.rummy.opened: '%player% reached 40 points and is open!'
+log.rummy.laid_off: '%player% lays off a card.'
+log.rummy.discarded: '%player% discards %suit% %rank%.'
+log.rummy.takeback: '%player% takes the provisional melds back.'
+log.rummy.reshuffled: 'The discard pile was shuffled into a new stock.'
+log.rummy.won: '%player% goes out and wins!'
+
+# --- Errors ---
+error.rummy.already_drawn: 'You already drew a card this turn.'
+error.rummy.draw_first: 'Draw a card first.'
+error.rummy.stock_empty: 'The stock is empty.'
+error.rummy.discard_empty: 'The discard pile is empty.'
+error.rummy.select_meld: 'Select at least three cards for a meld.'
+error.rummy.select_one: 'Select exactly one card.'
+error.rummy.keep_one: 'You must keep at least one card to discard.'
+error.rummy.invalid_meld: 'Those cards do not form a set or run.'
+error.rummy.open_first: 'You need your 40-point first meld before laying off.'
+error.rummy.unknown_meld: 'Unknown meld.'
+error.rummy.unknown_card: 'Unknown card.'
+error.rummy.does_not_fit: 'That card does not fit this meld.'
+error.rummy.initial_meld: 'Your first meld needs at least 40 points – meld more or take the cards back.'
+error.rummy.nothing_to_takeback: 'There is nothing to take back.'
+
+# --- How to play ---
+rules: |-
+    Start your turn by drawing a card from the stock or the discard pile, and end it by discarding one.
+    Meld sets (same rank) or runs (same suit) of at least three cards.
+    Your first meld must be worth at least 40 points – after that you may also lay off single cards on any meld.
+    Jokers substitute for any card. The first player to get rid of all cards wins.

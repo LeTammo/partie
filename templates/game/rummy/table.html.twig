@@ -1,0 +1,132 @@
+{% trans_default_domain 'rummy' %}
+<div class="space-y-6" data-controller="cards">
+    {# ---------- players ---------- #}
+    <div class="flex flex-wrap justify-center gap-3">
+        {% for p in view.players %}
+            <div class="flex items-center gap-2 rounded-2xl bg-cream px-4 py-2.5 transition {{ p.current ? 'ring-2 ring-softblue-300' }}">
+                <span class="size-2.5 rounded-full" style="background-color: {{ p.color }}"></span>
+                <span class="text-base font-extrabold text-warmgray-700">{{ p.nickname }}</span>
+                <span class="inline-flex items-center gap-1 text-sm font-extrabold text-warmgray-400">
+                    {% include 'icons/card-fan.svg.twig' with {class: 'size-4'} only %}
+                    {{ p.cardCount }}
+                </span>
+                {% if p.hasMelded %}
+                    <span class="text-xs font-extrabold uppercase tracking-wide text-sage-600">{{ 'rummy.opened'|trans }}</span>
+                {% endif %}
+            </div>
+        {% endfor %}
+    </div>
+
+    {# ---------- stock & discard ---------- #}
+    <div class="rounded-3xl bg-cream p-5">
+        <div class="flex items-center justify-center gap-6">
+            <div class="text-center">
+                <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}">
+                    <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
+                    <input type="hidden" name="action" value="draw">
+                    <button type="submit" {% if not view.canDraw %}disabled{% endif %}
+                            class="block rounded-xl transition enabled:hover:-translate-y-1 enabled:hover:shadow-lifted disabled:opacity-60"
+                            title="{{ 'rummy.draw'|trans }}">
+                        {% include 'components/card.html.twig' with {back: true} only %}
+                    </button>
+                </form>
+                <p class="mt-1.5 text-xs font-extrabold uppercase tracking-wide text-warmgray-400">
+                    {{ 'rummy.stock'|trans({'%count%': view.stockCount}) }}
+                </p>
+            </div>
+            <div class="text-center">
+                {% if view.discardTop is not null %}
+                    {% set discardKey = 'rm-top-' ~ (view.discardTop.joker ? 'joker' : view.discardTop.rank ~ '-' ~ view.discardTop.suit) %}
+                    <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}">
+                        <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
+                        <input type="hidden" name="action" value="takediscard">
+                        <button type="submit" {% if not view.canDraw %}disabled{% endif %}
+                                class="block rounded-xl transition enabled:hover:-translate-y-1 enabled:hover:shadow-lifted"
+                                title="{{ 'rummy.take_discard'|trans }}">
+                            {% include 'components/card.html.twig' with view.discardTop|merge({key: discardKey, exit: 'none'}) only %}
+                        </button>
+                    </form>
+                {% else %}
+                    <span class="block h-24 w-16 rounded-xl border-2 border-dashed border-warmgray-200"></span>
+                {% endif %}
+                <p class="mt-1.5 text-xs font-extrabold uppercase tracking-wide text-warmgray-400">{{ 'rummy.discard'|trans }}</p>
+            </div>
+        </div>
+    </div>
+
+    {# ---------- melds on the table ---------- #}
+    {% if view.melds is not empty %}
+        <div class="space-y-3">
+            <p class="text-center text-sm font-extrabold uppercase tracking-wide text-warmgray-400">{{ 'rummy.melds'|trans }}</p>
+            <div class="flex flex-wrap justify-center gap-4">
+                {% for meld in view.melds %}
+                    <div class="rounded-2xl bg-white p-3 shadow-soft">
+                        <div class="flex gap-1.5">
+                            {% for card in meld.cards %}
+                                {% include 'components/card.html.twig' with card|merge({class: 'h-16 w-11'}) only %}
+                            {% endfor %}
+                            {% if view.canLayoff %}
+                                <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}" class="self-center">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
+                                    <input type="hidden" name="action" value="layoff">
+                                    <input type="hidden" name="meld" value="{{ meld.index }}">
+                                    <input type="hidden" name="cards" data-cards-target="input">
+                                    <button type="submit" title="{{ 'rummy.layoff'|trans }}"
+                                            class="flex size-8 items-center justify-center rounded-xl bg-sage-100 font-extrabold text-sage-700 shadow-soft transition hover:bg-sage-200 hover:shadow-lifted">
+                                        +
+                                    </button>
+                                </form>
+                            {% endif %}
+                        </div>
+                        <p class="mt-1.5 text-xs font-extrabold uppercase tracking-wide text-warmgray-400">
+                            {{ meld.owner }} · {{ ('rummy.type_' ~ meld.type)|trans }}
+                        </p>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
+    {# ---------- own hand ---------- #}
+    {% if view.hand is not empty %}
+        <div>
+            <p class="mb-3 text-center text-sm font-extrabold uppercase tracking-wide text-warmgray-400">
+                {{ 'rummy.your_hand'|trans }}
+                {% if not view.hasOpened %}
+                    · {{ 'rummy.initial_progress'|trans({'%points%': view.initialPoints}) }}
+                {% endif %}
+            </p>
+            <div class="flex flex-wrap justify-center gap-2">
+                {% for card in view.hand %}
+                    <button type="button" data-cards-target="card" data-index="{{ card.index }}"
+                            data-action="cards#toggle" {% if not view.canAct %}disabled{% endif %}
+                            class="block rounded-xl transition">
+                        {% include 'components/card.html.twig' with card only %}
+                    </button>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
+    {# ---------- actions ---------- #}
+    {% if view.canAct %}
+        <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}" class="flex flex-wrap justify-center gap-3">
+            <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
+            <input type="hidden" name="cards" data-cards-target="input">
+            <button type="submit" name="action" value="meld"
+                    class="rounded-2xl bg-white px-7 py-3 text-lg font-extrabold text-warmgray-700 shadow-soft transition hover:shadow-lifted">
+                {{ 'rummy.meld'|trans }}
+            </button>
+            <button type="submit" name="action" value="discard"
+                    class="rounded-2xl bg-terracotta-300 px-7 py-3 text-lg font-extrabold text-white shadow-soft transition hover:bg-terracotta-200 hover:text-terracotta-700 hover:shadow-lifted">
+                {{ 'rummy.discard_action'|trans }}
+            </button>
+            {% if view.canTakeback %}
+                <button type="submit" name="action" value="takeback"
+                        class="rounded-2xl bg-white px-7 py-3 text-lg font-extrabold text-softblue-500 shadow-soft transition hover:shadow-lifted">
+                    {{ 'rummy.takeback'|trans }}
+                </button>
+            {% endif %}
+        </form>
+    {% endif %}
+</div>

@@ -1,0 +1,50 @@
+# --- Tisch ---
+rummy.your_hand: 'Deine Hand'
+rummy.stock: 'Stapel (%count%)'
+rummy.discard: 'Ablage'
+rummy.draw: 'Vom Stapel ziehen'
+rummy.take_discard: 'Ablage aufnehmen'
+rummy.melds: 'Meldungen auf dem Tisch'
+rummy.meld: 'Auswahl melden'
+rummy.layoff: 'Gewählte Karte hier anlegen'
+rummy.discard_action: 'Auswahl abwerfen'
+rummy.takeback: 'Meldungen zurücknehmen'
+rummy.opened: 'gemeldet'
+rummy.initial_progress: 'Erstmeldung: %points% / 40 Punkte'
+rummy.type_set: 'Satz'
+rummy.type_run: 'Folge'
+
+# --- Spielverlauf ---
+log.rummy.started: 'Rommé startet – die Erstmeldung braucht 40 Punkte.'
+log.rummy.drew: '%player% zieht vom Stapel.'
+log.rummy.took_discard: '%player% nimmt die Ablage auf.'
+log.rummy.melded: '%player% meldet %points% Punkte.'
+log.rummy.opened: '%player% hat 40 Punkte erreicht und ist draußen!'
+log.rummy.laid_off: '%player% legt eine Karte an.'
+log.rummy.discarded: '%player% wirft %suit% %rank% ab.'
+log.rummy.takeback: '%player% nimmt die vorläufigen Meldungen zurück.'
+log.rummy.reshuffled: 'Die Ablage wurde zum neuen Stapel gemischt.'
+log.rummy.won: '%player% wird alle Karten los und gewinnt!'
+
+# --- Fehler ---
+error.rummy.already_drawn: 'Du hast in diesem Zug schon gezogen.'
+error.rummy.draw_first: 'Zieh zuerst eine Karte.'
+error.rummy.stock_empty: 'Der Stapel ist leer.'
+error.rummy.discard_empty: 'Die Ablage ist leer.'
+error.rummy.select_meld: 'Wähle mindestens drei Karten für eine Meldung.'
+error.rummy.select_one: 'Wähle genau eine Karte.'
+error.rummy.keep_one: 'Du musst mindestens eine Karte zum Abwerfen behalten.'
+error.rummy.invalid_meld: 'Diese Karten sind weder Satz noch Folge.'
+error.rummy.open_first: 'Zum Anlegen brauchst du erst deine 40-Punkte-Erstmeldung.'
+error.rummy.unknown_meld: 'Unbekannte Meldung.'
+error.rummy.unknown_card: 'Unbekannte Karte.'
+error.rummy.does_not_fit: 'Diese Karte passt nicht an diese Meldung.'
+error.rummy.initial_meld: 'Deine Erstmeldung braucht mindestens 40 Punkte – melde mehr oder nimm die Karten zurück.'
+error.rummy.nothing_to_takeback: 'Es gibt nichts zurückzunehmen.'
+
+# --- Spielanleitung ---
+rules: |-
+    Ziehe zu Beginn deines Zuges eine Karte vom Stapel oder aus der Ablage und wirf am Ende eine ab.
+    Melde Sätze (gleicher Wert) oder Folgen (gleiche Farbe) aus mindestens drei Karten.
+    Deine Erstmeldung braucht mindestens 40 Punkte – danach darfst du auch einzelne Karten an alle Meldungen anlegen.
+    Joker ersetzen jede beliebige Karte. Wer zuerst alle Karten los ist, gewinnt.

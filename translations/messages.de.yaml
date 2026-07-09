@@ -27,6 +27,8 @@ game.blackjack.name: 'Black Jack'
 game.blackjack.description: 'Setze deine Chips und schlage die Bank in fünf Runden.'
 game.maumau.name: 'Mau-Mau'
 game.maumau.description: 'Farbe oder Wert bedienen, 7 straft, Bube wünscht – wer zuerst fertig ist, gewinnt.'
+game.rummy.name: 'Rommé'
+game.rummy.description: 'Ziehen, Sätze und Folgen melden, anlegen und als Erster alle Karten loswerden.'
 
 # --- Lobby ---
 lobby.status.waiting: 'wartet auf Spieler'
