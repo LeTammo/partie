@@ -8,13 +8,14 @@ maumau.wish: 'Wünschen'
 maumau.wish_prompt: 'Wunschfarbe für deinen Buben wählen'
 maumau.wished: 'Gewünschte Farbe:'
 maumau.pending_draw: 'Zieh %count% oder lege eine 7!'
+maumau.pending_draw_locked: 'Zieh noch %count%.'
 
 # --- Spielverlauf ---
 log.maumau.started: 'Mau-Mau startet – Farbe oder Wert bedienen.'
 log.maumau.played: '%player% legt %suit% %rank%.'
 log.maumau.wished: '%player% wünscht sich %suit%.'
 log.maumau.skipped: '%player% muss aussetzen.'
-log.maumau.penalty: '%player% zieht %count% Strafkarten.'
+log.maumau.penalty_drew: '%player% zieht eine Strafkarte (noch %left%).'
 log.maumau.drew: '%player% zieht eine Karte.'
 log.maumau.passed: '%player% passt.'
 log.maumau.reshuffled: 'Die Ablage wurde zum neuen Nachziehstapel gemischt.'
@@ -31,5 +32,6 @@ error.maumau.draw_first: 'Zieh zuerst eine Karte.'
 rules: |-
     Bediene die oberste Karte der Ablage mit gleicher Farbe oder gleichem Wert.
     Eine 7 lässt den Nächsten zwei Karten ziehen (stapelbar), eine 8 lässt ihn aussetzen, mit einem Buben wünschst du dir eine Farbe.
+    Fängst du an, eine Strafe abzuziehen, musst du sie komplett ziehen – eine 7 zum Weitergeben geht dann nicht mehr.
     Kannst du nicht legen, ziehe eine Karte – passt sie immer noch nicht, passe.
     Wer zuerst alle Karten ablegt, gewinnt.

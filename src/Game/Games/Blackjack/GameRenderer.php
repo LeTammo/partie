@@ -21,8 +21,7 @@ final readonly class GameRenderer
     {
         $running = GameStatus::Running === $state->status;
         $phase = $state->data['phase'];
-        $myTurn = null !== $viewerId && $running && $state->isPlayersTurn($viewerId)
-            && \in_array($phase, ['betting', 'playing'], true);
+        $myTurn = $state->isViewersTurn($viewerId) && \in_array($phase, ['betting', 'playing'], true);
         $holeCardHidden = 'playing' === $phase
             || ('dealer' === $phase && !($state->data['dealerRevealed'] ?? true));
 

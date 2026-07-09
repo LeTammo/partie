@@ -10,9 +10,9 @@ use App\Game\Core\Card\Rank;
 use App\Game\Core\Card\Suit;
 use App\Game\Core\Exception\InvalidMoveException;
 use App\Game\Core\Model\GameState;
-use App\Game\Core\Service\GameEngineInterface;
+use App\Game\Core\Service\AbstractGameDefinition;
 
-final class GameDefinition implements GameEngineInterface
+final readonly class GameDefinition extends AbstractGameDefinition
 {
     private const int HAND_SIZE = 5;
 
@@ -65,6 +65,7 @@ final class GameDefinition implements GameEngineInterface
         $state->data['wishedSuit'] = null;
         $state->data['pendingDraw'] = 0;
         $state->data['hasDrawn'] = false;
+        $state->data['penaltyLocked'] = false;
 
         $state->logGameEvent('log.maumau.started');
 
@@ -101,17 +102,17 @@ final class GameDefinition implements GameEngineInterface
         $hand = &$state->data['hands'][$player->id];
 
         if (!isset($hand[$cardIndex])) {
-            throw new InvalidMoveException('error.maumau.unknown_card', domain: 'maumau');
+            $this->invalidMove('error.maumau.unknown_card');
         }
 
         $card = $hand[$cardIndex];
         $top = $this->top($state);
-        if (!$this->rules->playable($card, $top, $state->data['wishedSuit'], $state->data['pendingDraw'])) {
-            throw new InvalidMoveException('error.maumau.not_playable', domain: 'maumau');
+        if (!$this->rules->playable($card, $top, $state->data['wishedSuit'], $state->data['pendingDraw'], $state->data['penaltyLocked'])) {
+            $this->invalidMove('error.maumau.not_playable');
         }
 
         if (Rank::Jack === $card->rank && null === Suit::tryFrom($wish)) {
-            throw new InvalidMoveException('error.maumau.wish_required', domain: 'maumau');
+            $this->invalidMove('error.maumau.wish_required');
         }
 
         array_splice($hand, $cardIndex, 1);
@@ -141,8 +142,7 @@ final class GameDefinition implements GameEngineInterface
             ]);
         }
 
-        $state->data['hasDrawn'] = false;
-        $state->advanceTurn();
+        $this->endTurn($state);
 
         if (Rank::Eight === $card->rank) {
             $state->logGameEvent('log.maumau.skipped', ['%player%' => $state->currentPlayer()->nickname]);
@@ -150,23 +150,35 @@ final class GameDefinition implements GameEngineInterface
         }
     }
 
+    /**
+     * Always draws exactly one card, so the player drags one card at a time
+     * from the pile into their hand. A stacked penalty (from playing 7s)
+     * must be drawn one card per request until it is fully paid off.
+     */
     private function draw(GameState $state): void
     {
         $player = $state->currentPlayer();
 
         if ($state->data['pendingDraw'] > 0) {
-            $count = $state->data['pendingDraw'];
-            $this->drawCards($state, $player->id, $count);
-            $state->data['pendingDraw'] = 0;
-            $state->logGameEvent('log.maumau.penalty', ['%player%' => $player->nickname, '%count%' => $count]);
-            $state->data['hasDrawn'] = false;
-            $state->advanceTurn();
+            $state->data['penaltyLocked'] = true;
+            $this->drawCards($state, $player->id, 1);
+            --$state->data['pendingDraw'];
+            $state->logGameEvent('log.maumau.penalty_drew', [
+                '%player%' => $player->nickname,
+                '%left%' => $state->data['pendingDraw'],
+            ]);
+
+            if ($state->data['pendingDraw'] > 0) {
+                return;
+            }
+
+            $this->endTurn($state);
 
             return;
         }
 
         if ($state->data['hasDrawn']) {
-            throw new InvalidMoveException('error.maumau.already_drawn', domain: 'maumau');
+            $this->invalidMove('error.maumau.already_drawn');
         }
 
         $this->drawCards($state, $player->id, 1);
@@ -177,11 +189,18 @@ final class GameDefinition implements GameEngineInterface
     private function pass(GameState $state): void
     {
         if (!$state->data['hasDrawn']) {
-            throw new InvalidMoveException('error.maumau.draw_first', domain: 'maumau');
+            $this->invalidMove('error.maumau.draw_first');
         }
 
         $state->logGameEvent('log.maumau.passed', ['%player%' => $state->currentPlayer()->nickname]);
+        $this->endTurn($state);
+    }
+
+    /** Clears the per-turn transient flags and advances to the next player. */
+    private function endTurn(GameState $state): void
+    {
         $state->data['hasDrawn'] = false;
+        $state->data['penaltyLocked'] = false;
         $state->advanceTurn();
     }
 

@@ -1,3 +1,16 @@
+/*
+ * FLIP + exit-ghost animations for Turbo morph refreshes.
+ *
+ * Elements opt in with data-flip-id (a stable identity). Around every morph:
+ *  - an element whose flip-id survived but moved glides from its old to its
+ *    new position (FLIP),
+ *  - an element whose flip-id vanished is cloned and animated out as a ghost
+ *    (data-flip-exit: "fade" (default), "fly-left", "fly-right" or "none"),
+ *  - brand-new flip-ids are left to their CSS entry animations.
+ */
+
+import { glideFrom, spawnGhost } from './animation.js';
+
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 const snapshots = new Map();
 
@@ -21,50 +34,19 @@ function play() {
 
         const old = snapshots.get(id);
         if (!old) {
-            return;
+            return; // newly inserted: CSS entry animation handles it
         }
 
-        const now = el.getBoundingClientRect();
-        const dx = old.rect.left - now.left;
-        const dy = old.rect.top - now.top;
-        if (Math.abs(dx) < 2 && Math.abs(dy) < 2) {
-            return;
-        }
-
-        el.getAnimations().forEach((animation) => animation.cancel());
-        el.animate(
-            [{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'translate(0, 0)' }],
-            { duration: 400, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' },
-        );
+        glideFrom(el, old.rect);
     });
 
     for (const [id, old] of snapshots) {
         if (!seen.has(id) && old.exit !== 'none') {
-            spawnGhost(old);
+            const exitClass = old.exit === 'fly-left' || old.exit === 'fly-right' ? `ghost-${old.exit}` : 'ghost-fade';
+            spawnGhost(old.clone, old.rect, { exitClass });
         }
     }
     snapshots.clear();
-}
-
-function spawnGhost({ rect, clone, exit }) {
-    clone.removeAttribute('id');
-    clone.removeAttribute('data-flip-id');
-    clone.className = clone.className.replace(/\banim-[\w-]+\b/g, '');
-    clone.classList.add(exit === 'fly-left' || exit === 'fly-right' ? `ghost-${exit}` : 'ghost-fade');
-    Object.assign(clone.style, {
-        position: 'fixed',
-        left: `${rect.left}px`,
-        top: `${rect.top}px`,
-        width: `${rect.width}px`,
-        height: `${rect.height}px`,
-        margin: '0',
-        pointerEvents: 'none',
-        zIndex: '40',
-    });
-
-    document.body.appendChild(clone);
-    clone.addEventListener('animationend', () => clone.remove());
-    setTimeout(() => clone.remove(), 1200); // safety net
 }
 
 document.addEventListener('turbo:before-render', (event) => {

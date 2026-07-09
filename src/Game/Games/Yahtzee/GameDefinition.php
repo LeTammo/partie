@@ -7,9 +7,9 @@ namespace App\Game\Games\Yahtzee;
 use App\Game\Core\Exception\InvalidMoveException;
 use App\Game\Core\Model\Dice;
 use App\Game\Core\Model\GameState;
-use App\Game\Core\Service\GameEngineInterface;
+use App\Game\Core\Service\AbstractGameDefinition;
 
-final class GameDefinition implements GameEngineInterface
+final readonly class GameDefinition extends AbstractGameDefinition
 {
     private const int DICE_COUNT = 5;
     private const int ROLLS_PER_TURN = 3;
@@ -95,7 +95,7 @@ final class GameDefinition implements GameEngineInterface
     private function roll(GameState $state): void
     {
         if ($state->data['rollsLeft'] <= 0) {
-            throw new InvalidMoveException('error.yahtzee.no_rolls_left', domain: 'yahtzee');
+            $this->invalidMove('error.yahtzee.no_rolls_left');
         }
 
         foreach ($state->dice as $die) {
@@ -115,13 +115,13 @@ final class GameDefinition implements GameEngineInterface
     private function toggleLock(GameState $state, int $index): void
     {
         if (!$state->data['hasRolled']) {
-            throw new InvalidMoveException('error.yahtzee.roll_first', domain: 'yahtzee');
+            $this->invalidMove('error.yahtzee.roll_first');
         }
         if (!isset($state->dice[$index])) {
-            throw new InvalidMoveException('error.yahtzee.unknown_die', domain: 'yahtzee');
+            $this->invalidMove('error.yahtzee.unknown_die');
         }
         if ($state->data['rollsLeft'] <= 0) {
-            throw new InvalidMoveException('error.yahtzee.no_rolls_hold', domain: 'yahtzee');
+            $this->invalidMove('error.yahtzee.no_rolls_hold');
         }
 
         $state->dice[$index]->toggleLock();
@@ -130,15 +130,15 @@ final class GameDefinition implements GameEngineInterface
     private function scoreCategory(GameState $state, string $playerId, string $category): void
     {
         if (!$state->data['hasRolled']) {
-            throw new InvalidMoveException('error.yahtzee.roll_first', domain: 'yahtzee');
+            $this->invalidMove('error.yahtzee.roll_first');
         }
 
         $scorecard = &$state->data['scorecards'][$playerId];
         if (!\array_key_exists($category, $scorecard)) {
-            throw new InvalidMoveException('error.yahtzee.unknown_category', domain: 'yahtzee');
+            $this->invalidMove('error.yahtzee.unknown_category');
         }
         if (null !== $scorecard[$category]) {
-            throw new InvalidMoveException('error.yahtzee.category_filled', domain: 'yahtzee');
+            $this->invalidMove('error.yahtzee.category_filled');
         }
 
         $values = array_map(static fn (Dice $d): int => $d->value, $state->dice);

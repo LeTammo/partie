@@ -49,6 +49,16 @@ final class GameState
         return GameStatus::Running === $this->status && $this->currentPlayer()->id === $playerId;
     }
 
+    /**
+     * Convenience for renderers: whether it's this viewer's turn right now,
+     * folding in the "viewerId might be null (spectator)" check every
+     * GameRenderer otherwise has to repeat next to isPlayersTurn().
+     */
+    public function isViewersTurn(?string $viewerId): bool
+    {
+        return null !== $viewerId && $this->isPlayersTurn($viewerId);
+    }
+
     public function playerById(string $playerId): ?Player
     {
         return array_find($this->players, fn($player) => $player->id === $playerId);

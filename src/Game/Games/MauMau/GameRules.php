@@ -11,10 +11,14 @@ final class GameRules
 {
     public const int DRAW_PENALTY = 2;
 
-    public function playable(PlayingCard $card, PlayingCard $top, ?string $wishedSuit, int $pendingDraw): bool
+    /**
+     * @param bool $penaltyLocked once the player facing a pending draw has drawn any of it,
+     *                            they are committed to drawing the rest – no more countering with a 7
+     */
+    public function playable(PlayingCard $card, PlayingCard $top, ?string $wishedSuit, int $pendingDraw, bool $penaltyLocked = false): bool
     {
         if ($pendingDraw > 0) {
-            return Rank::Seven === $card->rank;
+            return !$penaltyLocked && Rank::Seven === $card->rank;
         }
 
         if (Rank::Jack === $card->rank) {

@@ -20,34 +20,46 @@ final readonly class GameRenderer
     public function buildView(GameState $state, ?string $viewerId): array
     {
         $running = GameStatus::Running === $state->status;
-        $myTurn = null !== $viewerId && $running && $state->isPlayersTurn($viewerId);
+        $phase = $state->data['phase'] ?? 'playing';
+        $roundEnd = $running && 'roundend' === $phase;
+        $myTurn = $state->isViewersTurn($viewerId) && 'playing' === $phase;
 
         $players = [];
         foreach ($state->players as $player) {
             $players[] = [
                 'nickname' => $player->nickname,
                 'color' => $player->color,
-                'lives' => $state->data['lives'][$player->id],
-                'swimming' => $state->data['swimming'][$player->id],
-                'eliminated' => $state->data['eliminated'][$player->id],
-                'current' => $running && $state->currentPlayer()->id === $player->id,
+                'points' => $state->data['points'][$player->id],
+                'current' => $running && 'playing' === $phase && $state->currentPlayer()->id === $player->id,
             ];
         }
 
         $hand = null;
         $handValue = null;
-        if (null !== $viewerId
-            && isset($state->data['hands'][$viewerId])
-            && !$state->data['eliminated'][$viewerId]) {
+        if (null !== $viewerId && isset($state->data['hands'][$viewerId])) {
             $cards = $state->data['hands'][$viewerId];
             $hand = CardPresenter::views($cards);
             $handValue = $this->rules->format($this->rules->value($cards));
+        }
+
+        $reveal = [];
+        if ($roundEnd) {
+            foreach ($state->players as $player) {
+                $cards = $state->data['hands'][$player->id];
+                $reveal[] = [
+                    'nickname' => $player->nickname,
+                    'color' => $player->color,
+                    'cards' => CardPresenter::views($cards),
+                    'value' => $this->rules->format($this->rules->value($cards)),
+                ];
+            }
         }
 
         $closerId = $state->data['closerId'];
 
         return [
             'round' => $state->data['round'],
+            'roundsTotal' => $state->data['roundsTotal'],
             'players' => $players,
             'middle' => CardPresenter::views($state->data['middle']),
             'hand' => $hand,
@@ -57,6 +69,9 @@ final readonly class GameRenderer
             'canAct' => $myTurn,
             'canClose' => $myTurn && null === $closerId,
             'deckCount' => \count($state->data['deck']),
+            'roundEnd' => $roundEnd,
+            'reveal' => $reveal,
+            'canStartNewRound' => $roundEnd && null !== $viewerId,
         ];
     }
 }

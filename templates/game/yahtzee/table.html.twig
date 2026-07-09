@@ -1,5 +1,5 @@
 {% trans_default_domain 'yahtzee' %}
-<div class="space-y-6">
+<div class="space-y-6" data-controller="games--yahtzee">
     {# ---------- dice tray ---------- #}
     <div class="rounded-3xl bg-cream p-5">
         <div class="flex flex-wrap items-start justify-center gap-3">
@@ -9,6 +9,8 @@
                     <input type="hidden" name="action" value="toggle">
                     <input type="hidden" name="die" value="{{ die.index }}">
                     <button type="submit" {% if not die.lockable %}disabled{% endif %}
+                            data-games--yahtzee-target="die" data-locked="{{ die.locked ? 'true' : 'false' }}"
+                            data-action="click->games--yahtzee#hold"
                             title="{{ (die.locked ? 'yahtzee.release' : 'yahtzee.hold')|trans }}"
                             class="block rounded-2xl shadow-soft transition enabled:hover:shadow-lifted
                                    {{ die.locked ? 'ring-2 ring-softblue-300' : '' }}
@@ -25,7 +27,8 @@
 
         <div class="mt-4 text-center">
             {% if view.canRoll %}
-                <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}">
+                <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}"
+                      data-action="submit->games--yahtzee#roll">
                     <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
                     <input type="hidden" name="action" value="roll">
                     <button type="submit" class="inline-flex items-center gap-2 rounded-2xl bg-terracotta-300 px-8 py-3 text-lg font-extrabold text-white shadow-soft transition hover:bg-terracotta-200 hover:text-terracotta-700 hover:shadow-lifted">
@@ -60,7 +63,8 @@
                                 {% if cell.score is not null %}
                                     <span class="anim-pop text-xl font-extrabold text-warmgray-700">{{ cell.score }}</span>
                                 {% elseif cell.potential is not null and view.canScore %}
-                                    <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}" class="inline">
+                                    <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}" class="inline"
+                                          data-action="submit->games--yahtzee#score">
                                         <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
                                         <input type="hidden" name="action" value="score">
                                         <input type="hidden" name="category" value="{{ row.category }}">

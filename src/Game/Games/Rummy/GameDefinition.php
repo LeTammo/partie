@@ -8,9 +8,9 @@ use App\Game\Core\Card\DeckFactory;
 use App\Game\Core\Card\PlayingCard;
 use App\Game\Core\Exception\InvalidMoveException;
 use App\Game\Core\Model\GameState;
-use App\Game\Core\Service\GameEngineInterface;
+use App\Game\Core\Service\AbstractGameDefinition;
 
-final class GameDefinition implements GameEngineInterface
+final readonly class GameDefinition extends AbstractGameDefinition
 {
     private const int HAND_SIZE = 13;
 
@@ -105,7 +105,7 @@ final class GameDefinition implements GameEngineInterface
         if ([] === $state->data['stock']) {
             $this->reshuffle($state);
             if ([] === $state->data['stock']) {
-                throw new InvalidMoveException('error.rummy.stock_empty', domain: 'rummy');
+                $this->invalidMove('error.rummy.stock_empty');
             }
         }
 
@@ -120,7 +120,7 @@ final class GameDefinition implements GameEngineInterface
         $this->assertNotDrawn($state);
 
         if ([] === $state->data['discard']) {
-            throw new InvalidMoveException('error.rummy.discard_empty', domain: 'rummy');
+            $this->invalidMove('error.rummy.discard_empty');
         }
 
         $player = $state->currentPlayer();
@@ -140,16 +140,16 @@ final class GameDefinition implements GameEngineInterface
         $hand = &$state->data['hands'][$player->id];
 
         if (\count($indexes) < 3) {
-            throw new InvalidMoveException('error.rummy.select_meld', domain: 'rummy');
+            $this->invalidMove('error.rummy.select_meld');
         }
         $cards = $this->pick($hand, $indexes);
         if (\count($hand) - \count($indexes) < 1) {
-            throw new InvalidMoveException('error.rummy.keep_one', domain: 'rummy');
+            $this->invalidMove('error.rummy.keep_one');
         }
 
         $meld = $this->rules->validateMeld($cards);
         if (null === $meld) {
-            throw new InvalidMoveException('error.rummy.invalid_meld', domain: 'rummy');
+            $this->invalidMove('error.rummy.invalid_meld');
         }
 
         $this->remove($hand, $indexes);
@@ -185,23 +185,23 @@ final class GameDefinition implements GameEngineInterface
         $hand = &$state->data['hands'][$player->id];
 
         if (!$state->data['hasMelded'][$player->id]) {
-            throw new InvalidMoveException('error.rummy.open_first', domain: 'rummy');
+            $this->invalidMove('error.rummy.open_first');
         }
         if (1 !== \count($indexes)) {
-            throw new InvalidMoveException('error.rummy.select_one', domain: 'rummy');
+            $this->invalidMove('error.rummy.select_one');
         }
         if (!isset($state->data['melds'][$meldIndex])) {
-            throw new InvalidMoveException('error.rummy.unknown_meld', domain: 'rummy');
+            $this->invalidMove('error.rummy.unknown_meld');
         }
         if (\count($hand) - 1 < 1) {
-            throw new InvalidMoveException('error.rummy.keep_one', domain: 'rummy');
+            $this->invalidMove('error.rummy.keep_one');
         }
 
         $card = $this->pick($hand, $indexes)[0];
         $meld = $state->data['melds'][$meldIndex];
         $result = $this->rules->validateMeld([...$meld['cards'], $card]);
         if (null === $result || $result['type'] !== $meld['type']) {
-            throw new InvalidMoveException('error.rummy.does_not_fit', domain: 'rummy');
+            $this->invalidMove('error.rummy.does_not_fit');
         }
 
         $this->remove($hand, $indexes);
@@ -219,10 +219,10 @@ final class GameDefinition implements GameEngineInterface
         $hand = &$state->data['hands'][$player->id];
 
         if (1 !== \count($indexes)) {
-            throw new InvalidMoveException('error.rummy.select_one', domain: 'rummy');
+            $this->invalidMove('error.rummy.select_one');
         }
         if (!$state->data['hasMelded'][$player->id] && $state->data['turnMeldPoints'] > 0) {
-            throw new InvalidMoveException('error.rummy.initial_meld', domain: 'rummy');
+            $this->invalidMove('error.rummy.initial_meld');
         }
 
         $card = $this->pick($hand, $indexes)[0];
@@ -251,7 +251,7 @@ final class GameDefinition implements GameEngineInterface
     private function takeback(GameState $state): void
     {
         if ([] === $state->data['turnMelds']) {
-            throw new InvalidMoveException('error.rummy.nothing_to_takeback', domain: 'rummy');
+            $this->invalidMove('error.rummy.nothing_to_takeback');
         }
 
         $player = $state->currentPlayer();
@@ -288,14 +288,14 @@ final class GameDefinition implements GameEngineInterface
     private function assertNotDrawn(GameState $state): void
     {
         if ($state->data['hasDrawn']) {
-            throw new InvalidMoveException('error.rummy.already_drawn', domain: 'rummy');
+            $this->invalidMove('error.rummy.already_drawn');
         }
     }
 
     private function assertDrawn(GameState $state): void
     {
         if (!$state->data['hasDrawn']) {
-            throw new InvalidMoveException('error.rummy.draw_first', domain: 'rummy');
+            $this->invalidMove('error.rummy.draw_first');
         }
     }
 
@@ -332,7 +332,7 @@ final class GameDefinition implements GameEngineInterface
         $cards = [];
         foreach ($indexes as $index) {
             if (!isset($hand[$index])) {
-                throw new InvalidMoveException('error.rummy.unknown_card', domain: 'rummy');
+                $this->invalidMove('error.rummy.unknown_card');
             }
             $cards[] = $hand[$index];
         }

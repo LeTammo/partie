@@ -36,7 +36,7 @@
             </div>
             <div class="text-center">
                 {% if view.discardTop is not null %}
-                    {% set discardKey = 'rm-top-' ~ (view.discardTop.joker ? 'joker' : view.discardTop.rank ~ '-' ~ view.discardTop.suit) %}
+                    {% set discardKey = 'rm-top-' ~ view.discardTop.identity %}
                     <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}">
                         <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
                         <input type="hidden" name="action" value="takediscard">

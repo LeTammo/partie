@@ -14,7 +14,7 @@ final class GameRenderer
      */
     public function buildView(GameState $state, ?string $viewerId): array
     {
-        $myTurn = null !== $viewerId && $state->isPlayersTurn($viewerId);
+        $myTurn = $state->isViewersTurn($viewerId);
         $grid = [];
 
         for ($y = 0; $y < $state->board->height; ++$y) {
@@ -32,6 +32,11 @@ final class GameRenderer
             $grid[] = $row;
         }
 
-        return ['grid' => $grid];
+        return [
+            'grid' => $grid,
+            // lets the frontend place the viewer's symbol optimistically
+            'myVariant' => null !== $viewerId ? ($state->data['variants'][$viewerId] ?? null) : null,
+            'myColor' => null !== $viewerId ? $state->playerById($viewerId)?->color : null,
+        ];
     }
 }

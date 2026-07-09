@@ -1,5 +1,6 @@
 {% trans_default_domain 'maumau' %}
-<div class="space-y-6" data-controller="maumau">
+<div class="space-y-6" data-controller="games--maumau dragdrop--zone-drop"
+     data-action="zone-drop:drop->games--maumau#handlePlayDrop">
     {# ---------- players ---------- #}
     <div class="flex flex-wrap justify-center gap-3">
         {% for p in view.players %}
@@ -18,25 +19,31 @@
     <div class="rounded-3xl bg-cream p-5">
         <div class="flex items-center justify-center gap-6">
             <div class="text-center">
-                <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}">
+                <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}"
+                      data-action="submit->games--maumau#draw">
                     <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
                     <input type="hidden" name="action" value="draw">
                     <button type="submit" {% if not view.canDraw %}disabled{% endif %}
-                            class="block rounded-xl transition enabled:hover:-translate-y-1 enabled:hover:shadow-lifted disabled:opacity-60"
+                            {% if view.canDraw %}
+                                draggable="true" data-pair="draw"
+                                data-dragdrop--zone-drop-target="source"
+                                data-action="dragstart->dragdrop--zone-drop#dragStart dragend->dragdrop--zone-drop#dragEnd"
+                            {% endif %}
+                            class="block rounded-xl transition enabled:cursor-grab shadow shadow-soft enabled:hover:-translate-y-1 enabled:hover:shadow-lifted disabled:opacity-60"
                             title="{{ 'maumau.draw'|trans }}">
-                        {% include 'components/card.html.twig' with {back: true} only %}
+                        {% include 'components/card.html.twig' with {back: true, key: 'mm-pile-back'} only %}
                     </button>
                 </form>
                 <p class="mt-1.5 text-xs font-extrabold uppercase tracking-wide text-warmgray-400">
                     {{ 'maumau.pile'|trans({'%count%': view.drawCount}) }}
                 </p>
             </div>
-            <div class="text-center" data-maumau-target="dropzone"
-                 data-action="dragover->maumau#dragOver drop->maumau#drop dragleave->maumau#dragLeave">
-                {% set topIdentity = view.top.joker ? 'joker' : view.top.rank ~ '-' ~ view.top.suit %}
+            <div class="text-center" data-games--maumau-target="dropzone"
+                 data-dragdrop--zone-drop-target="zone" data-pair="play"
+                 data-action="dragover->dragdrop--zone-drop#dragOver drop->dragdrop--zone-drop#drop dragleave->dragdrop--zone-drop#dragLeave">
                 {% include 'components/card.html.twig' with view.top|merge({
-                    key: 'mm-top-' ~ topIdentity,
-                    flip: 'mm-' ~ topIdentity,
+                    key: 'mm-top-' ~ view.top.identity,
+                    flip: 'mm-' ~ view.top.identity,
                     exit: 'none',
                 }) only %}
                 <p class="mt-1.5 text-xs font-extrabold uppercase tracking-wide text-warmgray-400">{{ 'maumau.discard'|trans }}</p>
@@ -51,7 +58,7 @@
             {% endif %}
             {% if view.pendingDraw > 0 %}
                 <span id="pending-draw-{{ view.pendingDraw }}" class="anim-pop rounded-xl bg-terracotta-100 px-3 py-1.5 text-terracotta-700 shadow-soft">
-                    {{ 'maumau.pending_draw'|trans({'%count%': view.pendingDraw}) }}
+                    {{ (view.penaltyLocked ? 'maumau.pending_draw_locked' : 'maumau.pending_draw')|trans({'%count%': view.pendingDraw}) }}
                 </span>
             {% endif %}
         </div>
@@ -61,11 +68,11 @@
     {% if view.hand is not empty %}
         <div>
             <p class="mb-3 text-center text-sm font-extrabold uppercase tracking-wide text-warmgray-400">{{ 'maumau.your_hand'|trans }}</p>
-            <div class="flex flex-wrap justify-center gap-3">
+            <div class="flex flex-wrap justify-center gap-3 rounded-2xl transition" data-games--maumau-target="handzone"
+                 data-dragdrop--zone-drop-target="zone" data-pair="draw"
+                 data-action="dragover->dragdrop--zone-drop#dragOver drop->dragdrop--zone-drop#drop dragleave->dragdrop--zone-drop#dragLeave">
                 {% for card in view.hand %}
-                    {% set identity = card.joker ? 'joker' : card.rank ~ '-' ~ card.suit %}
                     <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}" class="text-center"
-                          data-maumau-target="cardForm" data-index="{{ card.index }}"
                           {% if card.isJack %}data-jack="true"{% endif %}>
                         <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
                         <input type="hidden" name="action" value="play">
@@ -73,15 +80,16 @@
                         <button type="{{ card.isJack ? 'button' : 'submit' }}"
                                 {% if not card.playable %}disabled{% endif %}
                                 {% if card.playable %}
-                                    draggable="true"
-                                    data-action="dragstart->maumau#dragStart dragend->maumau#dragEnd{{ card.isJack ? ' click->maumau#play' }}"
+                                    draggable="true" data-pair="play"
+                                    data-dragdrop--zone-drop-target="source"
+                                    data-action="dragstart->dragdrop--zone-drop#dragStart dragend->dragdrop--zone-drop#dragEnd{{ card.isJack ? ' click->games--maumau#play' }}"
                                 {% endif %}
                                 class="block rounded-xl transition enabled:cursor-grab enabled:hover:-translate-y-1.5 enabled:hover:shadow-lifted
                                        {{ not card.playable and view.myTurn ? 'opacity-40' }}
                                        {{ card.playable and card.isJack ? 'ring-2 ring-sunny-300' }}">
                             {% include 'components/card.html.twig' with card|merge({
-                                key: 'mm-hand-' ~ identity,
-                                flip: 'mm-' ~ identity,
+                                key: 'mm-hand-' ~ card.identity,
+                                flip: 'mm-' ~ card.identity,
                                 exit: 'none',
                             }) only %}
                         </button>
@@ -103,12 +111,12 @@
     {% endif %}
 
     {# ---------- wish suit dialog ---------- #}
-    <dialog data-maumau-target="dialog" data-action="close->maumau#dialogClosed"
+    <dialog data-games--maumau-target="dialog" data-action="close->games--maumau#dialogClosed"
             class="m-auto rounded-3xl bg-white p-6 text-center shadow-lifted backdrop:bg-warmgray-800/40">
         <p class="text-lg font-extrabold text-warmgray-700">{{ 'maumau.wish_prompt'|trans }}</p>
         <div class="mt-4 flex justify-center gap-3">
             {% for suit in view.suits %}
-                <button type="button" data-action="maumau#wish" data-suit="{{ suit.value }}"
+                <button type="button" data-action="games--maumau#wish" data-suit="{{ suit.value }}"
                         title="{{ 'maumau.wish'|trans }} {{ suit.symbol }}"
                         class="grid size-14 place-items-center rounded-2xl bg-cream text-3xl font-extrabold shadow-soft transition hover:shadow-lifted
                                {{ suit.red ? 'text-terracotta-500' : 'text-warmgray-800' }}">

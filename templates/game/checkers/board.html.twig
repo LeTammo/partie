@@ -1,7 +1,8 @@
 {% trans_default_domain 'checkers' %}
 <div class="mx-auto w-fit"
-     data-controller="checkers"
-     data-checkers-moves-value="{{ view.moves|json_encode|e('html_attr') }}">
+     data-controller="dragdrop--grid-move"
+     data-dragdrop--grid-move-moves-value="{{ view.moves|json_encode|e('html_attr') }}"
+     data-dragdrop--grid-move-capture-distance-value="2">
 
     {% if view.mustContinue %}
         <p class="anim-rise mb-3 rounded-2xl bg-terracotta-50 px-4 py-2 text-center text-base font-extrabold text-terracotta-700 shadow-soft">
@@ -9,12 +10,12 @@
         </p>
     {% endif %}
 
-    <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}" data-checkers-target="form" class="hidden">
+    <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}" data-dragdrop--grid-move-target="form" class="hidden">
         <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
-        <input type="hidden" name="fromX" data-checkers-target="fromX">
-        <input type="hidden" name="fromY" data-checkers-target="fromY">
-        <input type="hidden" name="toX" data-checkers-target="toX">
-        <input type="hidden" name="toY" data-checkers-target="toY">
+        <input type="hidden" name="fromX" data-dragdrop--grid-move-target="fromX">
+        <input type="hidden" name="fromY" data-dragdrop--grid-move-target="fromY">
+        <input type="hidden" name="toX" data-dragdrop--grid-move-target="toX">
+        <input type="hidden" name="toY" data-dragdrop--grid-move-target="toY">
     </form>
 
     <div class="grid grid-cols-8 overflow-hidden rounded-3xl shadow-soft">
@@ -22,15 +23,19 @@
             {% for cell in row %}
                 <button type="button"
                         data-cell data-x="{{ cell.x }}" data-y="{{ cell.y }}"
-                        data-action="click->checkers#pick"
+                        data-action="click->dragdrop--grid-move#pick dragover->dragdrop--grid-move#dragOver drop->dragdrop--grid-move#drop"
                         {% if not cell.selectable and cell.outer is null %}tabindex="-1"{% endif %}
                         class="relative grid size-10 place-items-center sm:size-14
                                {{ cell.dark ? 'bg-warmgray-300/80' : 'bg-cream' }}
                                {{ cell.selectable ? 'cursor-pointer hover:brightness-105' : 'cursor-default' }}">
                     {% if cell.outer %}
                         <span data-flip-id="piece-{{ cell.tokenId }}" data-flip-exit="fade"
+                              {% if cell.mine %}
+                                  draggable="true" data-x="{{ cell.x }}" data-y="{{ cell.y }}"
+                                  data-action="dragstart->dragdrop--grid-move#dragStart dragend->dragdrop--grid-move#dragEnd"
+                              {% endif %}
                               class="grid size-8 place-items-center rounded-full shadow-soft sm:size-11
-                                     {{ cell.selectable ? 'ring-2 ring-white/80' }}"
+                                     {{ cell.selectable ? 'ring-2 ring-white/80' }} {{ cell.mine ? 'cursor-grab' }}"
                               style="background-color: {{ cell.outer }}">
                             {% if cell.king %}
                                 <span style="color: {{ cell.inner }}">

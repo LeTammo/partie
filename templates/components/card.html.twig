@@ -2,8 +2,13 @@
 {% set id = key|default(null) %}
 {% set attrs %}{% if id %} id="{{ id }}"{% endif %}{% if flip|default(null) %} data-flip-id="{{ flip }}"{% endif %}{% if exit|default(null) %} data-flip-exit="{{ exit }}"{% endif %}{% endset %}
 {% if back|default(false) %}
-    <span{{ attrs }} class="{{ base }} bg-softblue-400" aria-hidden="true">
-        <span class="absolute inset-1.5 rounded-lg border-2 border-white/40 bg-[repeating-linear-gradient(45deg,rgba(255,255,255,0.18)_0_4px,transparent_4px_8px)]"></span>
+    <span{{ attrs }} class="{{ base }} overflow-hidden bg-softblue-500" aria-hidden="true">
+        <span class="absolute inset-1.5 rounded-lg border-2 border-white/50"></span>
+        <span class="absolute inset-2.5 rounded-md"
+              style="background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.55) 0 3px, transparent 3px 9px), repeating-linear-gradient(-45deg, rgba(255,255,255,0.55) 0 3px, transparent 3px 9px);"></span>
+        <span class="absolute inset-0 flex items-center justify-center">
+            <span class="size-3.5 rotate-45 rounded-sm bg-white shadow-sm"></span>
+        </span>
     </span>
 {% elseif joker|default(false) %}
     <span{{ attrs }} class="{{ base }} items-center justify-center bg-white text-sunny-500">

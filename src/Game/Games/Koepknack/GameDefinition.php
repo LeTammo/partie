@@ -7,12 +7,11 @@ namespace App\Game\Games\Koepknack;
 use App\Game\Core\Card\DeckFactory;
 use App\Game\Core\Exception\InvalidMoveException;
 use App\Game\Core\Model\GameState;
-use App\Game\Core\Model\Player;
-use App\Game\Core\Service\GameEngineInterface;
+use App\Game\Core\Service\AbstractGameDefinition;
 
-final class GameDefinition implements GameEngineInterface
+final readonly class GameDefinition extends AbstractGameDefinition
 {
-    private const int LIVES = 3;
+    private const int ROUNDS = 10;
 
     public function __construct(
         private readonly GameRules $rules,
@@ -55,11 +54,10 @@ final class GameDefinition implements GameEngineInterface
         $state = new GameState($this->getId(), $players);
 
         foreach ($players as $player) {
-            $state->data['lives'][$player->id] = self::LIVES;
-            $state->data['swimming'][$player->id] = false;
-            $state->data['eliminated'][$player->id] = false;
+            $state->data['points'][$player->id] = 0;
         }
         $state->data['round'] = 0;
+        $state->data['roundsTotal'] = self::ROUNDS;
         $state->data['starterIndex'] = 0;
 
         $this->startRound($state);
@@ -69,6 +67,12 @@ final class GameDefinition implements GameEngineInterface
 
     public function applyMove(GameState $state, string $playerId, array $payload): void
     {
+        if ('newround' === ($payload['action'] ?? null)) {
+            $this->newRound($state);
+
+            return;
+        }
+
         if (!$state->isPlayersTurn($playerId)) {
             throw new InvalidMoveException('error.not_your_turn');
         }
@@ -94,11 +98,13 @@ final class GameDefinition implements GameEngineInterface
 
     private function swap(GameState $state, int $handIndex, int $middleIndex): void
     {
+        $this->assertPlaying($state);
+
         $playerId = $state->currentPlayer()->id;
         $hand = &$state->data['hands'][$playerId];
 
         if (!isset($hand[$handIndex]) || !isset($state->data['middle'][$middleIndex])) {
-            throw new InvalidMoveException('error.koepknack.select_cards', domain: 'koepknack');
+            $this->invalidMove('error.koepknack.select_cards');
         }
 
         [$hand[$handIndex], $state->data['middle'][$middleIndex]]
@@ -111,6 +117,8 @@ final class GameDefinition implements GameEngineInterface
 
     private function swapAll(GameState $state): void
     {
+        $this->assertPlaying($state);
+
         $playerId = $state->currentPlayer()->id;
         [$state->data['hands'][$playerId], $state->data['middle']]
             = [$state->data['middle'], $state->data['hands'][$playerId]];
@@ -122,11 +130,13 @@ final class GameDefinition implements GameEngineInterface
 
     private function pass(GameState $state): void
     {
+        $this->assertPlaying($state);
+
         $state->logGameEvent('log.koepknack.passed', ['%player%' => $state->currentPlayer()->nickname]);
 
         if (null === $state->data['closerId']) {
             ++$state->data['passes'];
-            if ($state->data['passes'] >= \count($this->activePlayers($state))) {
+            if ($state->data['passes'] >= \count($state->players)) {
                 if (\count($state->data['deck']) >= 3) {
                     $state->data['middle'] = array_splice($state->data['deck'], 0, 3);
                     $state->data['passes'] = 0;
@@ -144,13 +154,37 @@ final class GameDefinition implements GameEngineInterface
 
     private function close(GameState $state): void
     {
+        $this->assertPlaying($state);
+
         if (null !== $state->data['closerId']) {
-            throw new InvalidMoveException('error.koepknack.already_closed', domain: 'koepknack');
+            $this->invalidMove('error.koepknack.already_closed');
         }
 
         $state->data['closerId'] = $state->currentPlayer()->id;
         $state->logGameEvent('log.koepknack.closed', ['%player%' => $state->currentPlayer()->nickname]);
         $this->endTurn($state);
+    }
+
+    /**
+     * Starts the next round once everyone has seen the previous reveal.
+     * Any seated player may trigger this – it is nobody's "turn" while the
+     * cards lie revealed.
+     */
+    private function newRound(GameState $state): void
+    {
+        if ('roundend' !== ($state->data['phase'] ?? null)) {
+            $this->invalidMove('error.koepknack.not_roundend');
+        }
+
+        $state->data['starterIndex'] = ($state->data['starterIndex'] + 1) % \count($state->players);
+        $this->startRound($state);
+    }
+
+    private function assertPlaying(GameState $state): void
+    {
+        if ('playing' !== ($state->data['phase'] ?? null)) {
+            $this->invalidMove('error.koepknack.round_over');
+        }
     }
 
     private function afterExchange(GameState $state): void
@@ -173,7 +207,7 @@ final class GameDefinition implements GameEngineInterface
 
     private function endTurn(GameState $state): void
     {
-        $this->advanceToNextActive($state);
+        $state->advanceTurn();
 
         if (null !== $state->data['closerId']
             && $state->currentPlayer()->id === $state->data['closerId']) {
@@ -181,12 +215,17 @@ final class GameDefinition implements GameEngineInterface
         }
     }
 
+    /**
+     * Reveals every hand, awards a point to the round's winner(s) (ties share
+     * the point), then either finishes the game or waits in the "roundend"
+     * phase for a player to start the next round.
+     */
     private function endRound(GameState $state): void
     {
         $values = [];
         $fireIds = [];
         $summary = [];
-        foreach ($this->activePlayers($state) as $player) {
+        foreach ($state->players as $player) {
             $hand = $state->data['hands'][$player->id];
             $values[$player->id] = $this->rules->value($hand);
             if ($this->rules->isFire($hand)) {
@@ -196,84 +235,64 @@ final class GameDefinition implements GameEngineInterface
         }
         $state->logGameEvent('log.koepknack.round_result', ['%values%' => implode(', ', $summary)]);
 
-        if ([] !== $fireIds) {
-            $loserIds = array_keys(array_diff_key($values, array_flip($fireIds)));
-        } else {
-            $min = min($values);
-            $loserIds = array_keys(array_filter($values, static fn (float $v): bool => $v <= $min));
+        $winnerIds = [] !== $fireIds ? $fireIds : array_keys($values, max($values), true);
+
+        foreach ($winnerIds as $winnerId) {
+            $winner = $state->playerById($winnerId);
+            $points = ++$state->data['points'][$winnerId];
+            $state->logGameEvent('log.koepknack.round_won', ['%player%' => $winner->nickname, '%points%' => $points]);
         }
 
-        foreach ($loserIds as $loserId) {
-            $loser = $state->playerById($loserId);
-            if ($state->data['swimming'][$loserId]) {
-                $state->data['eliminated'][$loserId] = true;
-                $state->logGameEvent('log.koepknack.eliminated', ['%player%' => $loser->nickname]);
-            } elseif (0 === --$state->data['lives'][$loserId]) {
-                $state->data['swimming'][$loserId] = true;
-                $state->logGameEvent('log.koepknack.swims', ['%player%' => $loser->nickname]);
-            } else {
-                $state->logGameEvent('log.koepknack.lost_life', [
-                    '%player%' => $loser->nickname,
-                    '%lives%' => $state->data['lives'][$loserId],
-                ]);
-            }
-        }
-
-        $active = $this->activePlayers($state);
-        if (\count($active) <= 1) {
-            $winner = $active[0] ?? null;
-            $state->finish($winner?->id);
-            if (null !== $winner) {
-                $state->logGameEvent('log.koepknack.won', ['%player%' => $winner->nickname]);
-            }
+        if ($state->data['round'] >= self::ROUNDS) {
+            $this->finishGame($state);
 
             return;
         }
 
-        $state->data['starterIndex'] = ($state->data['starterIndex'] + 1) % \count($state->players);
-        $this->startRound($state);
+        $state->data['phase'] = 'roundend';
+    }
+
+    private function finishGame(GameState $state): void
+    {
+        $best = null;
+        $bestPoints = -1;
+        $tie = false;
+        $summary = [];
+        foreach ($state->players as $player) {
+            $points = $state->data['points'][$player->id];
+            $summary[] = sprintf('%s: %d', $player->nickname, $points);
+            if ($points > $bestPoints) {
+                $bestPoints = $points;
+                $best = $player;
+                $tie = false;
+            } elseif ($points === $bestPoints) {
+                $tie = true;
+            }
+        }
+
+        $state->finish($tie ? null : $best?->id);
+        $state->logGameEvent('log.koepknack.final', ['%points%' => implode(', ', $summary)]);
+        if (!$tie && null !== $best) {
+            $state->logGameEvent('log.koepknack.won', ['%player%' => $best->nickname, '%points%' => $bestPoints]);
+        }
     }
 
     private function startRound(GameState $state): void
     {
         ++$state->data['round'];
+        $state->data['phase'] = 'playing';
 
         $deck = DeckFactory::deck32();
         $state->data['hands'] = [];
         foreach ($state->players as $player) {
-            if (!$state->data['eliminated'][$player->id]) {
-                $state->data['hands'][$player->id] = array_splice($deck, 0, 3);
-            }
+            $state->data['hands'][$player->id] = array_splice($deck, 0, 3);
         }
         $state->data['middle'] = array_splice($deck, 0, 3);
         $state->data['deck'] = $deck;
         $state->data['closerId'] = null;
         $state->data['passes'] = 0;
-
         $state->currentTurnIndex = $state->data['starterIndex'];
-        if ($state->data['eliminated'][$state->currentPlayer()->id]) {
-            $this->advanceToNextActive($state);
-        }
-        $state->data['starterIndex'] = $state->currentTurnIndex;
 
         $state->logGameEvent('log.koepknack.round_started', ['%round%' => $state->data['round']]);
-    }
-
-    private function advanceToNextActive(GameState $state): void
-    {
-        do {
-            $state->advanceTurn();
-        } while ($state->data['eliminated'][$state->currentPlayer()->id]);
-    }
-
-    /**
-     * @return list<Player>
-     */
-    private function activePlayers(GameState $state): array
-    {
-        return array_values(array_filter(
-            $state->players,
-            fn ($player): bool => !$state->data['eliminated'][$player->id],
-        ));
     }
 }

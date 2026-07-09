@@ -22,10 +22,11 @@ final readonly class GameRenderer
     public function buildView(GameState $state, ?string $viewerId): array
     {
         $running = GameStatus::Running === $state->status;
-        $myTurn = null !== $viewerId && $running && $state->isPlayersTurn($viewerId);
+        $myTurn = $state->isViewersTurn($viewerId);
         $top = $state->data['discard'][array_key_last($state->data['discard'])];
         $pendingDraw = $state->data['pendingDraw'];
         $wishedSuit = $state->data['wishedSuit'];
+        $penaltyLocked = $state->data['penaltyLocked'] ?? false;
 
         $players = [];
         foreach ($state->players as $player) {
@@ -42,7 +43,7 @@ final readonly class GameRenderer
             foreach ($state->data['hands'][$viewerId] as $index => $card) {
                 $hand[] = CardPresenter::view($card) + [
                     'index' => $index,
-                    'playable' => $myTurn && $this->rules->playable($card, $top, $wishedSuit, $pendingDraw),
+                    'playable' => $myTurn && $this->rules->playable($card, $top, $wishedSuit, $pendingDraw, $penaltyLocked),
                     'isJack' => Rank::Jack === $card->rank,
                 ];
             }
@@ -60,6 +61,7 @@ final readonly class GameRenderer
             'wishedSuit' => null !== $wishedSuit ? Suit::from($wishedSuit)->symbol() : null,
             'wishedSuitRed' => null !== $wishedSuit && Suit::from($wishedSuit)->isRed(),
             'pendingDraw' => $pendingDraw,
+            'penaltyLocked' => $penaltyLocked,
             'drawCount' => \count($state->data['drawPile']),
             'hand' => $hand,
             'hasDrawn' => $state->data['hasDrawn'],

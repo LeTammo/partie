@@ -1,51 +1,80 @@
 {% trans_default_domain 'koepknack' %}
-<div class="space-y-6">
-    {# ---------- players & lives ---------- #}
+<div class="space-y-6" data-controller="dragdrop--group-swap"
+     data-dragdrop--group-swap-id-template-value="kk-{group}-{slot}-{identity}">
+    {# ---------- players & points ---------- #}
     <div class="flex flex-wrap justify-center gap-3">
         {% for p in view.players %}
-            <div class="rounded-2xl bg-cream px-4 py-2.5 text-center transition {{ p.current ? 'ring-2 ring-softblue-300' }} {{ p.eliminated ? 'opacity-40' }}">
+            <div class="rounded-2xl bg-cream px-4 py-2.5 text-center transition {{ p.current ? 'ring-2 ring-softblue-300' }}">
                 <p class="flex items-center justify-center gap-1.5 text-base font-extrabold text-warmgray-700">
                     <span class="size-2.5 rounded-full" style="background-color: {{ p.color }}"></span>
                     {{ p.nickname }}
                 </p>
-                <p class="mt-1.5 flex justify-center gap-1">
-                    {% for i in 1..3 %}
-                        <span class="size-2.5 rounded-full {{ i <= p.lives ? 'bg-terracotta-400' : 'bg-warmgray-200' }}"></span>
-                    {% endfor %}
+                <p class="mt-1 text-xs font-extrabold uppercase tracking-wide text-softblue-500">
+                    {{ 'koepknack.points'|trans({'%points%': p.points}) }}
                 </p>
-                {% if p.eliminated %}
-                    <p class="mt-1 text-xs font-extrabold uppercase tracking-wide text-warmgray-400">{{ 'koepknack.out'|trans }}</p>
-                {% elseif p.swimming %}
-                    <p class="mt-1 text-xs font-extrabold uppercase tracking-wide text-softblue-500">{{ 'koepknack.swimming'|trans }}</p>
-                {% endif %}
             </div>
         {% endfor %}
     </div>
 
-    {% if view.closed %}
+    {% if view.closed and not view.roundEnd %}
         <p class="anim-rise rounded-2xl bg-sunny-100 px-4 py-2.5 text-center text-base font-extrabold text-warmgray-700">
             {{ 'koepknack.closed_by'|trans({'%player%': view.closerName}) }}
         </p>
     {% endif %}
 
-    <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}" class="space-y-6">
+    {# ---------- round-end reveal ---------- #}
+    {% if view.roundEnd %}
+        <div class="anim-rise space-y-4 rounded-3xl bg-sunny-50 p-5 text-center shadow-soft">
+            <p class="text-xs font-extrabold uppercase tracking-wide text-warmgray-500">{{ 'koepknack.reveal'|trans }}</p>
+            <div class="flex flex-wrap justify-center gap-4">
+                {% for p in view.reveal %}
+                    <div class="rounded-2xl bg-white p-3 shadow-soft">
+                        <p class="mb-2 flex items-center justify-center gap-1.5 text-sm font-extrabold text-warmgray-700">
+                            <span class="size-2.5 rounded-full" style="background-color: {{ p.color }}"></span>
+                            {{ p.nickname }} · {{ 'koepknack.value'|trans({'%value%': p.value}) }}
+                        </p>
+                        <div class="flex justify-center gap-1.5">
+                            {% for card in p.cards %}
+                                {% include 'components/card.html.twig' with card|merge({class: 'h-16 w-11'}) only %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+            {% if view.canStartNewRound %}
+                <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}">
+                    <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
+                    <input type="hidden" name="action" value="newround">
+                    <button type="submit" class="rounded-2xl bg-sage-300 px-7 py-3 text-lg font-extrabold text-sage-700 shadow-soft transition hover:bg-sage-200 hover:shadow-lifted">
+                        {{ 'koepknack.new_round'|trans }}
+                    </button>
+                </form>
+            {% endif %}
+        </div>
+    {% endif %}
+
+    {% if not view.roundEnd %}
+    <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}" class="space-y-6"
+          data-action="submit->dragdrop--group-swap#beforeSubmit">
         <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
 
         {# ---------- middle cards ---------- #}
         <div class="rounded-3xl bg-cream p-5">
             <p class="mb-3 text-center text-sm font-extrabold uppercase tracking-wide text-warmgray-400">
-                {{ 'koepknack.round'|trans({'%round%': view.round}) }} · {{ 'koepknack.middle'|trans }}
+                {{ 'koepknack.round'|trans({'%round%': view.round, '%total%': view.roundsTotal}) }} · {{ 'koepknack.middle'|trans }}
             </p>
             <div class="flex justify-center gap-3">
                 {% for card in view.middle %}
-                    {% set identity = card.joker ? 'joker' : card.rank ~ '-' ~ card.suit %}
-                    <label class="{{ view.canAct ? 'cursor-pointer' }}">
+                    <label class="{{ view.canAct ? 'cursor-pointer' }}" data-dragdrop--group-swap-target="item" data-slot="{{ loop.index0 }}"
+                           {% if view.canAct %}draggable="true"{% endif %}
+                           data-action="dragstart->dragdrop--group-swap#dragStart dragend->dragdrop--group-swap#dragEnd
+                                        dragover->dragdrop--group-swap#dragOver drop->dragdrop--group-swap#drop dragleave->dragdrop--group-swap#dragLeave">
                         <input type="radio" name="middle" value="{{ loop.index0 }}" class="peer sr-only"
                                {% if not view.canAct %}disabled{% endif %}>
                         <span class="block rounded-xl transition peer-checked:-translate-y-1.5 peer-checked:ring-4 peer-checked:ring-softblue-300">
                             {% include 'components/card.html.twig' with card|merge({
-                                key: 'kk-mid-' ~ loop.index0 ~ '-' ~ identity,
-                                flip: 'kk-' ~ identity,
+                                key: 'kk-middle-' ~ loop.index0 ~ '-' ~ card.identity,
+                                flip: 'kk-' ~ card.identity,
                                 exit: ['fly-left', 'fade', 'fly-right'][loop.index0 % 3],
                             }) only %}
                         </span>
@@ -62,14 +91,16 @@
                 </p>
                 <div class="flex justify-center gap-3">
                     {% for card in view.hand %}
-                        {% set identity = card.joker ? 'joker' : card.rank ~ '-' ~ card.suit %}
-                        <label class="{{ view.canAct ? 'cursor-pointer' }}">
+                        <label class="{{ view.canAct ? 'cursor-pointer' }}" data-dragdrop--group-swap-target="item" data-slot="{{ loop.index0 }}"
+                               {% if view.canAct %}draggable="true"{% endif %}
+                               data-action="dragstart->dragdrop--group-swap#dragStart dragend->dragdrop--group-swap#dragEnd
+                                            dragover->dragdrop--group-swap#dragOver drop->dragdrop--group-swap#drop dragleave->dragdrop--group-swap#dragLeave">
                             <input type="radio" name="hand" value="{{ loop.index0 }}" class="peer sr-only"
                                    {% if not view.canAct %}disabled{% endif %}>
                             <span class="block rounded-xl transition peer-checked:-translate-y-1.5 peer-checked:ring-4 peer-checked:ring-sage-300">
                                 {% include 'components/card.html.twig' with card|merge({
-                                    key: 'kk-hand-' ~ loop.index0 ~ '-' ~ identity,
-                                    flip: 'kk-' ~ identity,
+                                    key: 'kk-hand-' ~ loop.index0 ~ '-' ~ card.identity,
+                                    flip: 'kk-' ~ card.identity,
                                     exit: ['fly-right', 'fade', 'fly-left'][loop.index0 % 3],
                                 }) only %}
                             </span>
@@ -82,11 +113,11 @@
         {# ---------- actions ---------- #}
         {% if view.canAct %}
             <div class="flex flex-wrap justify-center gap-3">
-                <button type="submit" name="action" value="swap"
+                <button type="submit" name="action" value="swap" data-dragdrop--group-swap-target="submitButton"
                         class="rounded-2xl bg-terracotta-300 px-7 py-3 text-lg font-extrabold text-white shadow-soft transition hover:bg-terracotta-200 hover:text-terracotta-700 hover:shadow-lifted">
                     {{ 'koepknack.swap'|trans }}
                 </button>
-                <button type="submit" name="action" value="swapall"
+                <button type="submit" name="action" value="swapall" data-dragdrop--group-swap-target="swapAllButton"
                         class="rounded-2xl bg-white px-7 py-3 text-lg font-extrabold text-warmgray-700 shadow-soft transition hover:shadow-lifted">
                     {{ 'koepknack.swap_all'|trans }}
                 </button>
@@ -103,4 +134,5 @@
             </div>
         {% endif %}
     </form>
+    {% endif %}
 </div>

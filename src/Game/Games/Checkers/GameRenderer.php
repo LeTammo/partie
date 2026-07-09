@@ -23,7 +23,7 @@ final readonly class GameRenderer
     public function buildView(GameState $state, ?string $viewerId): array
     {
         $board = $state->board;
-        $myTurn = null !== $viewerId && $state->isPlayersTurn($viewerId);
+        $myTurn = $state->isViewersTurn($viewerId);
 
         $moves = [];
         $continueFrom = $state->data['mustContinueFrom'];

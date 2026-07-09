@@ -9,10 +9,10 @@ use App\Game\Core\Exception\InvalidMoveException;
 use App\Game\Core\Model\GameState;
 use App\Game\Core\Model\GameStatus;
 use App\Game\Core\Model\Player;
+use App\Game\Core\Service\AbstractGameDefinition;
 use App\Game\Core\Service\AutoPlayingEngineInterface;
-use App\Game\Core\Service\GameEngineInterface;
 
-final class GameDefinition implements GameEngineInterface, AutoPlayingEngineInterface
+final readonly class GameDefinition extends AbstractGameDefinition implements AutoPlayingEngineInterface
 {
     private const int START_CHIPS = 100;
     private const int ROUNDS = 5;
@@ -97,13 +97,13 @@ final class GameDefinition implements GameEngineInterface, AutoPlayingEngineInte
     private function bet(GameState $state, int $amount): void
     {
         if ('betting' !== $state->data['phase']) {
-            throw new InvalidMoveException('error.blackjack.no_betting', domain: 'blackjack');
+            $this->invalidMove('error.blackjack.no_betting');
         }
 
         $player = $state->currentPlayer();
         if (!\in_array($amount, GameRules::BET_OPTIONS, true)
             || $amount > $state->data['chips'][$player->id]) {
-            throw new InvalidMoveException('error.blackjack.invalid_bet', domain: 'blackjack');
+            $this->invalidMove('error.blackjack.invalid_bet');
         }
 
         $state->data['chips'][$player->id] -= $amount;
@@ -156,7 +156,7 @@ final class GameDefinition implements GameEngineInterface, AutoPlayingEngineInte
         $hand = &$state->data['hands'][$player->id];
 
         if (2 !== \count($hand) || $state->data['chips'][$player->id] < $bet) {
-            throw new InvalidMoveException('error.blackjack.cannot_double', domain: 'blackjack');
+            $this->invalidMove('error.blackjack.cannot_double');
         }
 
         $state->data['chips'][$player->id] -= $bet;
@@ -174,7 +174,7 @@ final class GameDefinition implements GameEngineInterface, AutoPlayingEngineInte
     private function assertPlaying(GameState $state): void
     {
         if ('playing' !== $state->data['phase']) {
-            throw new InvalidMoveException('error.blackjack.bet_first', domain: 'blackjack');
+            $this->invalidMove('error.blackjack.bet_first');
         }
     }
 

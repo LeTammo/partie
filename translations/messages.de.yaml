@@ -22,7 +22,7 @@ game.connectfour.description: 'Steine einwerfen und vor dem Gegner vier verbinde
 game.yahtzee.name: 'Kniffel'
 game.yahtzee.description: 'Fünf Würfel, drei Würfe, fülle deinen Spielzettel.'
 game.koepknack.name: 'Knack (31)'
-game.koepknack.description: 'Tausche Karten Richtung 31 – die schlechteste Hand verliert ein Leben.'
+game.koepknack.description: 'Tausche Karten Richtung 31 – die beste Hand jeder Runde bekommt einen Punkt.'
 game.blackjack.name: 'Black Jack'
 game.blackjack.description: 'Setze deine Chips und schlage die Bank in fünf Runden.'
 game.maumau.name: 'Mau-Mau'

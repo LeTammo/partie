@@ -9,9 +9,9 @@ use App\Game\Core\Model\Board;
 use App\Game\Core\Model\GameState;
 use App\Game\Core\Model\Token;
 use App\Game\Core\Model\TokenShape;
-use App\Game\Core\Service\GameEngineInterface;
+use App\Game\Core\Service\AbstractGameDefinition;
 
-final readonly class GameDefinition implements GameEngineInterface
+final readonly class GameDefinition extends AbstractGameDefinition
 {
     public function __construct(
         private GameRules    $rules,
@@ -70,7 +70,7 @@ final readonly class GameDefinition implements GameEngineInterface
         $y = (int) ($payload['y'] ?? -1);
 
         if (!$state->board->isEmpty($x, $y)) {
-            throw new InvalidMoveException('error.cell_taken', domain: 'tictactoe');
+            $this->invalidMove('error.cell_taken');
         }
 
         $player = $state->currentPlayer();

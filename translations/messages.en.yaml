@@ -22,7 +22,7 @@ game.connectfour.description: 'Drop discs, connect four in a line before your ri
 game.yahtzee.name: 'Yahtzee'
 game.yahtzee.description: 'Roll five dice, hold the good ones, fill your scorecard.'
 game.koepknack.name: 'Knack (31)'
-game.koepknack.description: 'Swap cards towards 31 – the lowest hand loses a life.'
+game.koepknack.description: 'Swap cards towards 31 – the best hand each round scores a point.'
 game.blackjack.name: 'Blackjack'
 game.blackjack.description: 'Bet your chips and beat the dealer over five rounds.'
 game.maumau.name: 'Mau-Mau'

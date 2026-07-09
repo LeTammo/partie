@@ -6,7 +6,6 @@ namespace App\Game\Games\Yahtzee;
 
 use App\Game\Core\Model\Dice;
 use App\Game\Core\Model\GameState;
-use App\Game\Core\Model\GameStatus;
 
 final readonly class GameRenderer
 {
@@ -19,9 +18,7 @@ final readonly class GameRenderer
      */
     public function buildView(GameState $state, ?string $viewerId): array
     {
-        $myTurn = null !== $viewerId
-            && GameStatus::Running === $state->status
-            && $state->isPlayersTurn($viewerId);
+        $myTurn = $state->isViewersTurn($viewerId);
         $hasRolled = (bool) $state->data['hasRolled'];
         $rollsLeft = (int) $state->data['rollsLeft'];
         $values = array_map(static fn (Dice $d): int => $d->value, $state->dice);

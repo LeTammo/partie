@@ -9,9 +9,9 @@ use App\Game\Core\Model\Board;
 use App\Game\Core\Model\GameState;
 use App\Game\Core\Model\Token;
 use App\Game\Core\Model\TokenShape;
-use App\Game\Core\Service\GameEngineInterface;
+use App\Game\Core\Service\AbstractGameDefinition;
 
-final class GameDefinition implements GameEngineInterface
+final readonly class GameDefinition extends AbstractGameDefinition
 {
     private const array TOKEN_COLORS = [
         ['#e8a598', '#f3cec6'], // soft terracotta
@@ -73,7 +73,7 @@ final class GameDefinition implements GameEngineInterface
         $column = (int) ($payload['column'] ?? -1);
         $y = $this->rules->dropRow($state->board, $column);
         if (null === $y) {
-            throw new InvalidMoveException('error.column_full', domain: 'connectfour');
+            $this->invalidMove('error.column_full');
         }
 
         $player = $state->currentPlayer();

@@ -8,13 +8,14 @@ maumau.wish: 'Wish'
 maumau.wish_prompt: 'Pick a wish suit for your jack'
 maumau.wished: 'Wished suit:'
 maumau.pending_draw: 'Draw %count% or play a 7!'
+maumau.pending_draw_locked: 'Draw %count% more.'
 
 # --- Game log ---
 log.maumau.started: 'Mau-Mau starts – match suit or rank.'
 log.maumau.played: '%player% plays %suit% %rank%.'
 log.maumau.wished: '%player% wishes %suit%.'
 log.maumau.skipped: '%player% is skipped.'
-log.maumau.penalty: '%player% draws %count% penalty cards.'
+log.maumau.penalty_drew: '%player% draws a penalty card (%left% left).'
 log.maumau.drew: '%player% draws a card.'
 log.maumau.passed: '%player% passes.'
 log.maumau.reshuffled: 'The discard pile was shuffled into a new draw pile.'
@@ -31,5 +32,6 @@ error.maumau.draw_first: 'Draw a card first.'
 rules: |-
     Match the top card of the discard pile by suit or rank.
     A 7 makes the next player draw two (stackable), an 8 skips them, a jack lets you wish a suit.
+    Once you start drawing off a penalty, you must draw all of it – you can no longer play a 7 to pass it on.
     If you cannot play, draw a card – if it still does not fit, pass.
     The first player to empty their hand wins.

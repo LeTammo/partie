@@ -9,9 +9,9 @@ use App\Game\Core\Model\Board;
 use App\Game\Core\Model\GameState;
 use App\Game\Core\Model\Token;
 use App\Game\Core\Model\TokenShape;
-use App\Game\Core\Service\GameEngineInterface;
+use App\Game\Core\Service\AbstractGameDefinition;
 
-final class GameDefinition implements GameEngineInterface
+final readonly class GameDefinition extends AbstractGameDefinition
 {
     private const array TOKEN_COLORS = [
         ['#a3b8a3', '#c9d8c9'], // sage green (moves down)
@@ -99,7 +99,7 @@ final class GameDefinition implements GameEngineInterface
         $board = $state->board;
         $token = $board->get($fromX, $fromY);
         if (null === $token || $token->ownerId !== $playerId) {
-            throw new InvalidMoveException('error.checkers.no_piece', domain: 'checkers');
+            $this->invalidMove('error.checkers.no_piece');
         }
 
         $direction = $state->data['directions'][$playerId];
@@ -107,7 +107,7 @@ final class GameDefinition implements GameEngineInterface
         $continueFrom = $state->data['mustContinueFrom'];
         $capturesOnly = null !== $continueFrom;
         if ($capturesOnly && [$fromX, $fromY] !== $continueFrom) {
-            throw new InvalidMoveException('error.checkers.must_continue', domain: 'checkers');
+            $this->invalidMove('error.checkers.must_continue');
         }
 
         $move = $this->findMove($board, $fromX, $fromY, $toX, $toY, $direction, $capturesOnly);

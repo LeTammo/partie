@@ -16,7 +16,7 @@ final class GameRenderer
     public function buildView(GameState $state, ?string $viewerId): array
     {
         $running = GameStatus::Running === $state->status;
-        $myTurn = null !== $viewerId && $running && $state->isPlayersTurn($viewerId);
+        $myTurn = $state->isViewersTurn($viewerId);
 
         $players = [];
         foreach ($state->players as $player) {

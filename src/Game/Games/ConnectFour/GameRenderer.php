@@ -18,7 +18,7 @@ final readonly class GameRenderer
      */
     public function buildView(GameState $state, ?string $viewerId): array
     {
-        $myTurn = null !== $viewerId && $state->isPlayersTurn($viewerId);
+        $myTurn = $state->isViewersTurn($viewerId);
 
         $grid = [];
         for ($y = 0; $y < $state->board->height; ++$y) {
@@ -43,6 +43,14 @@ final readonly class GameRenderer
             ];
         }
 
-        return ['grid' => $grid, 'columns' => $columns];
+        $myColors = null !== $viewerId ? ($state->data['colors'][$viewerId] ?? null) : null;
+
+        return [
+            'grid' => $grid,
+            'columns' => $columns,
+            // lets the frontend drop the viewer's disc optimistically
+            'myOuter' => $myColors[0] ?? null,
+            'myInner' => $myColors[1] ?? null,
+        ];
     }
 }
