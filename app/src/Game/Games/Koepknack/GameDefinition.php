@@ -14,8 +14,8 @@ final readonly class GameDefinition extends AbstractGameDefinition
     private const int ROUNDS = 10;
 
     public function __construct(
-        private readonly GameRules $rules,
-        private readonly GameRenderer $renderer,
+        private GameRules    $rules,
+        private GameRenderer $renderer,
     ) {
     }
 
@@ -78,7 +78,7 @@ final readonly class GameDefinition extends AbstractGameDefinition
         }
 
         match ($payload['action'] ?? '') {
-            'swap' => $this->swap($state, (int) ($payload['hand'] ?? -1), (int) ($payload['middle'] ?? -1)),
+            'swap' => $this->swap($state, $this->intParam($payload, 'hand'), $this->intParam($payload, 'middle')),
             'swapall' => $this->swapAll($state),
             'pass' => $this->pass($state),
             'close' => $this->close($state),

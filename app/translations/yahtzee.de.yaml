@@ -1,11 +1,5 @@
 # --- Tisch ---
 yahtzee.category: 'Kategorie'
-yahtzee.roll: 'Würfeln'
-yahtzee.rolls_left: 'noch %count%'
-yahtzee.no_rolls_left: 'Keine Würfe mehr – wähle eine Kategorie!'
-yahtzee.held: 'gehalten'
-yahtzee.hold: 'Diesen Würfel halten'
-yahtzee.release: 'Diesen Würfel freigeben'
 yahtzee.score_action: '%points% Punkte auf %category% eintragen'
 yahtzee.upper_bonus: 'Bonus oben (63 → +35)'
 yahtzee.total: 'Gesamt'

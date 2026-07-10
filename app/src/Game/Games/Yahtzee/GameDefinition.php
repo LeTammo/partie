@@ -15,8 +15,8 @@ final readonly class GameDefinition extends AbstractGameDefinition
     private const int ROLLS_PER_TURN = 3;
 
     public function __construct(
-        private readonly GameRules $rules,
-        private readonly GameRenderer $renderer,
+        private GameRules    $rules,
+        private GameRenderer $renderer,
     ) {
     }
 
@@ -76,8 +76,8 @@ final readonly class GameDefinition extends AbstractGameDefinition
 
         match ($payload['action'] ?? '') {
             'roll' => $this->roll($state),
-            'toggle' => $this->toggleLock($state, (int) ($payload['die'] ?? -1)),
-            'score' => $this->scoreCategory($state, $playerId, (string) ($payload['category'] ?? '')),
+            'toggle' => $this->toggleLock($state, $this->intParam($payload, 'die')),
+            'score' => $this->scoreCategory($state, $playerId, $this->stringParam($payload, 'category')),
             default => throw new InvalidMoveException('error.unknown_action'),
         };
     }

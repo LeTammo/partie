@@ -6,6 +6,8 @@ namespace App\Game\Games\ConnectFour;
 
 use App\Game\Core\Model\GameState;
 use App\Game\Core\Model\GameStatus;
+use App\Game\Core\Model\Token;
+use App\Game\Core\View\BoardViews;
 
 final readonly class GameRenderer
 {
@@ -20,18 +22,10 @@ final readonly class GameRenderer
     {
         $myTurn = $state->isViewersTurn($viewerId);
 
-        $grid = [];
-        for ($y = 0; $y < $state->board->height; ++$y) {
-            $row = [];
-            for ($x = 0; $x < $state->board->width; ++$x) {
-                $token = $state->board->get($x, $y);
-                $row[] = [
-                    'outer' => $token?->outerColor,
-                    'inner' => $token?->innerColor,
-                ];
-            }
-            $grid[] = $row;
-        }
+        $grid = BoardViews::grid($state->board, static fn (int $x, int $y, ?Token $token): array => [
+            'outer' => $token?->outerColor,
+            'inner' => $token?->innerColor,
+        ]);
 
         $columns = [];
         for ($x = 0; $x < $state->board->width; ++$x) {

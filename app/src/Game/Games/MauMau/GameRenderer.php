@@ -8,7 +8,8 @@ use App\Game\Core\Card\CardPresenter;
 use App\Game\Core\Card\Rank;
 use App\Game\Core\Card\Suit;
 use App\Game\Core\Model\GameState;
-use App\Game\Core\Model\GameStatus;
+use App\Game\Core\Model\Player;
+use App\Game\Core\View\PlayerViews;
 
 final readonly class GameRenderer
 {
@@ -21,22 +22,15 @@ final readonly class GameRenderer
      */
     public function buildView(GameState $state, ?string $viewerId): array
     {
-        $running = GameStatus::Running === $state->status;
         $myTurn = $state->isViewersTurn($viewerId);
         $top = $state->data['discard'][array_key_last($state->data['discard'])];
         $pendingDraw = $state->data['pendingDraw'];
         $wishedSuit = $state->data['wishedSuit'];
         $penaltyLocked = $state->data['penaltyLocked'] ?? false;
 
-        $players = [];
-        foreach ($state->players as $player) {
-            $players[] = [
-                'nickname' => $player->nickname,
-                'color' => $player->color,
-                'cardCount' => \count($state->data['hands'][$player->id]),
-                'current' => $running && $state->currentPlayer()->id === $player->id,
-            ];
-        }
+        $players = PlayerViews::build($state, static fn (Player $player): array => [
+            'cardCount' => \count($state->data['hands'][$player->id]),
+        ]);
 
         $hand = [];
         if (null !== $viewerId && isset($state->data['hands'][$viewerId])) {

@@ -19,8 +19,8 @@ final readonly class GameDefinition extends AbstractGameDefinition
     ];
 
     public function __construct(
-        private readonly GameRules $rules,
-        private readonly GameRenderer $renderer,
+        private GameRules    $rules,
+        private GameRenderer $renderer,
     ) {
     }
 
@@ -70,7 +70,7 @@ final readonly class GameDefinition extends AbstractGameDefinition
             throw new InvalidMoveException('error.not_your_turn');
         }
 
-        $column = (int) ($payload['column'] ?? -1);
+        $column = $this->intParam($payload, 'column');
         $y = $this->rules->dropRow($state->board, $column);
         if (null === $y) {
             $this->invalidMove('error.column_full');

@@ -7,6 +7,8 @@ namespace App\Game\Games\Blackjack;
 use App\Game\Core\Card\CardPresenter;
 use App\Game\Core\Model\GameState;
 use App\Game\Core\Model\GameStatus;
+use App\Game\Core\Model\Player;
+use App\Game\Core\View\PlayerViews;
 
 final readonly class GameRenderer
 {
@@ -25,13 +27,11 @@ final readonly class GameRenderer
         $holeCardHidden = 'playing' === $phase
             || ('dealer' === $phase && !($state->data['dealerRevealed'] ?? true));
 
-        $players = [];
-        foreach ($state->players as $player) {
+        $players = PlayerViews::build($state, function (Player $player) use ($state): array {
             $hand = $state->data['hands'][$player->id];
             $bet = $state->data['bets'][$player->id];
-            $players[] = [
-                'nickname' => $player->nickname,
-                'color' => $player->color,
+
+            return [
                 'chips' => $state->data['chips'][$player->id],
                 'bet' => $bet,
                 'cards' => CardPresenter::views($hand),
@@ -39,9 +39,8 @@ final readonly class GameRenderer
                 'bust' => [] !== $hand && $this->rules->isBust($hand),
                 'blackjack' => $this->rules->isBlackjack($hand),
                 'broke' => $state->data['chips'][$player->id] < GameRules::MIN_BET && null === $bet,
-                'current' => $running && $state->currentPlayer()->id === $player->id,
             ];
-        }
+        });
 
         $dealerCards = [];
         foreach ($state->data['dealer'] as $i => $card) {

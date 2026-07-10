@@ -1,17 +1,16 @@
 {% trans_default_domain 'maumau' %}
-<div class="space-y-6" data-controller="games--maumau dragdrop--zone-drop"
-     data-action="zone-drop:drop->games--maumau#handlePlayDrop">
+<div class="space-y-6" data-controller="optimistic dragdrop--zone-drop choice-dialog">
     {# ---------- players ---------- #}
     <div class="flex flex-wrap justify-center gap-3">
         {% for p in view.players %}
-            <div class="flex items-center gap-2 rounded-2xl bg-cream px-4 py-2.5 transition {{ p.current ? 'ring-2 ring-softblue-300' }}">
-                <span class="size-2.5 rounded-full" style="background-color: {{ p.color }}"></span>
-                <span class="text-base font-extrabold text-warmgray-700">{{ p.nickname }}</span>
-                <span class="inline-flex items-center gap-1 text-sm font-extrabold text-warmgray-400">
-                    {% include 'icons/card-fan.svg.twig' with {class: 'size-4'} only %}
-                    {{ p.cardCount }}
-                </span>
-            </div>
+            {% embed 'components/player_chip.html.twig' with {p: p} %}
+                {% block extra %}
+                    <span class="inline-flex items-center gap-1 text-sm font-extrabold text-warmgray-400">
+                        {% include 'icons/card-fan.svg.twig' with {class: 'size-4'} only %}
+                        {{ p.cardCount }}
+                    </span>
+                {% endblock %}
+            {% endembed %}
         {% endfor %}
     </div>
 
@@ -20,7 +19,8 @@
         <div class="flex items-center justify-center gap-6">
             <div class="text-center">
                 <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}"
-                      data-action="submit->games--maumau#draw">
+                      data-action="submit->optimistic#ghost"
+                      data-optimistic-from-param="#mm-pile-back" data-optimistic-to-param="#mm-handzone">
                     <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
                     <input type="hidden" name="action" value="draw">
                     <button type="submit" {% if not view.canDraw %}disabled{% endif %}
@@ -38,7 +38,7 @@
                     {{ 'maumau.pile'|trans({'%count%': view.drawCount}) }}
                 </p>
             </div>
-            <div class="text-center" data-games--maumau-target="dropzone"
+            <div id="mm-dropzone" class="text-center"
                  data-dragdrop--zone-drop-target="zone" data-pair="play"
                  data-action="dragover->dragdrop--zone-drop#dragOver drop->dragdrop--zone-drop#drop dragleave->dragdrop--zone-drop#dragLeave">
                 {% include 'components/card.html.twig' with view.top|merge({
@@ -68,21 +68,26 @@
     {% if view.hand is not empty %}
         <div>
             <p class="mb-3 text-center text-sm font-extrabold uppercase tracking-wide text-warmgray-400">{{ 'maumau.your_hand'|trans }}</p>
-            <div class="flex flex-wrap justify-center gap-3 rounded-2xl transition" data-games--maumau-target="handzone"
+            <div id="mm-handzone" class="flex flex-wrap justify-center gap-3 rounded-2xl transition"
                  data-dragdrop--zone-drop-target="zone" data-pair="draw"
                  data-action="dragover->dragdrop--zone-drop#dragOver drop->dragdrop--zone-drop#drop dragleave->dragdrop--zone-drop#dragLeave">
                 {% for card in view.hand %}
                     <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}" class="text-center"
-                          {% if card.isJack %}data-jack="true"{% endif %}>
+                          data-action="{{ card.isJack ? 'submit->choice-dialog#require ' }}submit->optimistic#move"
+                          data-optimistic-to-param="#mm-dropzone" data-optimistic-id-param="mm-top-{{ card.identity }}"
+                          {% if card.isJack %}
+                              data-choice-dialog-dialog-param="#mm-wish-dialog" data-choice-dialog-name-param="wish"
+                          {% endif %}>
                         <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
                         <input type="hidden" name="action" value="play">
                         <input type="hidden" name="card" value="{{ card.index }}">
-                        <button type="{{ card.isJack ? 'button' : 'submit' }}"
+                        {% if card.isJack %}<input type="hidden" name="wish" value="">{% endif %}
+                        <button type="submit"
                                 {% if not card.playable %}disabled{% endif %}
                                 {% if card.playable %}
                                     draggable="true" data-pair="play"
                                     data-dragdrop--zone-drop-target="source"
-                                    data-action="dragstart->dragdrop--zone-drop#dragStart dragend->dragdrop--zone-drop#dragEnd{{ card.isJack ? ' click->games--maumau#play' }}"
+                                    data-action="dragstart->dragdrop--zone-drop#dragStart dragend->dragdrop--zone-drop#dragEnd"
                                 {% endif %}
                                 class="block rounded-xl transition enabled:cursor-grab enabled:hover:-translate-y-1.5 enabled:hover:shadow-lifted
                                        {{ not card.playable and view.myTurn ? 'opacity-40' }}
@@ -104,19 +109,19 @@
         <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}" class="text-center">
             <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
             <input type="hidden" name="action" value="pass">
-            <button type="submit" class="rounded-2xl bg-white px-7 py-3 text-lg font-extrabold text-warmgray-700 shadow-soft transition hover:shadow-lifted">
+            <button type="submit" class="btn btn-neutral">
                 {{ 'maumau.pass'|trans }}
             </button>
         </form>
     {% endif %}
 
     {# ---------- wish suit dialog ---------- #}
-    <dialog data-games--maumau-target="dialog" data-action="close->games--maumau#dialogClosed"
+    <dialog id="mm-wish-dialog" data-action="close->choice-dialog#closed"
             class="m-auto rounded-3xl bg-white p-6 text-center shadow-lifted backdrop:bg-warmgray-800/40">
         <p class="text-lg font-extrabold text-warmgray-700">{{ 'maumau.wish_prompt'|trans }}</p>
         <div class="mt-4 flex justify-center gap-3">
             {% for suit in view.suits %}
-                <button type="button" data-action="games--maumau#wish" data-suit="{{ suit.value }}"
+                <button type="button" data-action="choice-dialog#pick" data-choice-dialog-value-param="{{ suit.value }}"
                         title="{{ 'maumau.wish'|trans }} {{ suit.symbol }}"
                         class="grid size-14 place-items-center rounded-2xl bg-cream text-3xl font-extrabold shadow-soft transition hover:shadow-lifted
                                {{ suit.red ? 'text-terracotta-500' : 'text-warmgray-800' }}">

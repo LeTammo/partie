@@ -1,47 +1,15 @@
 {% trans_default_domain 'yahtzee' %}
-<div class="space-y-6" data-controller="games--yahtzee">
+<div class="space-y-6" data-controller="optimistic">
     {# ---------- dice tray ---------- #}
-    <div class="rounded-3xl bg-cream p-5">
-        <div class="flex flex-wrap items-start justify-center gap-3">
-            {% for die in view.dice %}
-                <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}">
-                    <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
-                    <input type="hidden" name="action" value="toggle">
-                    <input type="hidden" name="die" value="{{ die.index }}">
-                    <button type="submit" {% if not die.lockable %}disabled{% endif %}
-                            data-games--yahtzee-target="die" data-locked="{{ die.locked ? 'true' : 'false' }}"
-                            data-action="click->games--yahtzee#hold"
-                            title="{{ (die.locked ? 'yahtzee.release' : 'yahtzee.hold')|trans }}"
-                            class="block rounded-2xl shadow-soft transition enabled:hover:shadow-lifted
-                                   {{ die.locked ? 'ring-2 ring-softblue-300' : '' }}
-                                   {{ not view.hasRolled ? 'opacity-30' }}">
-                        {# keyed by value: a new value swaps the node and replays the roll animation #}
-                        <span id="die-{{ die.index }}-{{ die.value }}" class="anim-roll block">
-                            {% include 'components/die.html.twig' with {value: die.value, face: view.dieFace, pip: view.diePip, class: 'size-20'} only %}
-                        </span>
-                    </button>
-                    {% if die.locked %}<p class="mt-1 text-center text-xs font-extrabold uppercase text-softblue-500">{{ 'yahtzee.held'|trans }}</p>{% endif %}
-                </form>
-            {% endfor %}
-        </div>
-
-        <div class="mt-4 text-center">
-            {% if view.canRoll %}
-                <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}"
-                      data-action="submit->games--yahtzee#roll">
-                    <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
-                    <input type="hidden" name="action" value="roll">
-                    <button type="submit" class="inline-flex items-center gap-2 rounded-2xl bg-terracotta-300 px-8 py-3 text-lg font-extrabold text-white shadow-soft transition hover:bg-terracotta-200 hover:text-terracotta-700 hover:shadow-lifted">
-                        {% include 'icons/die.svg.twig' with {class: 'size-5'} only %}
-                        {{ 'yahtzee.roll'|trans }}
-                        <span class="opacity-80">({{ 'yahtzee.rolls_left'|trans({'%count%': view.rollsLeft}) }})</span>
-                    </button>
-                </form>
-            {% elseif view.myTurn %}
-                <p class="text-base font-extrabold text-warmgray-500">{{ 'yahtzee.no_rolls_left'|trans }}</p>
-            {% endif %}
-        </div>
-    </div>
+    {% include 'components/dice_tray.html.twig' with {
+        dice: view.dice,
+        dieFace: view.dieFace,
+        diePip: view.diePip,
+        hasRolled: view.hasRolled,
+        canRoll: view.canRoll,
+        rollsLeft: view.rollsLeft,
+        myTurn: view.myTurn,
+    } %}
 
     {# ---------- scorecard ---------- #}
     <div>
@@ -64,7 +32,7 @@
                                     <span class="anim-pop text-xl font-extrabold text-warmgray-700">{{ cell.score }}</span>
                                 {% elseif cell.potential is not null and view.canScore %}
                                     <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}" class="inline"
-                                          data-action="submit->games--yahtzee#score">
+                                          data-action="submit->optimistic#replace">
                                         <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
                                         <input type="hidden" name="action" value="score">
                                         <input type="hidden" name="category" value="{{ row.category }}">
@@ -72,6 +40,9 @@
                                                 class="rounded-xl bg-sage-100 px-3 py-1 text-lg font-extrabold text-sage-700 shadow-soft transition hover:bg-sage-200 hover:shadow-lifted">
                                             +{{ cell.potential }}
                                         </button>
+                                        <template>
+                                            <span class="anim-pop text-xl font-extrabold text-warmgray-700">{{ cell.potential }}</span>
+                                        </template>
                                     </form>
                                 {% else %}
                                     <span class="text-xl font-extrabold text-warmgray-300">·</span>

@@ -66,8 +66,8 @@ final readonly class GameDefinition extends AbstractGameDefinition
             throw new InvalidMoveException('error.not_your_turn');
         }
 
-        $x = (int) ($payload['x'] ?? -1);
-        $y = (int) ($payload['y'] ?? -1);
+        $x = $this->intParam($payload, 'x');
+        $y = $this->intParam($payload, 'y');
 
         if (!$state->board->isEmpty($x, $y)) {
             $this->invalidMove('error.cell_taken');

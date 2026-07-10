@@ -6,6 +6,8 @@ namespace App\Game\Games\Checkers;
 
 use App\Game\Core\Model\GameState;
 use App\Game\Core\Model\GameStatus;
+use App\Game\Core\Model\Token;
+use App\Game\Core\View\BoardViews;
 
 final readonly class GameRenderer
 {
@@ -50,25 +52,19 @@ final readonly class GameRenderer
             }
         }
 
-        $grid = [];
-        for ($y = 0; $y < $board->height; ++$y) {
-            $row = [];
-            for ($x = 0; $x < $board->width; ++$x) {
-                $token = $board->get($x, $y);
-                $row[] = [
-                    'x' => $x,
-                    'y' => $y,
-                    'dark' => $this->rules->isDarkSquare($x, $y),
-                    'tokenId' => null !== $token && isset($token->id) ? $token->id : $x.'-'.$y,
-                    'outer' => $token?->outerColor,
-                    'inner' => $token?->innerColor,
-                    'king' => GameRules::KING === $token?->variant,
-                    'mine' => null !== $token && $token->ownerId === $viewerId,
-                    'selectable' => isset($moves[$x.':'.$y]),
-                ];
-            }
-            $grid[] = $row;
-        }
+        $grid = BoardViews::grid($board, function (int $x, int $y, ?Token $token) use ($moves, $viewerId): array {
+            return [
+                'x' => $x,
+                'y' => $y,
+                'dark' => $this->rules->isDarkSquare($x, $y),
+                'tokenId' => null !== $token && isset($token->id) ? $token->id : $x.'-'.$y,
+                'outer' => $token?->outerColor,
+                'inner' => $token?->innerColor,
+                'king' => GameRules::KING === $token?->variant,
+                'mine' => null !== $token && $token->ownerId === $viewerId,
+                'selectable' => isset($moves[$x.':'.$y]),
+            ];
+        });
 
         return [
             'grid' => $grid,

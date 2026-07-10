@@ -45,7 +45,7 @@
                 <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}">
                     <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
                     <input type="hidden" name="action" value="newround">
-                    <button type="submit" class="rounded-2xl bg-sage-300 px-7 py-3 text-lg font-extrabold text-sage-700 shadow-soft transition hover:bg-sage-200 hover:shadow-lifted">
+                    <button type="submit" class="btn btn-confirm">
                         {{ 'koepknack.new_round'|trans }}
                     </button>
                 </form>
@@ -113,21 +113,17 @@
         {# ---------- actions ---------- #}
         {% if view.canAct %}
             <div class="flex flex-wrap justify-center gap-3">
-                <button type="submit" name="action" value="swap" data-dragdrop--group-swap-target="submitButton"
-                        class="rounded-2xl bg-terracotta-300 px-7 py-3 text-lg font-extrabold text-white shadow-soft transition hover:bg-terracotta-200 hover:text-terracotta-700 hover:shadow-lifted">
+                <button type="submit" name="action" value="swap" data-dragdrop--group-swap-target="submitButton" class="btn btn-primary">
                     {{ 'koepknack.swap'|trans }}
                 </button>
-                <button type="submit" name="action" value="swapall" data-dragdrop--group-swap-target="swapAllButton"
-                        class="rounded-2xl bg-white px-7 py-3 text-lg font-extrabold text-warmgray-700 shadow-soft transition hover:shadow-lifted">
+                <button type="submit" name="action" value="swapall" data-dragdrop--group-swap-target="swapAllButton" class="btn btn-neutral">
                     {{ 'koepknack.swap_all'|trans }}
                 </button>
-                <button type="submit" name="action" value="pass"
-                        class="rounded-2xl bg-white px-7 py-3 text-lg font-extrabold text-warmgray-700 shadow-soft transition hover:shadow-lifted">
+                <button type="submit" name="action" value="pass" class="btn btn-neutral">
                     {{ 'koepknack.pass'|trans }}
                 </button>
                 {% if view.canClose %}
-                    <button type="submit" name="action" value="close"
-                            class="rounded-2xl bg-white px-7 py-3 text-lg font-extrabold text-softblue-500 shadow-soft transition hover:shadow-lifted">
+                    <button type="submit" name="action" value="close" class="btn btn-info">
                         {{ 'koepknack.close'|trans }}
                     </button>
                 {% endif %}

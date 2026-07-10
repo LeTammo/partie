@@ -6,12 +6,9 @@
  * hover highlight.
  */
 
-/**
- * Starts a drag: sets the payload + effect (required for the drag to even
- * begin in some browsers, notably Firefox). Returns false if `data` is
- * null/undefined - the caller should then call event.preventDefault() to
- * refuse the drag.
- */
+export const CELL_SELECTED_CLASS = 'cell-selected';
+export const CELL_TARGET_CLASS = 'cell-target';
+
 export function startDrag(event, data) {
     if (null == data) {
         return false;
@@ -34,4 +31,15 @@ export function hover(event, el, accept, overClass = 'drop-over') {
 /** Call from dragleave (and on cleanup) to clear a hover highlight. */
 export function unhover(el, overClass = 'drop-over') {
     el.classList.remove(overClass);
+}
+
+export function markTargets(els, readyClass = 'drop-ready') {
+    els.forEach((el) => el.classList.add(readyClass));
+}
+
+export function clearTargets(els, readyClass = 'drop-ready', overClass = 'drop-over') {
+    els.forEach((el) => {
+        el.classList.remove(readyClass);
+        unhover(el, overClass);
+    });
 }

@@ -1,5 +1,5 @@
 import { Controller } from '@hotwired/stimulus';
-import { startDrag, hover, unhover } from '../../dragdrop.js';
+import { startDrag, hover, unhover, markTargets, clearTargets } from '../../dragdrop.js';
 
 /*
  * "zone_drop" drag-and-drop type: one or more draggable `source` elements
@@ -30,7 +30,7 @@ export default class extends Controller {
             return;
         }
         this.dragging = source;
-        this.zonesFor(source).forEach((zone) => zone.classList.add('drop-ready'));
+        markTargets(this.zonesFor(source));
     }
 
     dragOver(event) {
@@ -73,8 +73,6 @@ export default class extends Controller {
     }
 
     clearHighlight() {
-        for (const zone of this.zoneTargets) {
-            zone.classList.remove('drop-ready', 'drop-over');
-        }
+        clearTargets(this.zoneTargets);
     }
 }

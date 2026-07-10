@@ -16,7 +16,7 @@ use Symfony\Component\Cache\Adapter\FilesystemAdapter;
  */
 final class LobbyManager
 {
-    private const string CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no O/0, I/1
+    private const string CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
     private const int CODE_LENGTH = 6;
     private const int|float TTL_SECONDS = 60 * 60 * 12; // lobbies live for 12h
 

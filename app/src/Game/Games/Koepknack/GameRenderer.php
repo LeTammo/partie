@@ -7,6 +7,8 @@ namespace App\Game\Games\Koepknack;
 use App\Game\Core\Card\CardPresenter;
 use App\Game\Core\Model\GameState;
 use App\Game\Core\Model\GameStatus;
+use App\Game\Core\Model\Player;
+use App\Game\Core\View\PlayerViews;
 
 final readonly class GameRenderer
 {
@@ -24,15 +26,10 @@ final readonly class GameRenderer
         $roundEnd = $running && 'roundend' === $phase;
         $myTurn = $state->isViewersTurn($viewerId) && 'playing' === $phase;
 
-        $players = [];
-        foreach ($state->players as $player) {
-            $players[] = [
-                'nickname' => $player->nickname,
-                'color' => $player->color,
-                'points' => $state->data['points'][$player->id],
-                'current' => $running && 'playing' === $phase && $state->currentPlayer()->id === $player->id,
-            ];
-        }
+        $players = PlayerViews::build($state, static fn (Player $player): array => [
+            'points' => $state->data['points'][$player->id],
+            'current' => $running && 'playing' === $phase && $state->currentPlayer()->id === $player->id,
+        ]);
 
         $hand = null;
         $handValue = null;

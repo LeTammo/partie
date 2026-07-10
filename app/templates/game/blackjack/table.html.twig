@@ -73,23 +73,20 @@
                 <input type="hidden" name="action" value="bet">
                 {% for amount in view.betOptions %}
                     <button type="submit" name="amount" value="{{ amount }}"
-                            class="inline-flex items-center gap-2 rounded-2xl bg-white px-7 py-3 text-lg font-extrabold text-warmgray-700 shadow-soft transition hover:shadow-lifted">
+                            class="btn btn-neutral inline-flex items-center gap-2">
                         {% include 'icons/chip.svg.twig' with {class: 'size-4'} only %}
                         {{ amount }}
                     </button>
                 {% endfor %}
             {% else %}
-                <button type="submit" name="action" value="hit"
-                        class="rounded-2xl bg-terracotta-300 px-7 py-3 text-lg font-extrabold text-white shadow-soft transition hover:bg-terracotta-200 hover:text-terracotta-700 hover:shadow-lifted">
+                <button type="submit" name="action" value="hit" class="btn btn-primary">
                     {{ 'blackjack.hit'|trans }}
                 </button>
-                <button type="submit" name="action" value="stand"
-                        class="rounded-2xl bg-white px-7 py-3 text-lg font-extrabold text-warmgray-700 shadow-soft transition hover:shadow-lifted">
+                <button type="submit" name="action" value="stand" class="btn btn-neutral">
                     {{ 'blackjack.stand'|trans }}
                 </button>
                 {% if view.canDouble %}
-                    <button type="submit" name="action" value="double"
-                            class="rounded-2xl bg-white px-7 py-3 text-lg font-extrabold text-softblue-500 shadow-soft transition hover:shadow-lifted">
+                    <button type="submit" name="action" value="double" class="btn btn-info">
                         {{ 'blackjack.double'|trans }}
                     </button>
                 {% endif %}

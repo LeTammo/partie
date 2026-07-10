@@ -1,6 +1,6 @@
 import { Controller } from '@hotwired/stimulus';
 import { glideFrom } from '../../animation.js';
-import { startDrag, hover, unhover } from '../../dragdrop.js';
+import { startDrag, hover, unhover, markTargets, clearTargets } from '../../dragdrop.js';
 
 /*
  * "group_swap" drag-and-drop type: items belong to one of two named groups
@@ -92,8 +92,7 @@ export default class extends Controller {
         }
 
         this.dragging = item;
-        const opposite = this.itemTargets.filter((i) => !this.sameGroup(i, item));
-        opposite.forEach((i) => i.classList.add('drop-ready'));
+        markTargets(this.itemTargets.filter((i) => !this.sameGroup(i, item)));
     }
 
     dragOver(event) {
@@ -153,9 +152,6 @@ export default class extends Controller {
     }
 
     clearHighlight() {
-        for (const item of this.itemTargets) {
-            item.classList.remove('drop-ready');
-            unhover(item);
-        }
+        clearTargets(this.itemTargets);
     }
 }

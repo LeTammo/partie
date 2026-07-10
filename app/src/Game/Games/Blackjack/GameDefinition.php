@@ -18,8 +18,8 @@ final readonly class GameDefinition extends AbstractGameDefinition implements Au
     private const int ROUNDS = 5;
 
     public function __construct(
-        private readonly GameRules $rules,
-        private readonly GameRenderer $renderer,
+        private GameRules    $rules,
+        private GameRenderer $renderer,
     ) {
     }
 
@@ -76,7 +76,7 @@ final readonly class GameDefinition extends AbstractGameDefinition implements Au
         }
 
         match ($payload['action'] ?? '') {
-            'bet' => $this->bet($state, (int) ($payload['amount'] ?? 0)),
+            'bet' => $this->bet($state, $this->intParam($payload, 'amount', 0)),
             'hit' => $this->hit($state),
             'stand' => $this->stand($state),
             'double' => $this->double($state),

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Game\Games\Rummy;
 
 use App\Game\Core\Card\DeckFactory;
+use App\Game\Core\Card\Piles;
 use App\Game\Core\Card\PlayingCard;
 use App\Game\Core\Exception\InvalidMoveException;
 use App\Game\Core\Model\GameState;
@@ -15,8 +16,8 @@ final readonly class GameDefinition extends AbstractGameDefinition
     private const int HAND_SIZE = 13;
 
     public function __construct(
-        private readonly GameRules $rules,
-        private readonly GameRenderer $renderer,
+        private GameRules    $rules,
+        private GameRenderer $renderer,
     ) {
     }
 
@@ -80,9 +81,9 @@ final readonly class GameDefinition extends AbstractGameDefinition
         match ($payload['action'] ?? '') {
             'draw' => $this->draw($state),
             'takediscard' => $this->takeDiscard($state),
-            'meld' => $this->meld($state, $this->indexes($payload)),
-            'layoff' => $this->layoff($state, $this->indexes($payload), (int) ($payload['meld'] ?? -1)),
-            'discard' => $this->discard($state, $this->indexes($payload)),
+            'meld' => $this->meld($state, $this->intListParam($payload, 'cards')),
+            'layoff' => $this->layoff($state, $this->intListParam($payload, 'cards'), $this->intParam($payload, 'meld')),
+            'discard' => $this->discard($state, $this->intListParam($payload, 'cards')),
             'takeback' => $this->takeback($state),
             default => throw new InvalidMoveException('error.unknown_action'),
         };
@@ -102,15 +103,18 @@ final readonly class GameDefinition extends AbstractGameDefinition
     {
         $this->assertNotDrawn($state);
 
-        if ([] === $state->data['stock']) {
-            $this->reshuffle($state);
-            if ([] === $state->data['stock']) {
-                $this->invalidMove('error.rummy.stock_empty');
-            }
+        $drawn = Piles::draw(
+            $state->data['stock'],
+            $state->data['discard'],
+            1,
+            fn () => $state->logGameEvent('log.rummy.reshuffled'),
+        );
+        if ([] === $drawn) {
+            $this->invalidMove('error.rummy.stock_empty');
         }
 
         $player = $state->currentPlayer();
-        $state->data['hands'][$player->id][] = array_pop($state->data['stock']);
+        $state->data['hands'][$player->id][] = $drawn[0];
         $state->data['hasDrawn'] = true;
         $state->logGameEvent('log.rummy.drew', ['%player%' => $player->nickname]);
     }
@@ -271,20 +275,6 @@ final readonly class GameDefinition extends AbstractGameDefinition
         $state->logGameEvent('log.rummy.takeback', ['%player%' => $player->nickname]);
     }
 
-    private function reshuffle(GameState $state): void
-    {
-        $discard = $state->data['discard'];
-        if (\count($discard) <= 1) {
-            return;
-        }
-
-        $top = array_pop($discard);
-        shuffle($discard);
-        $state->data['stock'] = $discard;
-        $state->data['discard'] = [$top];
-        $state->logGameEvent('log.rummy.reshuffled');
-    }
-
     private function assertNotDrawn(GameState $state): void
     {
         if ($state->data['hasDrawn']) {
@@ -297,28 +287,6 @@ final readonly class GameDefinition extends AbstractGameDefinition
         if (!$state->data['hasDrawn']) {
             $this->invalidMove('error.rummy.draw_first');
         }
-    }
-
-    /**
-     * @param array<string, mixed> $payload
-     *
-     * @return list<int>
-     */
-    private function indexes(array $payload): array
-    {
-        $raw = trim((string) ($payload['cards'] ?? ''));
-        if ('' === $raw) {
-            return [];
-        }
-
-        $indexes = [];
-        foreach (explode(',', $raw) as $part) {
-            if (is_numeric($part)) {
-                $indexes[] = (int) $part;
-            }
-        }
-
-        return array_values(array_unique($indexes));
     }
 
     /**

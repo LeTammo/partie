@@ -19,8 +19,8 @@ final readonly class GameDefinition extends AbstractGameDefinition
     ];
 
     public function __construct(
-        private readonly GameRules $rules,
-        private readonly GameRenderer $renderer,
+        private GameRules    $rules,
+        private GameRenderer $renderer,
     ) {
     }
 
@@ -91,10 +91,10 @@ final readonly class GameDefinition extends AbstractGameDefinition
             throw new InvalidMoveException('error.not_your_turn');
         }
 
-        $fromX = (int) ($payload['fromX'] ?? -1);
-        $fromY = (int) ($payload['fromY'] ?? -1);
-        $toX = (int) ($payload['toX'] ?? -1);
-        $toY = (int) ($payload['toY'] ?? -1);
+        $fromX = $this->intParam($payload, 'fromX');
+        $fromY = $this->intParam($payload, 'fromY');
+        $toX = $this->intParam($payload, 'toX');
+        $toY = $this->intParam($payload, 'toY');
 
         $board = $state->board;
         $token = $board->get($fromX, $fromY);

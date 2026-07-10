@@ -6,7 +6,8 @@ namespace App\Game\Games\Rummy;
 
 use App\Game\Core\Card\CardPresenter;
 use App\Game\Core\Model\GameState;
-use App\Game\Core\Model\GameStatus;
+use App\Game\Core\Model\Player;
+use App\Game\Core\View\PlayerViews;
 
 final class GameRenderer
 {
@@ -15,19 +16,12 @@ final class GameRenderer
      */
     public function buildView(GameState $state, ?string $viewerId): array
     {
-        $running = GameStatus::Running === $state->status;
         $myTurn = $state->isViewersTurn($viewerId);
 
-        $players = [];
-        foreach ($state->players as $player) {
-            $players[] = [
-                'nickname' => $player->nickname,
-                'color' => $player->color,
-                'cardCount' => \count($state->data['hands'][$player->id]),
-                'hasMelded' => $state->data['hasMelded'][$player->id],
-                'current' => $running && $state->currentPlayer()->id === $player->id,
-            ];
-        }
+        $players = PlayerViews::build($state, static fn (Player $player): array => [
+            'cardCount' => \count($state->data['hands'][$player->id]),
+            'hasMelded' => $state->data['hasMelded'][$player->id],
+        ]);
 
         $melds = [];
         foreach ($state->data['melds'] as $index => $meld) {

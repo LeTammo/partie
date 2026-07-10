@@ -93,3 +93,11 @@ card.rank.jack: 'B'
 card.rank.queen: 'D'
 card.rank.king: 'K'
 card.rank.ace: 'A'
+
+# --- Dice (components/dice_tray.html.twig) ---
+dice.roll: 'Würfeln'
+dice.rolls_left: 'noch %count%'
+dice.no_rolls_left: 'Keine Würfe mehr – wähle eine Kategorie!'
+dice.held: 'gehalten'
+dice.hold: 'Diesen Würfel halten'
+dice.release: 'Diesen Würfel freigeben'

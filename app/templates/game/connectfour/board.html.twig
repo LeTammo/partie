@@ -1,19 +1,24 @@
 {% trans_default_domain 'connectfour' %}
-<div class="mx-auto w-fit" data-controller="games--connectfour"
-     data-games--connectfour-outer-value="{{ view.myOuter }}"
-     data-games--connectfour-inner-value="{{ view.myInner }}">
+<div class="mx-auto w-fit" data-controller="optimistic">
     {# drop buttons #}
     <div class="mb-2 grid grid-cols-7 gap-1.5 px-3 sm:gap-2">
         {% for col in view.columns %}
             {% if col.playable %}
                 <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}" class="contents"
-                      data-action="submit->games--connectfour#drop">
+                      data-action="submit->optimistic#insert"
+                      data-optimistic-into-param="[data-col='{{ col.column }}']"
+                      data-optimistic-where-param="last-empty">
                     <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
                     <input type="hidden" name="column" value="{{ col.column }}">
                     <button type="submit" aria-label="{{ 'connectfour.drop'|trans({'%column%': col.column + 1}) }}"
                             class="grid h-8 place-items-center rounded-xl bg-sage-100 text-sage-700 shadow-soft transition hover:bg-sage-200 hover:shadow-lifted">
                         {% include 'icons/chevron-down.svg.twig' with {class: 'size-4'} only %}
                     </button>
+                    <template>
+                        <span class="anim-drop grid size-9 place-items-center rounded-full shadow-soft sm:size-11" style="background-color: {{ view.myOuter }}">
+                            <span class="size-4 rounded-full sm:size-5" style="background-color: {{ view.myInner }}"></span>
+                        </span>
+                    </template>
                 </form>
             {% else %}
                 <div class="h-8"></div>

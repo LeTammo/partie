@@ -1,18 +1,19 @@
 {% trans_default_domain 'tictactoe' %}
-<div class="mx-auto w-fit" data-controller="games--tictactoe"
-     data-games--tictactoe-variant-value="{{ view.myVariant }}"
-     data-games--tictactoe-color-value="{{ view.myColor }}">
+<div class="mx-auto w-fit" data-controller="optimistic">
     <div class="grid grid-cols-3 gap-2 rounded-3xl bg-cream p-3">
         {% for row in view.grid %}
             {% for cell in row %}
                 {% if cell.playable %}
                     <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}"
-                          data-action="submit->games--tictactoe#place">
+                          data-action="submit->optimistic#insert">
                         <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
                         <input type="hidden" name="x" value="{{ cell.x }}">
                         <input type="hidden" name="y" value="{{ cell.y }}">
                         <button type="submit" aria-label="{{ 'tictactoe.place'|trans({'%x%': cell.x + 1, '%y%': cell.y + 1}) }}"
                                 class="grid size-20 place-items-center rounded-2xl bg-white shadow-soft transition hover:bg-softblue-50 hover:shadow-lifted sm:size-24"></button>
+                        <template>
+                            <span class="anim-pop pointer-events-none text-4xl font-extrabold sm:text-5xl" style="color: {{ view.myColor }}">{{ view.myVariant == 'x' ? '✕' : '◯' }}</span>
+                        </template>
                     </form>
                 {% else %}
                     <div class="grid size-20 place-items-center rounded-2xl bg-white shadow-soft sm:size-24">

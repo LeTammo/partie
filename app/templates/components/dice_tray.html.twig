@@ -1,0 +1,46 @@
+{# How to use, see
+   docs/components/dice.md #}
+<div class="rounded-3xl bg-cream p-5">
+    <div class="flex flex-wrap items-start justify-center gap-3">
+        {% for die in dice %}
+            <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}">
+                <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
+                <input type="hidden" name="action" value="toggle">
+                <input type="hidden" name="die" value="{{ die.index }}">
+                <button type="submit" {% if not die.lockable %}disabled{% endif %}
+                        data-die data-locked="{{ die.locked ? 'true' : 'false' }}"
+                        data-action="click->optimistic#toggle"
+                        data-optimistic-class-param="ring-2 ring-softblue-300"
+                        title="{{ (die.locked ? 'dice.release' : 'dice.hold')|trans }}"
+                        class="block rounded-2xl shadow-soft transition enabled:hover:shadow-lifted
+                               {{ die.locked ? 'ring-2 ring-softblue-300' : '' }}
+                               {{ not hasRolled ? 'opacity-30' }}">
+                    <span id="die-{{ die.index }}-{{ die.value }}" class="anim-roll block">
+                        {% include 'components/die.html.twig' with {value: die.value, face: dieFace, pip: diePip, class: 'size-20'} only %}
+                    </span>
+                </button>
+                {% if die.locked %}<p class="mt-1 text-center text-xs font-extrabold uppercase text-softblue-500">{{ 'dice.held'|trans }}</p>{% endif %}
+            </form>
+        {% endfor %}
+    </div>
+
+    <div class="mt-4 text-center">
+        {% if canRoll %}
+            <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}"
+                  data-action="submit->optimistic#pending"
+                  data-optimistic-selector-param="[data-die]"
+                  data-optimistic-class-param="anim-rolling"
+                  data-optimistic-unless-param="[data-locked='true']">
+                <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
+                <input type="hidden" name="action" value="roll">
+                <button type="submit" class="btn btn-primary inline-flex items-center gap-2 px-8">
+                    {% include 'icons/die.svg.twig' with {class: 'size-5'} only %}
+                    {{ 'dice.roll'|trans }}
+                    <span class="opacity-80">({{ 'dice.rolls_left'|trans({'%count%': rollsLeft}) }})</span>
+                </button>
+            </form>
+        {% elseif myTurn %}
+            <p class="text-base font-semibold text-warmgray-500">{{ 'dice.no_rolls_left'|trans }}</p>
+        {% endif %}
+    </div>
+</div>

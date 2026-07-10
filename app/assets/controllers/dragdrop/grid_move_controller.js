@@ -1,5 +1,6 @@
 import { Controller } from '@hotwired/stimulus';
 import { glideFrom } from '../../animation.js';
+import { CELL_SELECTED_CLASS, CELL_TARGET_CLASS } from '../../dragdrop.js';
 
 /*
  * "grid_move" drag-and-drop type: a 2D board where cells hold pieces that
@@ -148,9 +149,9 @@ export default class extends Controller {
 
         this.element.querySelectorAll('[data-cell]').forEach((el) => {
             const key = `${el.dataset.x}:${el.dataset.y}`;
-            el.classList.toggle('cell-selected', key === this.selected);
+            el.classList.toggle(CELL_SELECTED_CLASS, key === this.selected);
             el.classList.toggle(
-                'cell-target',
+                CELL_TARGET_CLASS,
                 targets.some((m) => `${m.toX}:${m.toY}` === key),
             );
         });

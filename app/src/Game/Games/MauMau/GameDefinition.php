@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Game\Games\MauMau;
 
 use App\Game\Core\Card\DeckFactory;
+use App\Game\Core\Card\Piles;
 use App\Game\Core\Card\PlayingCard;
 use App\Game\Core\Card\Rank;
 use App\Game\Core\Card\Suit;
@@ -17,8 +18,8 @@ final readonly class GameDefinition extends AbstractGameDefinition
     private const int HAND_SIZE = 5;
 
     public function __construct(
-        private readonly GameRules $rules,
-        private readonly GameRenderer $renderer,
+        private GameRules    $rules,
+        private GameRenderer $renderer,
     ) {
     }
 
@@ -79,7 +80,7 @@ final readonly class GameDefinition extends AbstractGameDefinition
         }
 
         match ($payload['action'] ?? '') {
-            'play' => $this->play($state, (int) ($payload['card'] ?? -1), (string) ($payload['wish'] ?? '')),
+            'play' => $this->play($state, $this->intParam($payload, 'card'), $this->stringParam($payload, 'wish')),
             'draw' => $this->draw($state),
             'pass' => $this->pass($state),
             default => throw new InvalidMoveException('error.unknown_action'),
@@ -206,29 +207,13 @@ final readonly class GameDefinition extends AbstractGameDefinition
 
     private function drawCards(GameState $state, string $playerId, int $count): void
     {
-        for ($i = 0; $i < $count; ++$i) {
-            if ([] === $state->data['drawPile']) {
-                $this->reshuffle($state);
-                if ([] === $state->data['drawPile']) {
-                    return;
-                }
-            }
-            $state->data['hands'][$playerId][] = array_pop($state->data['drawPile']);
-        }
-    }
-
-    private function reshuffle(GameState $state): void
-    {
-        $discard = $state->data['discard'];
-        if (\count($discard) <= 1) {
-            return;
-        }
-
-        $top = array_pop($discard);
-        shuffle($discard);
-        $state->data['drawPile'] = $discard;
-        $state->data['discard'] = [$top];
-        $state->logGameEvent('log.maumau.reshuffled');
+        $drawn = Piles::draw(
+            $state->data['drawPile'],
+            $state->data['discard'],
+            $count,
+            fn () => $state->logGameEvent('log.maumau.reshuffled'),
+        );
+        array_push($state->data['hands'][$playerId], ...$drawn);
     }
 
     private function top(GameState $state): PlayingCard
