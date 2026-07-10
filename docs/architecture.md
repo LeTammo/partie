@@ -1,7 +1,7 @@
 # Architecture
 
 How the app is wired together. For how to build a game on top of it, see
-[ADDING_A_GAME.md](ADDING_A_GAME.md) and [components/](components/) instead.
+[adding_a_game.md](adding_a_game.md) and [components/...](components/) instead.
 
 ## Directory layout
 

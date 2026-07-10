@@ -25,7 +25,6 @@ Stack:
 1. [Setup](#setup)
 2. [Adding a new game](#adding-a-new-game)
 3. [Architecture](#architecture)
-4. [Frontend](#frontend)
 
 ---
 
