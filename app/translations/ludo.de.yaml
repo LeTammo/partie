@@ -1,0 +1,26 @@
+# --- Brett ---
+ludo.roll: 'Würfeln'
+ludo.no_move: 'Kein möglicher Zug - du setzt aus.'
+ludo.move_pawn: 'Diese Figur ziehen'
+
+# --- Spielverlauf ---
+log.ludo.rolled: '%player% würfelt eine %value%.'
+log.ludo.no_move: '%player% hat keinen möglichen Zug.'
+log.ludo.released: '%player% bringt eine Figur ins Spiel.'
+log.ludo.moved: '%player% zieht eine Figur.'
+log.ludo.captured: '%player% schickt %opponent%s Figur zurück ins Haus!'
+
+# --- Fehler ---
+error.ludo.already_rolled: 'Du hast schon gewürfelt - ziehe zuerst eine Figur.'
+error.ludo.roll_first: 'Würfle zuerst.'
+error.ludo.illegal_pawn: 'Mit dieser Figur ist dieser Zug nicht möglich.'
+
+# --- Spielanleitung ---
+rules: |-
+  Bringe deine vier Figuren als Erster einmal ums Brett und ins Ziel.
+  Wirf eine Sechs, um eine Figur aus deinem Haus ins Spiel zu bringen.
+  Eine Sechs gibt dir außerdem einen weiteren Wurf, egal ob du sie nutzen konntest.
+  Solange noch alle vier Figuren in deinem Haus stehen, darfst du bis zu drei Mal würfeln - du hörst früher auf, sobald eine Sechs fällt.
+  Landest du genau auf einer gegnerischen Figur, muss diese zurück ins Haus.
+  Bist du einmal ganz herum, biegst du in deine eigene Zielgerade ein - dafür brauchst du die passende Augenzahl.
+  Wer zuerst alle vier Figuren im Ziel hat, gewinnt.

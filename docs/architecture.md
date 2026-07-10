@@ -17,6 +17,7 @@ src/Game/
 │   └── Exception/            GameException, InvalidMoveException, LobbyNotFoundException
 └── Games/
     ├── TicTacToe/, ConnectFour/, Checkers/   grid games
+    ├── Ludo/                                 track/race game, custom (non-grid) board
     ├── MauMau/, Rummy/, Koepknack/           card games
     ├── Blackjack/                            card game, dealer auto-plays
     └── Yahtzee/                              dice game

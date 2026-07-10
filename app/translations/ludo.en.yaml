@@ -1,0 +1,26 @@
+# --- Board ---
+ludo.roll: 'Roll the die'
+ludo.no_move: 'No legal move - your turn passes.'
+ludo.move_pawn: 'Move this pawn'
+
+# --- Game log ---
+log.ludo.rolled: '%player% rolled a %value%.'
+log.ludo.no_move: '%player% has no legal move.'
+log.ludo.released: '%player% brought a pawn into play.'
+log.ludo.moved: '%player% moved a pawn.'
+log.ludo.captured: '%player% sent %opponent%''s pawn back to base!'
+
+# --- Errors ---
+error.ludo.already_rolled: 'You already rolled - move a pawn first.'
+error.ludo.roll_first: 'Roll the die first.'
+error.ludo.illegal_pawn: 'That pawn cannot make this move.'
+
+# --- How to play ---
+rules: |-
+  Race your four pawns around the board and home before anyone else.
+  Roll a six to bring a pawn out of your base and onto the board.
+  Rolling a six also grants an extra roll, whether or not you could use it.
+  While all four of your pawns are still in your base, you get up to three rolls per turn, stopping early the moment you roll a six.
+  Landing exactly on an opponent's pawn sends it back to their base.
+  Once you've gone all the way around, turn into your own home stretch - you need an exact roll to reach the final square.
+  First player to get all four pawns home wins.

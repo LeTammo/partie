@@ -34,8 +34,16 @@
     --color-terracotta-500: #bd7460;
     --color-terracotta-700: #8f4f3f;
 
+    --color-sunny-50: #fbf6ea;
+    --color-sunny-100: #f5e9c8;
+    --color-sunny-200: #ecd89a;
+    --color-sunny-300: #e0c069;
+    --color-sunny-500: #c99f3d;
+    --color-sunny-700: #96762c;
+
     --shadow-soft: 0 2px 10px rgb(68 61 52 / 0.07);
     --shadow-lifted: 0 6px 24px rgb(68 61 52 / 0.12);
+    --shadow-strong: 0 1px 7px rgb(67 67 67 / 63%);
     --inset-shadow-soft: inset 0 2px 6px rgb(68 61 52 / 0.06);
 }
 

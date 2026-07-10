@@ -34,6 +34,8 @@ game.maumau.name: 'Mau-Mau'
 game.maumau.description: 'Farbe oder Wert bedienen, 7 straft, Bube wünscht – wer zuerst fertig ist, gewinnt.'
 game.rummy.name: 'Rommé'
 game.rummy.description: 'Ziehen, Sätze und Folgen melden, anlegen und als Erster alle Karten loswerden.'
+game.ludo.name: 'Mensch ärgere Dich nicht'
+game.ludo.description: 'Wirf eine Sechs zum Start, bring deine Figuren ins Ziel und schick Gegner zurück ins Haus.'
 
 # --- Lobby ---
 lobby.status.waiting: 'wartet auf Spieler'

@@ -34,6 +34,8 @@ game.maumau.name: 'Mau-Mau'
 game.maumau.description: 'Match suit or rank, sevens punish, jacks wish – empty your hand first.'
 game.rummy.name: 'Rummy'
 game.rummy.description: 'Draw, meld sets and runs, lay off and be the first to go out.'
+game.ludo.name: 'Ludo'
+game.ludo.description: 'Roll a six to start, race your pawns home, and send opponents back to base.'
 
 # --- Lobby ---
 lobby.status.waiting: 'waiting for players'
