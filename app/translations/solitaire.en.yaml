@@ -1,0 +1,26 @@
+# --- Board ---
+solitaire.stock: 'Draw pile'
+solitaire.recycle: 'Flip the waste back over'
+solitaire.foundation: 'Foundation'
+
+# --- Settings ---
+setting.solitaire.draw_count: 'Draw count'
+setting.solitaire.draw_one: 'Draw 1'
+setting.solitaire.draw_three: 'Draw 3'
+
+# --- Game log ---
+log.solitaire.drew: '%player% drew from the stock.'
+log.solitaire.recycled: '%player% flipped the waste back into the stock.'
+log.solitaire.moved: '%player% moved a card.'
+
+# --- Errors ---
+error.solitaire.invalid_move: 'That move is not allowed.'
+error.solitaire.nothing_to_draw: 'The stock and waste are both empty.'
+
+# --- How to play ---
+rules: |-
+  Build the four foundations up from Ace to King, one suit each - clear the whole deck to win.
+  In the tableau, stack cards in descending order, alternating red and black.
+  A run of stacked cards can move together as long as it stays in that order.
+  Only a King can start an empty tableau column.
+  Draw from the stock when you're stuck - once it's empty, flip the waste back over to go through it again.

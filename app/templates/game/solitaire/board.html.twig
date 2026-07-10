@@ -1,0 +1,76 @@
+{% trans_default_domain 'solitaire' %}
+<div class="mx-auto max-w-4xl" data-controller="solitaire" data-solitaire-moves-value="{{ view.moves|json_encode|e('html_attr') }}">
+    <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}" data-solitaire-target="form" class="hidden">
+        <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
+        <input type="hidden" name="action" value="move">
+        <input type="hidden" name="from" data-solitaire-target="from">
+        <input type="hidden" name="to" data-solitaire-target="to">
+    </form>
+
+    <div class="mb-6 flex flex-wrap items-start gap-3">
+        {# stock #}
+        <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}">
+            <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
+            <input type="hidden" name="action" value="draw">
+            <button type="submit" aria-label="{{ (view.stockCount > 0 ? 'solitaire.stock' : 'solitaire.recycle')|trans }}"
+                    {% if not view.canDraw %}disabled{% endif %}
+                    class="block {{ not view.canDraw ? 'cursor-not-allowed opacity-40' }}">
+                {% if view.stockCount > 0 %}
+                    {% include 'components/card.html.twig' with {back: true, key: 'sol-stock'} only %}
+                {% else %}
+                    <span class="relative flex h-24 w-16 shrink-0 items-center justify-center rounded-xl border-2 border-dashed border-warmgray-300 text-warmgray-300">
+                        {% include 'icons/chevron-down.svg.twig' with {class: 'size-5 rotate-180'} only %}
+                    </span>
+                {% endif %}
+            </button>
+        </form>
+
+        {# waste #}
+        <div>
+            {% if view.waste %}
+                <button type="button" data-solitaire-target="source" data-source="{{ view.wasteSource }}" draggable="true"
+                        data-action="click->solitaire#pick dragstart->solitaire#dragStart dragend->solitaire#dragEnd"
+                        class="block cursor-grab">
+                    {% include 'components/card.html.twig' with view.waste|merge({key: 'sol-waste', flip: 'sol-' ~ view.waste.identity}) only %}
+                </button>
+            {% else %}
+                <span class="block h-24 w-16 rounded-xl border-2 border-dashed border-warmgray-200"></span>
+            {% endif %}
+        </div>
+
+        <div class="ml-auto flex gap-3">
+            {% for foundation in view.foundations %}
+                <div data-solitaire-target="zone" data-zone="{{ foundation.zone }}"
+                     data-action="click->solitaire#pickZone dragover->solitaire#dragOver drop->solitaire#drop"
+                     title="{{ 'solitaire.foundation'|trans }}"
+                     class="grid h-24 w-16 place-items-center rounded-xl border-2 border-dashed border-warmgray-200 {{ foundation.red ? 'text-terracotta-300' : 'text-warmgray-300' }}">
+                    {% if foundation.top %}
+                        {% include 'components/card.html.twig' with foundation.top|merge({key: 'sol-fnd-' ~ foundation.zone, flip: 'sol-' ~ foundation.top.identity}) only %}
+                    {% else %}
+                        <span class="text-2xl">{{ foundation.suit }}</span>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="grid grid-cols-7 gap-3">
+        {% for column in view.tableau %}
+            <div data-solitaire-target="zone" data-zone="{{ column.zone }}"
+                 data-action="click->solitaire#pickZone dragover->solitaire#dragOver drop->solitaire#drop"
+                 class="min-h-24 -space-y-16">
+                {% for card in column.cards %}
+                    {% if not card.faceUp %}
+                        {% include 'components/card.html.twig' with {back: true, key: 'sol-down-' ~ column.zone ~ '-' ~ loop.index0} only %}
+                    {% else %}
+                        <button type="button" data-solitaire-target="source" data-source="{{ card.source }}" draggable="true"
+                                data-action="click->solitaire#pick dragstart->solitaire#dragStart dragend->solitaire#dragEnd"
+                                class="block cursor-grab">
+                            {% include 'components/card.html.twig' with card.card|merge({key: 'sol-' ~ card.card.identity, flip: 'sol-' ~ card.card.identity}) only %}
+                        </button>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        {% endfor %}
+    </div>
+</div>

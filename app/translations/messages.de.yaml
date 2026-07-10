@@ -36,6 +36,8 @@ game.rummy.name: 'Rommé'
 game.rummy.description: 'Ziehen, Sätze und Folgen melden, anlegen und als Erster alle Karten loswerden.'
 game.ludo.name: 'Mensch ärgere Dich nicht'
 game.ludo.description: 'Wirf eine Sechs zum Start, bring deine Figuren ins Ziel und schick Gegner zurück ins Haus.'
+game.solitaire.name: 'Solitaire'
+game.solitaire.description: 'Klassisches Klondike - baue die Ablagestapel auf, ganz allein gegen die Karten.'
 
 # --- Lobby ---
 lobby.status.waiting: 'wartet auf Spieler'
@@ -64,7 +66,6 @@ lobby.settings.title: 'Spieleinstellungen'
 
 # --- Sidebar ---
 players.title: 'Spieler'
-players.you: '(du)'
 players.host: 'Host'
 players.turn: 'Am Zug'
 players.winner: 'Sieger'

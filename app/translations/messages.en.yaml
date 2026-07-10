@@ -36,6 +36,8 @@ game.rummy.name: 'Rummy'
 game.rummy.description: 'Draw, meld sets and runs, lay off and be the first to go out.'
 game.ludo.name: 'Ludo'
 game.ludo.description: 'Roll a six to start, race your pawns home, and send opponents back to base.'
+game.solitaire.name: 'Solitaire'
+game.solitaire.description: 'Classic Klondike - build up the foundations, alone against the deck.'
 
 # --- Lobby ---
 lobby.status.waiting: 'waiting for players'
@@ -64,7 +66,6 @@ lobby.settings.title: 'Game settings'
 
 # --- Sidebar ---
 players.title: 'Players'
-players.you: '(you)'
 players.host: 'Host'
 players.turn: 'Their turn'
 players.winner: 'Winner'

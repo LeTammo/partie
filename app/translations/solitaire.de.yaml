@@ -1,0 +1,26 @@
+# --- Brett ---
+solitaire.stock: 'Nachziehstapel'
+solitaire.recycle: 'Ablage zurück umdrehen'
+solitaire.foundation: 'Ablage'
+
+# --- Einstellungen ---
+setting.solitaire.draw_count: 'Anzahl aufgedeckter Karten'
+setting.solitaire.draw_one: '1 Karte'
+setting.solitaire.draw_three: '3 Karten'
+
+# --- Spielverlauf ---
+log.solitaire.drew: '%player% zieht vom Stapel.'
+log.solitaire.recycled: '%player% dreht die Ablage zurück in den Stapel.'
+log.solitaire.moved: '%player% bewegt eine Karte.'
+
+# --- Fehler ---
+error.solitaire.invalid_move: 'Dieser Zug ist nicht erlaubt.'
+error.solitaire.nothing_to_draw: 'Stapel und Ablage sind beide leer.'
+
+# --- Spielanleitung ---
+rules: |-
+  Baue die vier Ablagestapel von Ass bis König auf - räum das ganze Deck ab, um zu gewinnen.
+  Im Spielfeld stapelst du Karten absteigend, abwechselnd Rot und Schwarz.
+  Eine Folge gestapelter Karten kannst du zusammen bewegen, solange die Reihenfolge stimmt.
+  Nur ein König darf eine leere Spalte eröffnen.
+  Zieh vom Stapel, wenn du nicht weiterkommst - ist er leer, dreh die Ablage zurück um, um sie erneut durchzugehen.

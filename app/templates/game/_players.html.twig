@@ -29,9 +29,6 @@
                     {% else %}
                         {{ player.nickname }}
                     {% endif %}
-                    {% if me is defined and me is not null and me.id == player.id %}
-                        <span class="text-warmgray-400">{{ 'players.you'|trans }}</span>
-                    {% endif %}
                 </span>
                 <span class="ml-auto flex items-center gap-1.5">
                     {% if lobby.roundWins is not empty %}
