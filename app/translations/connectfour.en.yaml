@@ -3,6 +3,8 @@ connectfour.drop: 'Drop into column %column%'
 
 # --- Settings ---
 setting.connectfour.connect_count: 'Discs in a row to win'
+setting.connectfour.board_width: 'Board width'
+setting.connectfour.board_height: 'Board height'
 
 # --- Game log ---
 log.connectfour.dropped: '%player% dropped a disc into column %column%.'
