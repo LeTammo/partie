@@ -60,7 +60,6 @@ lobby.turn.you: "It's your turn, %player%!"
 lobby.turn.waiting: 'Waiting for %player%…'
 lobby.rules: 'How to play'
 lobby.settings.title: 'Game settings'
-lobby.settings.host_only: 'Only the host can change settings, and only before the game starts. Changes save automatically.'
 
 # --- Sidebar ---
 players.title: 'Players'

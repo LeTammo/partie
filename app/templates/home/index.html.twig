@@ -49,7 +49,7 @@
             {# ---------- username ---------- #}
             <div class="rounded-3xl bg-white p-5 shadow-soft">
                 <div data-nickname-target="display" class="flex items-center justify-between gap-3">
-                    <span data-nickname-target="text" class="truncate text-lg font-extrabold">{{ nickname }} {{ 'players.you'|trans }}</span>
+                    <span data-nickname-target="text" class="truncate text-lg font-extrabold">{{ nickname }}</span>
                     <button type="button" data-action="nickname#edit"
                             class="cursor-pointer grid size-9 shrink-0 place-items-center rounded-xl bg-cream text-warmgray-500 shadow-soft transition hover:shadow-lifted">
                         {% include 'icons/pencil.svg.twig' with {class: 'size-4'} only %}

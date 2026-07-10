@@ -13,10 +13,10 @@ maumau.pending_skip: '%count%x Aussetzen offen – lege eine passende Karte oder
 
 # --- Einstellungen ---
 setting.maumau.skip_rank: 'Aussetzen-Karte'
-setting.maumau.draw_rank: 'Nachzieh-Karte'
-setting.maumau.stack_draw: 'Nachziehen stapelbar (weitere Nachzieh-Karte legen statt ziehen)'
-setting.maumau.stack_skip: 'Aussetzen stapelbar (weitere Aussetzen-Karte legen statt auszusetzen)'
-setting.maumau.allow_rewish: 'Erneut wünschen erlaubt (Bube auf Bube spielen)'
+setting.maumau.draw_rank: 'Zwei-Ziehen-Karte'
+setting.maumau.stack_draw: 'Zwei-Ziehen stapelbar'
+setting.maumau.stack_skip: 'Aussetzen verlängerbar'
+setting.maumau.allow_rewish: 'Bube auf Bube erlaubt'
 
 # --- Spielverlauf ---
 log.maumau.started: 'Mau-Mau startet – Farbe oder Wert bedienen.'

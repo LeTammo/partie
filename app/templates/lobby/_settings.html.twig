@@ -1,8 +1,6 @@
 {% if game.settings() is not empty %}
     <div class="rounded-3xl bg-white p-6 shadow-soft">
         <h3 class="text-lg font-extrabold">{{ 'lobby.settings.title'|trans }}</h3>
-        <p class="mt-1 text-xs font-semibold text-warmgray-400">{{ 'lobby.settings.host_only'|trans }}</p>
-
         <form method="post" action="{{ path('app_lobby_settings', {code: lobby.code}) }}" class="mt-4 space-y-3"
               data-controller="autosave" data-action="change->autosave#save">
             <input type="hidden" name="_token" value="{{ csrf_token('lobby') }}">

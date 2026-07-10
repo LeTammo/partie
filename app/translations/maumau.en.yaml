@@ -13,10 +13,10 @@ maumau.pending_skip: '%count% skip(s) pending – play a matching card or pass!'
 
 # --- Settings ---
 setting.maumau.skip_rank: 'Skip card'
-setting.maumau.draw_rank: 'Draw card'
-setting.maumau.stack_draw: 'Draw is stackable (play another draw card instead of drawing)'
-setting.maumau.stack_skip: 'Skip is stackable (play another skip card instead of being skipped)'
-setting.maumau.allow_rewish: 'Allow re-wishing (playing a jack on a jack)'
+setting.maumau.draw_rank: 'Draw-two card'
+setting.maumau.stack_draw: 'Draw-two is stackable'
+setting.maumau.stack_skip: 'Skip is stackable'
+setting.maumau.allow_rewish: 'Allow jack on a jack'
 
 # --- Game log ---
 log.maumau.started: 'Mau-Mau starts – match suit or rank.'

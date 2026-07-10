@@ -60,7 +60,6 @@ lobby.turn.you: 'Du bist dran, %player%!'
 lobby.turn.waiting: 'Warten auf %player%…'
 lobby.rules: 'Spielanleitung'
 lobby.settings.title: 'Spieleinstellungen'
-lobby.settings.host_only: 'Nur der Host kann Einstellungen ändern, und nur bevor das Spiel startet. Änderungen werden automatisch gespeichert.'
 
 # --- Sidebar ---
 players.title: 'Spieler'
