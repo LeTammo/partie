@@ -3,16 +3,16 @@ app.title: 'Cozy Board Games'
 app.language: 'Language'
 
 # --- Home / dashboard ---
+home.hello: 'Hello'
 home.title: 'Pick a game'
 home.create.title: 'Create a lobby'
 home.create.button: 'Create lobby'
-home.join.title: 'Join with a code'
 home.join.button: 'Join lobby'
 home.players_exact: '%min% players'
 home.players_range: '%min%-%max% players'
 home.lobbies.title: 'Open lobbies'
 home.lobbies.empty: 'No open lobbies right now – create one!'
-home.lobbies.seats: '%taken%/%max% joined'
+home.lobbies.seats: '%taken%/%max%'
 
 # --- Nickname editing ---
 nickname.save: 'Save'

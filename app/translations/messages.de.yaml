@@ -3,16 +3,16 @@ app.title: 'Gemütliche Brettspiele'
 app.language: 'Sprache'
 
 # --- Home / dashboard ---
+home.hello: 'Hallo'
 home.title: 'Spiel auswählen'
 home.create.title: 'Lobby erstellen'
 home.create.button: 'Lobby erstellen'
-home.join.title: 'Mit Code beitreten'
 home.join.button: 'Beitreten'
 home.players_exact: '%min% Spieler'
 home.players_range: '%min%-%max% Spieler'
 home.lobbies.title: 'Offene Lobbys'
 home.lobbies.empty: 'Gerade keine offenen Lobbys – erstelle eine!'
-home.lobbies.seats: '%taken%/%max% beigetreten'
+home.lobbies.seats: '%taken%/%max%'
 
 # --- Nickname bearbeiten ---
 nickname.save: 'Speichern'
