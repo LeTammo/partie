@@ -8,11 +8,12 @@ How the app is wired together. For how to build a game on top of it, see
 ```
 src/Game/
 ├── Core/                     Reusable across every game - see docs/components/
-│   ├── Model/                Board, Token, Dice, Player, GameState, Lobby, GameStatus, ...
+│   ├── Model/                Board, Token, Dice, Player, GameState, Lobby, GameStatus,
+│   │                         GameSetting, GameSettingType, ...
 │   ├── Card/                 PlayingCard, DeckFactory, Piles, CardPresenter, Rank, Suit
 │   ├── View/                 BoardViews, PlayerViews (render-data helpers for GameRenderers)
 │   ├── Service/              GameEngineInterface, AbstractGameDefinition, AutoPlayingEngineInterface,
-│   │                         GameRegistry, LobbyManager, GameBroadcaster, PlayerSession
+│   │                         GameSettingsResolver, GameRegistry, LobbyManager, GameBroadcaster, PlayerSession
 │   └── Exception/            GameException, InvalidMoveException, LobbyNotFoundException
 └── Games/
     ├── TicTacToe/, ConnectFour/, Checkers/   grid games
@@ -24,11 +25,15 @@ src/Game/
 
 ```
 src/Controller/
-├── HomeController.php     GET  /                      Dashboard (game picker, join form)
+├── HomeController.php     GET  /                      Dashboard (game picker, open lobbies, join form)
+│                          POST /nickname              Update the session's default nickname
 ├── LobbyController.php    POST /lobby/create          Create lobby, become host
 │                          POST /lobby/join            Join via invite code
 │                          GET  /lobby/{code}          Waiting room or game view
+│                          POST /lobby/{code}/rename   Rename the seated player, broadcast
+│                          POST /lobby/{code}/settings Host updates game settings (before start)
 │                          POST /lobby/{code}/start    Host starts the match
+│                          POST /lobby/{code}/replay   Host starts another round, same players/settings
 ├── GameController.php     POST /lobby/{code}/move     Apply a move, save, broadcast
 │                          POST /lobby/{code}/tick     Advance an auto-playing game one step
 └── LocaleController.php   GET  /locale/{locale}       Switch en/de
@@ -58,6 +63,10 @@ takes a moment, so the UI reacts immediately and the morph just confirms it.
 - **Lobby storage**: `LobbyManager` uses a dedicated `FilesystemAdapter` cache
   pool (namespace `lobbies`, TTL 12h). The whole `Lobby` object graph
   (players + `GameState`, boards, tokens, dice, hands) is PHP-serialized.
+  A lobby also carries the host's chosen game settings and a per-player
+  round-win tally, both of which outlive any single `GameState` - see
+  [components/engine-and-state.md](components/engine-and-state.md) for how
+  settings and round replay work.
 - **Identity**: `PlayerSession` stores `lobby_player_{CODE} => playerId` in
   the Symfony session. A visitor without a seat sees the lobby as a
   spectator and can grab a seat while it's still `waiting`.

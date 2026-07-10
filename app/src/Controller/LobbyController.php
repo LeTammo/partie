@@ -138,6 +138,54 @@ final class LobbyController extends AbstractController
         return $this->redirectToRoute('app_lobby_show', ['code' => $code]);
     }
 
+    #[Route('/{code}/settings', name: 'app_lobby_settings', requirements: ['code' => '[A-Za-z0-9]{6}'], methods: ['POST'])]
+    public function settings(string $code, Request $request): Response
+    {
+        if (!$this->isCsrfTokenValid('lobby', (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Invalid CSRF token.');
+        }
+
+        try {
+            $lobby = $this->lobbyManager->getLobby($code);
+            $me = $this->playerSession->playerFor($lobby);
+            if (null === $me) {
+                return $this->redirectToRoute('app_lobby_show', ['code' => $code]);
+            }
+
+            $raw = $request->request->all();
+            unset($raw['_token']);
+
+            $this->lobbyManager->updateSettings($lobby, $me->id, $raw);
+        } catch (GameException $e) {
+            $this->addFlash('error', $e->translate($this->translator));
+        }
+
+        return $this->redirectToRoute('app_lobby_show', ['code' => $code]);
+    }
+
+    #[Route('/{code}/replay', name: 'app_lobby_replay', requirements: ['code' => '[A-Za-z0-9]{6}'], methods: ['POST'])]
+    public function replay(string $code, Request $request): Response
+    {
+        if (!$this->isCsrfTokenValid('lobby', (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Invalid CSRF token.');
+        }
+
+        try {
+            $lobby = $this->lobbyManager->getLobby($code);
+            $me = $this->playerSession->playerFor($lobby);
+            if (null === $me) {
+                return $this->redirectToRoute('app_lobby_show', ['code' => $code]);
+            }
+
+            $this->lobbyManager->playAgain($lobby, $me->id);
+            $this->broadcaster->broadcast($lobby);
+        } catch (GameException $e) {
+            $this->addFlash('error', $e->translate($this->translator));
+        }
+
+        return $this->redirectToRoute('app_lobby_show', ['code' => $code]);
+    }
+
     #[Route('/{code}/start', name: 'app_lobby_start', requirements: ['code' => '[A-Za-z0-9]{6}'], methods: ['POST'])]
     public function start(string $code, Request $request): Response
     {

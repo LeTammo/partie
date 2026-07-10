@@ -49,13 +49,14 @@ final readonly class GameDefinition extends AbstractGameDefinition
         return 2;
     }
 
-    public function createInitialState(array $players): GameState
+    public function createInitialState(array $players, array $settings = []): GameState
     {
         $state = new GameState($this->getId(), $players, new Board(3, 3));
         $state->data['variants'] = [
             $players[0]->id => 'x',
             $players[1]->id => 'o',
         ];
+        $state->data['settings'] = $settings;
 
         return $state;
     }

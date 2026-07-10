@@ -197,11 +197,28 @@ $state->dice[0]->toggleLock();    // "hold" between rolls
 `components/dice_tray.html.twig` renders a full row of these, wired for
 hold/roll, in one include: [dice.md](components/dice.md).
 
+### Settings: a host-configurable rule variant
+
+```php
+public function settings(): array
+{
+    return [
+        new GameSetting(key: 'forcedCapture', labelKey: 'setting.checkers.forced_capture', type: GameSettingType::Bool, default: false),
+    ];
+}
+```
+
+That's it - the waiting room grows a settings form for it automatically
+(host-only, before the game starts), and the resolved value shows up as
+`$state->data['settings']['forcedCapture']`. See
+[engine-and-state.md](components/engine-and-state.md) for the `Int`/`Enum`
+variants and how round-replay reuses the same settings.
+
 ## Reference
 
 | Doc | Covers |
 |---|---|
-| [engine-and-state.md](components/engine-and-state.md) | `GameEngineInterface`/`AbstractGameDefinition`, `GameState`, `PlayerViews`, autoplay, translations |
+| [engine-and-state.md](components/engine-and-state.md) | `GameEngineInterface`/`AbstractGameDefinition`, `GameState`, `PlayerViews`, autoplay, host-configurable settings, round replay, translations |
 | [tokens-and-boards.md](components/tokens-and-boards.md) | `Board`/`Token`, `BoardViews`, the `grid_move` drag-and-drop type |
 | [cards.md](components/cards.md) | `PlayingCard`/`DeckFactory`/`Piles`/`CardPresenter`, `cards`/`group_swap`/`zone_drop` |
 | [dice.md](components/dice.md) | `Dice`, `components/die.html.twig`, `components/dice_tray.html.twig` |

@@ -19,18 +19,20 @@ final readonly class GameRenderer
      * @return array{
      *     grid: list<list<array<string, mixed>>>,
      *     moves: array<string, list<array{toX: int, toY: int}>>,
-     *     mustContinue: bool
+     *     mustContinue: bool,
+     *     pendingSacrifice: bool,
+     *     sacrificeSquares: list<string>
      * }
      */
     public function buildView(GameState $state, ?string $viewerId): array
     {
         $board = $state->board;
         $myTurn = $state->isViewersTurn($viewerId);
+        $continueFrom = $state->data['mustContinueFrom'];
+        $pendingSacrifice = $myTurn ? $state->data['pendingSacrifice'] : null;
 
         $moves = [];
-        $continueFrom = $state->data['mustContinueFrom'];
-
-        if ($myTurn && GameStatus::Running === $state->status) {
+        if ($myTurn && GameStatus::Running === $state->status && null === $pendingSacrifice) {
             $direction = $state->data['directions'][$viewerId];
 
             if (null !== $continueFrom) {
@@ -52,7 +54,11 @@ final readonly class GameRenderer
             }
         }
 
-        $grid = BoardViews::grid($board, function (int $x, int $y, ?Token $token) use ($moves, $viewerId): array {
+        $sacrificeSquares = null !== $pendingSacrifice
+            ? array_map(static fn (array $s): string => $s[0].':'.$s[1], $pendingSacrifice)
+            : [];
+
+        $grid = BoardViews::grid($board, function (int $x, int $y, ?Token $token) use ($moves, $viewerId, $sacrificeSquares): array {
             return [
                 'x' => $x,
                 'y' => $y,
@@ -63,6 +69,7 @@ final readonly class GameRenderer
                 'king' => GameRules::KING === $token?->variant,
                 'mine' => null !== $token && $token->ownerId === $viewerId,
                 'selectable' => isset($moves[$x.':'.$y]),
+                'sacrificeCandidate' => \in_array($x.':'.$y, $sacrificeSquares, true),
             ];
         });
 
@@ -70,6 +77,8 @@ final readonly class GameRenderer
             'grid' => $grid,
             'moves' => $moves,
             'mustContinue' => $myTurn && null !== $continueFrom,
+            'pendingSacrifice' => null !== $pendingSacrifice,
+            'sacrificeSquares' => $sacrificeSquares,
         ];
     }
 }

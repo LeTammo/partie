@@ -6,6 +6,8 @@ namespace App\Game\Games\Koepknack;
 
 use App\Game\Core\Card\DeckFactory;
 use App\Game\Core\Exception\InvalidMoveException;
+use App\Game\Core\Model\GameSetting;
+use App\Game\Core\Model\GameSettingType;
 use App\Game\Core\Model\GameState;
 use App\Game\Core\Service\AbstractGameDefinition;
 
@@ -49,15 +51,30 @@ final readonly class GameDefinition extends AbstractGameDefinition
         return 6;
     }
 
-    public function createInitialState(array $players): GameState
+    public function settings(): array
+    {
+        return [
+            new GameSetting(
+                key: 'roundsTotal',
+                labelKey: 'setting.koepknack.rounds_total',
+                type: GameSettingType::Int,
+                default: self::ROUNDS,
+                min: 1,
+                max: 30,
+            ),
+        ];
+    }
+
+    public function createInitialState(array $players, array $settings = []): GameState
     {
         $state = new GameState($this->getId(), $players);
+        $state->data['settings'] = $settings;
 
         foreach ($players as $player) {
             $state->data['points'][$player->id] = 0;
         }
         $state->data['round'] = 0;
-        $state->data['roundsTotal'] = self::ROUNDS;
+        $state->data['roundsTotal'] = (int) ($settings['roundsTotal'] ?? self::ROUNDS);
         $state->data['starterIndex'] = 0;
 
         $this->startRound($state);
@@ -233,7 +250,7 @@ final readonly class GameDefinition extends AbstractGameDefinition
             $state->logGameEvent('log.koepknack.round_won', ['%player%' => $winner->nickname, '%points%' => $points]);
         }
 
-        if ($state->data['round'] >= self::ROUNDS) {
+        if ($state->data['round'] >= $state->data['roundsTotal']) {
             $this->finishGame($state);
 
             return;

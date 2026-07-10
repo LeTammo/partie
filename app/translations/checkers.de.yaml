@@ -1,14 +1,20 @@
 # --- Brett ---
 checkers.must_continue: 'Spring mit demselben Stein weiter!'
+checkers.choose_sacrifice: 'Du hast mehrere Schläge verpasst. Wähle, welcher Stein entfernt wird.'
+
+# --- Einstellungen ---
+setting.checkers.forced_capture: 'Schlagzwang (ein Stein, der schlagen könnte es aber nicht tut, wird entfernt)'
 
 # --- Spielverlauf ---
 log.checkers.moved: '%player% zieht einen Stein.'
 log.checkers.captured: '%player% schlägt einen Stein!'
 log.checkers.king: '%player% bekommt eine Dame!'
+log.checkers.huffed: '%player%s Stein wurde wegen Schlagzwang entfernt!'
 
 # --- Fehler ---
 error.checkers.no_piece: 'Auf diesem Feld steht kein Stein von dir.'
 error.checkers.must_continue: 'Du musst mit demselben Stein weiterspringen.'
+error.checkers.choose_sacrifice: 'Du musst wählen, welcher Stein entfernt wird.'
 
 # --- Spielanleitung ---
 rules: |-

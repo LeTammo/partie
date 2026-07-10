@@ -8,6 +8,8 @@ use App\Game\Core\Card\DeckFactory;
 use App\Game\Core\Card\Piles;
 use App\Game\Core\Card\PlayingCard;
 use App\Game\Core\Exception\InvalidMoveException;
+use App\Game\Core\Model\GameSetting;
+use App\Game\Core\Model\GameSettingType;
 use App\Game\Core\Model\GameState;
 use App\Game\Core\Service\AbstractGameDefinition;
 
@@ -51,9 +53,24 @@ final readonly class GameDefinition extends AbstractGameDefinition
         return 6;
     }
 
-    public function createInitialState(array $players): GameState
+    public function settings(): array
+    {
+        return [
+            new GameSetting(
+                key: 'initialMeldPoints',
+                labelKey: 'setting.rummy.initial_meld_points',
+                type: GameSettingType::Int,
+                default: GameRules::INITIAL_MELD_POINTS,
+                min: 10,
+                max: 100,
+            ),
+        ];
+    }
+
+    public function createInitialState(array $players, array $settings = []): GameState
     {
         $state = new GameState($this->getId(), $players);
+        $state->data['settings'] = $settings;
 
         $deck = DeckFactory::deck110();
         foreach ($players as $player) {
@@ -67,7 +84,9 @@ final readonly class GameDefinition extends AbstractGameDefinition
         $state->data['turnMelds'] = [];
         $state->data['turnMeldPoints'] = 0;
 
-        $state->logGameEvent('log.rummy.started');
+        $state->logGameEvent('log.rummy.started', [
+            '%points%' => (int) ($settings['initialMeldPoints'] ?? GameRules::INITIAL_MELD_POINTS),
+        ]);
 
         return $state;
     }
@@ -171,10 +190,11 @@ final readonly class GameDefinition extends AbstractGameDefinition
         if (!$state->data['hasMelded'][$player->id]) {
             $state->data['turnMelds'][] = \count($state->data['melds']) - 1;
             $state->data['turnMeldPoints'] += $meld['points'];
-            if ($state->data['turnMeldPoints'] >= GameRules::INITIAL_MELD_POINTS) {
+            $initialMeldPoints = (int) ($this->setting($state, 'initialMeldPoints') ?? GameRules::INITIAL_MELD_POINTS);
+            if ($state->data['turnMeldPoints'] >= $initialMeldPoints) {
                 $state->data['hasMelded'][$player->id] = true;
                 $state->data['turnMelds'] = [];
-                $state->logGameEvent('log.rummy.opened', ['%player%' => $player->nickname]);
+                $state->logGameEvent('log.rummy.opened', ['%player%' => $player->nickname, '%points%' => $initialMeldPoints]);
             }
         }
     }
@@ -189,7 +209,7 @@ final readonly class GameDefinition extends AbstractGameDefinition
         $hand = &$state->data['hands'][$player->id];
 
         if (!$state->data['hasMelded'][$player->id]) {
-            $this->invalidMove('error.rummy.open_first');
+            $this->invalidMove('error.rummy.open_first', ['%points%' => (int) ($this->setting($state, 'initialMeldPoints') ?? GameRules::INITIAL_MELD_POINTS)]);
         }
         if (1 !== \count($indexes)) {
             $this->invalidMove('error.rummy.select_one');
@@ -226,7 +246,7 @@ final readonly class GameDefinition extends AbstractGameDefinition
             $this->invalidMove('error.rummy.select_one');
         }
         if (!$state->data['hasMelded'][$player->id] && $state->data['turnMeldPoints'] > 0) {
-            $this->invalidMove('error.rummy.initial_meld');
+            $this->invalidMove('error.rummy.initial_meld', ['%points%' => (int) ($this->setting($state, 'initialMeldPoints') ?? GameRules::INITIAL_MELD_POINTS)]);
         }
 
         $card = $this->pick($hand, $indexes)[0];

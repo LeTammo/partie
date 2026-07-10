@@ -16,15 +16,20 @@ final class GameRules
         PlayingCard $top,
         ?string $wishedSuit,
         int $pendingDraw,
-        bool $penaltyLocked = false
-    ): bool
-    {
+        bool $penaltyLocked,
+        int $pendingSkip,
+        Options $options,
+    ): bool {
+        if ($pendingSkip > 0) {
+            return $options->stackSkip && $card->rank === $options->skipRank;
+        }
+
         if ($pendingDraw > 0) {
-            return !$penaltyLocked && Rank::Seven === $card->rank;
+            return !$penaltyLocked && $options->stackDraw && $card->rank === $options->drawRank;
         }
 
         if (Rank::Jack === $card->rank) {
-            return Rank::Jack !== $top->rank;
+            return $options->allowRewish || Rank::Jack !== $top->rank;
         }
 
         if (null !== $wishedSuit) {

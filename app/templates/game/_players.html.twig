@@ -34,6 +34,13 @@
                     {% endif %}
                 </span>
                 <span class="ml-auto flex items-center gap-1.5">
+                    {% if lobby.roundWins is not empty %}
+                        <span title="{{ 'lobby.rounds_won'|trans({'%count%': lobby.roundWins[player.id] ?? 0}) }}"
+                              class="inline-flex items-center gap-0.5 text-xs font-extrabold text-sage-600">
+                            {% include 'icons/trophy.svg.twig' with {class: 'size-3.5'} only %}
+                            {{ lobby.roundWins[player.id] ?? 0 }}
+                        </span>
+                    {% endif %}
                     {% if lobby.isHost(player.id) %}
                         <span title="{{ 'players.host'|trans }}" class="text-softblue-300">
                             {% include 'icons/star.svg.twig' with {class: 'size-4'} only %}

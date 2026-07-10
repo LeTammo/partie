@@ -57,6 +57,7 @@ final class GameController extends AbstractController
 
             if (GameStatus::Finished === $lobby->state->status) {
                 $lobby->status = GameStatus::Finished;
+                $this->lobbyManager->recordRoundResult($lobby);
             }
 
             $this->lobbyManager->save($lobby);
@@ -94,6 +95,7 @@ final class GameController extends AbstractController
         $game->applyAutoStep($state);
         if (GameStatus::Finished === $state->status) {
             $lobby->status = GameStatus::Finished;
+            $this->lobbyManager->recordRoundResult($lobby);
         }
 
         $this->lobbyManager->save($lobby);

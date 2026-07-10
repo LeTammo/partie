@@ -52,6 +52,10 @@
                         <p class="mt-6 text-base font-semibold text-warmgray-400">{{ 'lobby.waiting.host_hint'|trans }}</p>
                     {% endif %}
                 </div>
+
+                {% if me is not null and lobby.isHost(me.id) %}
+                    {% include 'lobby/_settings.html.twig' %}
+                {% endif %}
             {% else %}
                 {# ---------- finished banner ---------- #}
                 {% if lobby.state.status.value == 'finished' %}
@@ -65,9 +69,31 @@
                             {% set winner = lobby.state.playerById(lobby.state.winnerId) %}
                             <h2 class="mt-2 text-2xl font-extrabold text-sage-700">{{ 'lobby.finished.winner'|trans({'%player%': winner.nickname}) }}</h2>
                         {% endif %}
-                        <a href="{{ path('app_home') }}" class="btn btn-neutral mt-4 inline-block">
-                            {{ 'lobby.finished.again'|trans }} →
-                        </a>
+
+                        {% if lobby.roundWins is not empty %}
+                            <div class="mt-3 flex flex-wrap items-center justify-center gap-2.5">
+                                {% for player in lobby.players %}
+                                    <span class="inline-flex items-center gap-1.5 rounded-xl bg-white px-3 py-1.5 text-sm font-extrabold text-sage-700 shadow-soft">
+                                        <span class="size-2.5 shrink-0 rounded-full" style="background-color: {{ player.color }}"></span>
+                                        {{ player.nickname }}: {{ 'lobby.rounds_won'|trans({'%count%': lobby.roundWins[player.id] ?? 0}) }}
+                                    </span>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+
+                        <div class="mt-4 flex flex-wrap items-center justify-center gap-3">
+                            {% if me is not null and lobby.isHost(me.id) %}
+                                <form method="post" action="{{ path('app_lobby_replay', {code: lobby.code}) }}">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('lobby') }}">
+                                    <button type="submit" class="btn btn-confirm">
+                                        {{ 'lobby.replay.button'|trans }}
+                                    </button>
+                                </form>
+                            {% endif %}
+                            <a href="{{ path('app_home') }}" class="btn btn-neutral inline-block">
+                                {{ 'lobby.finished.again'|trans }} →
+                            </a>
+                        </div>
                     </div>
                 {% elseif me is not null and lobby.state.isPlayersTurn(me.id) %}
                     {# keyed by the player at turn: a turn change swaps the node and replays the animation #}
@@ -101,6 +127,7 @@
                         <h1 class="truncate text-lg font-extrabold leading-tight">{{ game.name|trans }}</h1>
                         <p class="text-xs font-bold uppercase tracking-wide text-warmgray-400">
                             {{ ('lobby.status.' ~ lobby.status.value)|trans }}
+                            {% if lobby.round > 1 %}· {{ 'lobby.round'|trans({'%round%': lobby.round}) }}{% endif %}
                         </p>
                     </div>
                     <button type="button" popovertarget="game-rules" aria-label="{{ 'lobby.rules'|trans }}" title="{{ 'lobby.rules'|trans }}"

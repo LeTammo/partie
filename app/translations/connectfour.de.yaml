@@ -1,6 +1,9 @@
 # --- Brett ---
 connectfour.drop: 'In Spalte %column% einwerfen'
 
+# --- Einstellungen ---
+setting.connectfour.connect_count: 'Steine in einer Reihe zum Gewinnen'
+
 # --- Spielverlauf ---
 log.connectfour.dropped: '%player% wirft einen Stein in Spalte %column%.'
 log.connectfour.won: '%player% hat vier verbunden!'

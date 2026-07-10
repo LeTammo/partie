@@ -12,6 +12,9 @@ koepknack.closed_by: '%player% hat zugemacht – alle sind noch einmal dran!'
 koepknack.reveal: 'Aufdecken'
 koepknack.new_round: 'Nächste Runde starten'
 
+# --- Einstellungen ---
+setting.koepknack.rounds_total: 'Anzahl Runden'
+
 # --- Spielverlauf ---
 log.koepknack.round_started: 'Runde %round% – frische Karten für alle.'
 log.koepknack.swapped: '%player% tauscht eine Karte.'

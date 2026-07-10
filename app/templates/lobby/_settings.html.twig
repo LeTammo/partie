@@ -1,0 +1,39 @@
+{% if game.settings() is not empty %}
+    <div class="rounded-3xl bg-white p-6 shadow-soft">
+        <h3 class="text-lg font-extrabold">{{ 'lobby.settings.title'|trans }}</h3>
+        <p class="mt-1 text-xs font-semibold text-warmgray-400">{{ 'lobby.settings.host_only'|trans }}</p>
+
+        <form method="post" action="{{ path('app_lobby_settings', {code: lobby.code}) }}" class="mt-4 space-y-3"
+              data-controller="autosave" data-action="change->autosave#save">
+            <input type="hidden" name="_token" value="{{ csrf_token('lobby') }}">
+
+            {% for setting in game.settings() %}
+                {% set current = lobby.settings[setting.key] ?? setting.default %}
+                <div class="flex items-center justify-between gap-3 rounded-2xl bg-cream px-4 py-3">
+                    <label for="setting-{{ setting.key }}" class="text-sm font-bold text-warmgray-700">
+                        {{ setting.labelKey|trans({}, game.id) }}
+                    </label>
+
+                    {% if setting.type.value == 'bool' %}
+                        <input type="hidden" name="{{ setting.key }}" value="0">
+                        <input type="checkbox" id="setting-{{ setting.key }}" name="{{ setting.key }}" value="1"
+                               {{ current ? 'checked' }}
+                               class="size-5 shrink-0 rounded accent-softblue-500">
+                    {% elseif setting.type.value == 'int' %}
+                        <input type="number" id="setting-{{ setting.key }}" name="{{ setting.key }}" value="{{ current }}"
+                               {% if setting.min is not null %}min="{{ setting.min }}"{% endif %}
+                               {% if setting.max is not null %}max="{{ setting.max }}"{% endif %}
+                               class="w-20 shrink-0 rounded-xl bg-white px-3 py-1.5 text-center font-bold shadow-soft focus:outline-none focus:ring-2 focus:ring-softblue-300">
+                    {% elseif setting.type.value == 'enum' %}
+                        <select id="setting-{{ setting.key }}" name="{{ setting.key }}"
+                                class="shrink-0 rounded-xl bg-white px-3 py-1.5 font-bold shadow-soft focus:outline-none focus:ring-2 focus:ring-softblue-300">
+                            {% for value, labelKey in setting.options %}
+                                <option value="{{ value }}" {{ current == value ? 'selected' }}>{{ labelKey|trans }}</option>
+                            {% endfor %}
+                        </select>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </form>
+    </div>
+{% endif %}

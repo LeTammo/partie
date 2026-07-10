@@ -1,14 +1,20 @@
 # --- Board ---
 checkers.must_continue: 'Keep jumping with the same piece!'
+checkers.choose_sacrifice: 'You missed multiple captures. Choose which piece is removed.'
+
+# --- Settings ---
+setting.checkers.forced_capture: 'Forced capture (a piece that could capture but doesn''t is removed)'
 
 # --- Game log ---
 log.checkers.moved: '%player% moved a piece.'
 log.checkers.captured: '%player% captured a piece!'
 log.checkers.king: '%player% got a king!'
+log.checkers.huffed: '%player%''s piece was removed for not capturing!'
 
 # --- Errors ---
 error.checkers.no_piece: 'There is no piece of yours on that square.'
 error.checkers.must_continue: 'You must continue jumping with the same piece.'
+error.checkers.choose_sacrifice: 'You must choose which piece is removed.'
 
 # --- How to play ---
 rules: |-

@@ -10,6 +10,8 @@ use App\Game\Core\Card\PlayingCard;
 use App\Game\Core\Card\Rank;
 use App\Game\Core\Card\Suit;
 use App\Game\Core\Exception\InvalidMoveException;
+use App\Game\Core\Model\GameSetting;
+use App\Game\Core\Model\GameSettingType;
 use App\Game\Core\Model\GameState;
 use App\Game\Core\Service\AbstractGameDefinition;
 
@@ -53,9 +55,50 @@ final readonly class GameDefinition extends AbstractGameDefinition
         return 5;
     }
 
-    public function createInitialState(array $players): GameState
+    public function settings(): array
+    {
+        $rankOptions = $this->rankOptions();
+
+        return [
+            new GameSetting(
+                key: 'skipRank',
+                labelKey: 'setting.maumau.skip_rank',
+                type: GameSettingType::Enum,
+                default: (string) Rank::Eight->value,
+                options: $rankOptions,
+            ),
+            new GameSetting(
+                key: 'drawRank',
+                labelKey: 'setting.maumau.draw_rank',
+                type: GameSettingType::Enum,
+                default: (string) Rank::Seven->value,
+                options: $rankOptions,
+            ),
+            new GameSetting(
+                key: 'stackDraw',
+                labelKey: 'setting.maumau.stack_draw',
+                type: GameSettingType::Bool,
+                default: true,
+            ),
+            new GameSetting(
+                key: 'stackSkip',
+                labelKey: 'setting.maumau.stack_skip',
+                type: GameSettingType::Bool,
+                default: false,
+            ),
+            new GameSetting(
+                key: 'allowRewish',
+                labelKey: 'setting.maumau.allow_rewish',
+                type: GameSettingType::Bool,
+                default: false,
+            ),
+        ];
+    }
+
+    public function createInitialState(array $players, array $settings = []): GameState
     {
         $state = new GameState($this->getId(), $players);
+        $state->data['settings'] = $settings;
 
         $deck = DeckFactory::deck32();
         foreach ($players as $player) {
@@ -65,12 +108,29 @@ final readonly class GameDefinition extends AbstractGameDefinition
         $state->data['drawPile'] = $deck;
         $state->data['wishedSuit'] = null;
         $state->data['pendingDraw'] = 0;
+        $state->data['pendingSkip'] = 0;
         $state->data['hasDrawn'] = false;
         $state->data['penaltyLocked'] = false;
 
         $state->logGameEvent('log.maumau.started');
 
         return $state;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function rankOptions(): array
+    {
+        $options = [];
+        foreach (Rank::cases() as $rank) {
+            if (Rank::Jack === $rank) {
+                continue;
+            }
+            $options[(string) $rank->value] = 'card.rank.'.$rank->labelKey();
+        }
+
+        return $options;
     }
 
     public function applyMove(GameState $state, string $playerId, array $payload): void
@@ -101,6 +161,7 @@ final readonly class GameDefinition extends AbstractGameDefinition
     {
         $player = $state->currentPlayer();
         $hand = &$state->data['hands'][$player->id];
+        $options = Options::fromState($state);
 
         if (!isset($hand[$cardIndex])) {
             $this->invalidMove('error.maumau.unknown_card');
@@ -108,7 +169,7 @@ final readonly class GameDefinition extends AbstractGameDefinition
 
         $card = $hand[$cardIndex];
         $top = $this->top($state);
-        if (!$this->rules->playable($card, $top, $state->data['wishedSuit'], $state->data['pendingDraw'], $state->data['penaltyLocked'])) {
+        if (!$this->rules->playable($card, $top, $state->data['wishedSuit'], $state->data['pendingDraw'], $state->data['penaltyLocked'], $state->data['pendingSkip'], $options)) {
             $this->invalidMove('error.maumau.not_playable');
         }
 
@@ -133,8 +194,10 @@ final readonly class GameDefinition extends AbstractGameDefinition
             return;
         }
 
-        if (Rank::Seven === $card->rank) {
+        if ($card->rank === $options->drawRank) {
             $state->data['pendingDraw'] += GameRules::DRAW_PENALTY;
+        } elseif ($card->rank === $options->skipRank) {
+            ++$state->data['pendingSkip'];
         } elseif (Rank::Jack === $card->rank) {
             $state->data['wishedSuit'] = $wish;
             $state->logGameEvent('log.maumau.wished', [
@@ -145,8 +208,9 @@ final readonly class GameDefinition extends AbstractGameDefinition
 
         $this->endTurn($state);
 
-        if (Rank::Eight === $card->rank) {
+        if ($card->rank === $options->skipRank && !$options->stackSkip) {
             $state->logGameEvent('log.maumau.skipped', ['%player%' => $state->currentPlayer()->nickname]);
+            $state->data['pendingSkip'] = 0;
             $state->advanceTurn();
         }
     }
@@ -184,6 +248,15 @@ final readonly class GameDefinition extends AbstractGameDefinition
 
     private function pass(GameState $state): void
     {
+        if ($state->data['pendingSkip'] > 0) {
+            $player = $state->currentPlayer();
+            --$state->data['pendingSkip'];
+            $state->logGameEvent('log.maumau.skipped', ['%player%' => $player->nickname]);
+            $state->advanceTurn();
+
+            return;
+        }
+
         if (!$state->data['hasDrawn']) {
             $this->invalidMove('error.maumau.draw_first');
         }

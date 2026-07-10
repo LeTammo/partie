@@ -47,6 +47,7 @@ final class LobbyManager
 
         $host = $this->createPlayer($nickname, 0);
         $lobby = new Lobby($code, $game->getId(), $host->id);
+        $lobby->settings = GameSettingsResolver::resolve($game->settings(), []);
         $lobby->addPlayer($host);
 
         $this->save($lobby);
@@ -92,10 +93,57 @@ final class LobbyManager
         }
 
         $lobby->status = GameStatus::Running;
-        $lobby->state = $game->createInitialState($lobby->players);
+        $lobby->state = $game->createInitialState($lobby->players, $lobby->settings);
         $lobby->state->logEvent('log.game_started', ['%game%' => 't:game.'.$game->getId().'.name']);
 
         $this->save($lobby);
+    }
+
+    /**
+     * @param array<string, mixed> $raw
+     */
+    public function updateSettings(Lobby $lobby, string $playerId, array $raw): void
+    {
+        if (!$lobby->isHost($playerId)) {
+            throw new GameException('error.host_only');
+        }
+        if (GameStatus::Waiting !== $lobby->status) {
+            throw new GameException('error.already_running');
+        }
+
+        $game = $this->games->get($lobby->gameId);
+        $lobby->settings = GameSettingsResolver::resolve($game->settings(), $raw);
+
+        $this->save($lobby);
+    }
+
+    public function playAgain(Lobby $lobby, string $playerId): void
+    {
+        if (!$lobby->isHost($playerId)) {
+            throw new GameException('error.host_only');
+        }
+        if (GameStatus::Finished !== $lobby->status) {
+            throw new GameException('error.not_finished');
+        }
+
+        $game = $this->games->get($lobby->gameId);
+
+        ++$lobby->round;
+        $lobby->status = GameStatus::Running;
+        $lobby->state = $game->createInitialState($lobby->players, $lobby->settings);
+        $lobby->state->logEvent('log.game_started', ['%game%' => 't:game.'.$game->getId().'.name']);
+
+        $this->save($lobby);
+    }
+
+    public function recordRoundResult(Lobby $lobby): void
+    {
+        $winnerId = $lobby->state?->winnerId;
+        if (null === $winnerId) {
+            return;
+        }
+
+        $lobby->roundWins[$winnerId] = ($lobby->roundWins[$winnerId] ?? 0) + 1;
     }
 
     public function getLobby(string $code): Lobby
@@ -116,9 +164,6 @@ final class LobbyManager
     }
 
     /**
-     * Lobbies still waiting for players, for the dashboard's "open lobbies" list.
-     * Self-heals the code index: entries whose lobby has expired are dropped.
-     *
      * @return list<Lobby>
      */
     public function listOpen(): array

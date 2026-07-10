@@ -4,6 +4,9 @@ yahtzee.score_action: '%points% Punkte auf %category% eintragen'
 yahtzee.upper_bonus: 'Bonus oben (63 → +35)'
 yahtzee.total: 'Gesamt'
 
+# --- Einstellungen ---
+setting.yahtzee.rolls_per_turn: 'Würfe pro Zug'
+
 # --- Kategorien ---
 yahtzee.category.ones: 'Einser'
 yahtzee.category.twos: 'Zweier'

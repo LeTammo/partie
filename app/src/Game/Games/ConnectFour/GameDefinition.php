@@ -6,6 +6,8 @@ namespace App\Game\Games\ConnectFour;
 
 use App\Game\Core\Exception\InvalidMoveException;
 use App\Game\Core\Model\Board;
+use App\Game\Core\Model\GameSetting;
+use App\Game\Core\Model\GameSettingType;
 use App\Game\Core\Model\GameState;
 use App\Game\Core\Model\Token;
 use App\Game\Core\Model\TokenShape;
@@ -54,12 +56,27 @@ final readonly class GameDefinition extends AbstractGameDefinition
         return 2;
     }
 
-    public function createInitialState(array $players): GameState
+    public function settings(): array
+    {
+        return [
+            new GameSetting(
+                key: 'connectCount',
+                labelKey: 'setting.connectfour.connect_count',
+                type: GameSettingType::Int,
+                default: 4,
+                min: 3,
+                max: 6,
+            ),
+        ];
+    }
+
+    public function createInitialState(array $players, array $settings = []): GameState
     {
         $state = new GameState($this->getId(), $players, new Board(7, 6));
         foreach ($players as $i => $player) {
             $state->data['colors'][$player->id] = self::TOKEN_COLORS[$i % 2];
         }
+        $state->data['settings'] = $settings;
 
         return $state;
     }
@@ -88,7 +105,8 @@ final readonly class GameDefinition extends AbstractGameDefinition
 
         $state->logGameEvent('log.connectfour.dropped', ['%player%' => $player->nickname, '%column%' => $column + 1]);
 
-        if ($this->rules->isWinningMove($state->board, $column, $y)) {
+        $connectCount = (int) ($this->setting($state, 'connectCount') ?? 4);
+        if ($this->rules->isWinningMove($state->board, $column, $y, $connectCount)) {
             $state->finish($playerId);
             $state->logGameEvent('log.connectfour.won', ['%player%' => $player->nickname]);
         } elseif ($this->rules->isBoardFull($state->board)) {

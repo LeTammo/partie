@@ -95,7 +95,7 @@
             <p class="mb-3 text-center text-sm font-extrabold uppercase tracking-wide text-warmgray-400">
                 {{ 'rummy.your_hand'|trans }}
                 {% if not view.hasOpened %}
-                    · {{ 'rummy.initial_progress'|trans({'%points%': view.initialPoints}) }}
+                    · {{ 'rummy.initial_progress'|trans({'%points%': view.initialPoints, '%needed%': view.initialMeldPoints}) }}
                 {% endif %}
             </p>
             <div id="rm-hand" class="flex flex-wrap justify-center gap-2">

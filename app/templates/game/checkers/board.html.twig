@@ -2,11 +2,18 @@
 <div class="mx-auto w-fit"
      data-controller="dragdrop--grid-move"
      data-dragdrop--grid-move-moves-value="{{ view.moves|json_encode|e('html_attr') }}"
+     data-dragdrop--grid-move-sacrifice-squares-value="{{ view.sacrificeSquares|json_encode|e('html_attr') }}"
      data-dragdrop--grid-move-capture-distance-value="2">
 
     {% if view.mustContinue %}
         <p class="anim-rise mb-3 rounded-2xl bg-terracotta-50 px-4 py-2 text-center text-base font-extrabold text-terracotta-700 shadow-soft">
             {{ 'checkers.must_continue'|trans }}
+        </p>
+    {% endif %}
+
+    {% if view.pendingSacrifice %}
+        <p class="anim-rise mb-3 rounded-2xl bg-terracotta-50 px-4 py-2 text-center text-base font-extrabold text-terracotta-700 shadow-soft">
+            {{ 'checkers.choose_sacrifice'|trans }}
         </p>
     {% endif %}
 
@@ -16,6 +23,7 @@
         <input type="hidden" name="fromY" data-dragdrop--grid-move-target="fromY">
         <input type="hidden" name="toX" data-dragdrop--grid-move-target="toX">
         <input type="hidden" name="toY" data-dragdrop--grid-move-target="toY">
+        <input type="hidden" name="sacrifice" data-dragdrop--grid-move-target="sacrifice">
     </form>
 
     <div class="grid grid-cols-8 overflow-hidden rounded-3xl shadow-soft">
@@ -24,18 +32,20 @@
                 <button type="button"
                         data-cell data-x="{{ cell.x }}" data-y="{{ cell.y }}"
                         data-action="click->dragdrop--grid-move#pick dragover->dragdrop--grid-move#dragOver drop->dragdrop--grid-move#drop"
-                        {% if not cell.selectable and cell.outer is null %}tabindex="-1"{% endif %}
+                        {% if not cell.selectable and not cell.sacrificeCandidate and cell.outer is null %}tabindex="-1"{% endif %}
                         class="relative grid size-10 place-items-center sm:size-14
                                {{ cell.dark ? 'bg-warmgray-300/80' : 'bg-cream' }}
-                               {{ cell.selectable ? 'cursor-pointer hover:brightness-105' : 'cursor-default' }}">
+                               {{ cell.selectable or cell.sacrificeCandidate ? 'cursor-pointer hover:brightness-105' : 'cursor-default' }}">
                     {% if cell.outer %}
                         <span data-flip-id="piece-{{ cell.tokenId }}" data-flip-exit="fade"
-                              {% if cell.mine %}
+                              {% if cell.mine and not cell.sacrificeCandidate %}
                                   draggable="true" data-x="{{ cell.x }}" data-y="{{ cell.y }}"
                                   data-action="dragstart->dragdrop--grid-move#dragStart dragend->dragdrop--grid-move#dragEnd"
                               {% endif %}
-                              class="grid size-8 place-items-center rounded-full shadow-soft sm:size-11
-                                     {{ cell.selectable ? 'ring-2 ring-white/80' }} {{ cell.mine ? 'cursor-grab' }}"
+                              class="group relative grid size-8 place-items-center rounded-full shadow-soft sm:size-11
+                                     {{ cell.selectable ? 'ring-2 ring-white/80' }}
+                                     {{ cell.sacrificeCandidate ? 'ring-2 ring-terracotta-500' }}
+                                     {{ cell.mine and not cell.sacrificeCandidate ? 'cursor-grab' }}"
                               style="background-color: {{ cell.outer }}">
                             {% if cell.king %}
                                 <span style="color: {{ cell.inner }}">
@@ -43,6 +53,11 @@
                                 </span>
                             {% else %}
                                 <span class="size-3.5 rounded-full sm:size-5" style="background-color: {{ cell.inner }}"></span>
+                            {% endif %}
+                            {% if cell.sacrificeCandidate %}
+                                <span class="absolute inset-0 grid place-items-center rounded-full bg-terracotta-600/80 text-white opacity-0 transition group-hover:opacity-100">
+                                    {% include 'icons/x.svg.twig' with {class: 'size-4 sm:size-6'} only %}
+                                </span>
                             {% endif %}
                         </span>
                     {% endif %}

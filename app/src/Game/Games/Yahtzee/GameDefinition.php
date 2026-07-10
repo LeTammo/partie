@@ -6,6 +6,8 @@ namespace App\Game\Games\Yahtzee;
 
 use App\Game\Core\Exception\InvalidMoveException;
 use App\Game\Core\Model\Dice;
+use App\Game\Core\Model\GameSetting;
+use App\Game\Core\Model\GameSettingType;
 use App\Game\Core\Model\GameState;
 use App\Game\Core\Service\AbstractGameDefinition;
 
@@ -50,9 +52,24 @@ final readonly class GameDefinition extends AbstractGameDefinition
         return 6;
     }
 
-    public function createInitialState(array $players): GameState
+    public function settings(): array
+    {
+        return [
+            new GameSetting(
+                key: 'rollsPerTurn',
+                labelKey: 'setting.yahtzee.rolls_per_turn',
+                type: GameSettingType::Int,
+                default: self::ROLLS_PER_TURN,
+                min: 1,
+                max: 5,
+            ),
+        ];
+    }
+
+    public function createInitialState(array $players, array $settings = []): GameState
     {
         $state = new GameState($this->getId(), $players);
+        $state->data['settings'] = $settings;
 
         for ($i = 0; $i < self::DICE_COUNT; ++$i) {
             $state->dice[] = new Dice(maxFaces: 6);
@@ -62,7 +79,8 @@ final readonly class GameDefinition extends AbstractGameDefinition
         foreach ($players as $player) {
             $state->data['scorecards'][$player->id] = $emptyCard;
         }
-        $state->data['rollsLeft'] = self::ROLLS_PER_TURN;
+        $state->data['rollsPerTurn'] = (int) ($settings['rollsPerTurn'] ?? self::ROLLS_PER_TURN);
+        $state->data['rollsLeft'] = $state->data['rollsPerTurn'];
         $state->data['hasRolled'] = false;
 
         return $state;
@@ -156,7 +174,7 @@ final readonly class GameDefinition extends AbstractGameDefinition
             $die->locked = false;
             $die->value = 1;
         }
-        $state->data['rollsLeft'] = self::ROLLS_PER_TURN;
+        $state->data['rollsLeft'] = $state->data['rollsPerTurn'];
         $state->data['hasRolled'] = false;
 
         if ($this->isGameComplete($state)) {

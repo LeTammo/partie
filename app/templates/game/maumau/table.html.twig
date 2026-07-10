@@ -61,6 +61,11 @@
                     {{ (view.penaltyLocked ? 'maumau.pending_draw_locked' : 'maumau.pending_draw')|trans({'%count%': view.pendingDraw}) }}
                 </span>
             {% endif %}
+            {% if view.pendingSkip > 0 %}
+                <span id="pending-skip-{{ view.pendingSkip }}" class="anim-pop rounded-xl bg-softblue-100 px-3 py-1.5 text-softblue-700 shadow-soft">
+                    {{ 'maumau.pending_skip'|trans({'%count%': view.pendingSkip}) }}
+                </span>
+            {% endif %}
         </div>
     </div>
 

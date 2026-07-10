@@ -6,6 +6,8 @@ namespace App\Game\Games\Blackjack;
 
 use App\Game\Core\Card\DeckFactory;
 use App\Game\Core\Exception\InvalidMoveException;
+use App\Game\Core\Model\GameSetting;
+use App\Game\Core\Model\GameSettingType;
 use App\Game\Core\Model\GameState;
 use App\Game\Core\Model\GameStatus;
 use App\Game\Core\Model\Player;
@@ -53,12 +55,36 @@ final readonly class GameDefinition extends AbstractGameDefinition implements Au
         return 5;
     }
 
-    public function createInitialState(array $players): GameState
+    public function settings(): array
+    {
+        return [
+            new GameSetting(
+                key: 'startChips',
+                labelKey: 'setting.blackjack.start_chips',
+                type: GameSettingType::Int,
+                default: self::START_CHIPS,
+                min: 20,
+                max: 1000,
+            ),
+            new GameSetting(
+                key: 'dealerStandsAt',
+                labelKey: 'setting.blackjack.dealer_stands_at',
+                type: GameSettingType::Int,
+                default: GameRules::DEALER_STANDS_AT,
+                min: 15,
+                max: 19,
+            ),
+        ];
+    }
+
+    public function createInitialState(array $players, array $settings = []): GameState
     {
         $state = new GameState($this->getId(), $players);
+        $state->data['settings'] = $settings;
 
+        $startChips = (int) ($settings['startChips'] ?? self::START_CHIPS);
         foreach ($players as $player) {
-            $state->data['chips'][$player->id] = self::START_CHIPS;
+            $state->data['chips'][$player->id] = $startChips;
         }
         $state->data['round'] = 0;
         $state->data['roundsTotal'] = self::ROUNDS;
@@ -228,7 +254,8 @@ final readonly class GameDefinition extends AbstractGameDefinition implements Au
             return;
         }
 
-        if ($this->rules->value($dealer) < GameRules::DEALER_STANDS_AT) {
+        $dealerStandsAt = (int) ($this->setting($state, 'dealerStandsAt') ?? GameRules::DEALER_STANDS_AT);
+        if ($this->rules->value($dealer) < $dealerStandsAt) {
             $dealer[] = array_pop($state->data['deck']);
             $state->logGameEvent('log.blackjack.dealer_draw', ['%value%' => $this->rules->value($dealer)]);
 

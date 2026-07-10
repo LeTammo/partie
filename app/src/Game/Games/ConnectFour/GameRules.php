@@ -26,7 +26,7 @@ final class GameRules
         return null;
     }
 
-    public function isWinningMove(Board $board, int $x, int $y): bool
+    public function isWinningMove(Board $board, int $x, int $y, int $connect = self::CONNECT): bool
     {
         $ownerId = $board->get($x, $y)?->ownerId;
         if (null === $ownerId) {
@@ -37,7 +37,7 @@ final class GameRules
             $count = 1
                 + $this->countDirection($board, $ownerId, $x, $y, $dx, $dy)
                 + $this->countDirection($board, $ownerId, $x, $y, -$dx, -$dy);
-            if ($count >= self::CONNECT) {
+            if ($count >= $connect) {
                 return true;
             }
         }

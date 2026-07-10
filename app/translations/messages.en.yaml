@@ -53,9 +53,14 @@ lobby.start.button: 'Start the game'
 lobby.finished.draw: "It's a draw!"
 lobby.finished.winner: '%player% wins!'
 lobby.finished.again: 'Play another game'
+lobby.replay.button: 'Play another round'
+lobby.round: 'Round %round%'
+lobby.rounds_won: '%count% round(s) won'
 lobby.turn.you: "It's your turn, %player%!"
 lobby.turn.waiting: 'Waiting for %player%…'
 lobby.rules: 'How to play'
+lobby.settings.title: 'Game settings'
+lobby.settings.host_only: 'Only the host can change settings, and only before the game starts. Changes save automatically.'
 
 # --- Sidebar ---
 players.title: 'Players'
@@ -79,6 +84,7 @@ error.match_started: 'This match has already started.'
 error.lobby_full: 'This lobby is already full.'
 error.host_only: 'Only the host can start the game.'
 error.already_running: 'The game is already running.'
+error.not_finished: 'The round is not over yet.'
 error.min_players: '%game% needs at least %count% players.'
 error.nickname_length: 'Please pick a nickname between 1 and 26 characters.'
 error.lobby_not_found: 'Lobby "%code%" does not exist (anymore).'

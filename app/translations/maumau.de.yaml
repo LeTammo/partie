@@ -9,6 +9,14 @@ maumau.wish_prompt: 'Wunschfarbe für deinen Buben wählen'
 maumau.wished: 'Gewünschte Farbe:'
 maumau.pending_draw: 'Zieh %count% oder lege eine 7!'
 maumau.pending_draw_locked: 'Zieh noch %count%.'
+maumau.pending_skip: '%count%x Aussetzen offen – lege eine passende Karte oder passe!'
+
+# --- Einstellungen ---
+setting.maumau.skip_rank: 'Aussetzen-Karte'
+setting.maumau.draw_rank: 'Nachzieh-Karte'
+setting.maumau.stack_draw: 'Nachziehen stapelbar (weitere Nachzieh-Karte legen statt ziehen)'
+setting.maumau.stack_skip: 'Aussetzen stapelbar (weitere Aussetzen-Karte legen statt auszusetzen)'
+setting.maumau.allow_rewish: 'Erneut wünschen erlaubt (Bube auf Bube spielen)'
 
 # --- Spielverlauf ---
 log.maumau.started: 'Mau-Mau startet – Farbe oder Wert bedienen.'

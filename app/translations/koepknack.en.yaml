@@ -12,6 +12,9 @@ koepknack.closed_by: '%player% knocked – one last turn for everyone!'
 koepknack.reveal: 'Showdown'
 koepknack.new_round: 'Start next round'
 
+# --- Settings ---
+setting.koepknack.rounds_total: 'Number of rounds'
+
 # --- Game log ---
 log.koepknack.round_started: 'Round %round% – fresh cards for everyone.'
 log.koepknack.swapped: '%player% swapped a card.'

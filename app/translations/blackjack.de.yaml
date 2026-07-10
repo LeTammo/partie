@@ -11,6 +11,10 @@ blackjack.hit: 'Karte'
 blackjack.stand: 'Halten'
 blackjack.double: 'Verdoppeln'
 
+# --- Einstellungen ---
+setting.blackjack.start_chips: 'Start-Chips'
+setting.blackjack.dealer_stands_at: 'Bank hört auf bei'
+
 # --- Spielverlauf ---
 log.blackjack.round_started: 'Runde %round% von %total% – Einsätze bitte.'
 log.blackjack.bet: '%player% setzt %amount% Chips.'

@@ -5,11 +5,26 @@ declare(strict_types=1);
 namespace App\Game\Core\Service;
 
 use App\Game\Core\Exception\InvalidMoveException;
+use App\Game\Core\Model\GameSetting;
+use App\Game\Core\Model\GameState;
 
 // How to use, see
 // docs/components/engine-and-state.md
 abstract readonly class AbstractGameDefinition implements GameEngineInterface
 {
+    /**
+     * @return list<GameSetting>
+     */
+    public function settings(): array
+    {
+        return [];
+    }
+
+    protected function setting(GameState $state, string $key): string|int|bool|null
+    {
+        return $state->data['settings'][$key] ?? null;
+    }
+
     /**
      * @param array<string, string|int> $params
      */

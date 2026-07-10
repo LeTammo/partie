@@ -4,6 +4,9 @@ yahtzee.score_action: 'Score %points% points on %category%'
 yahtzee.upper_bonus: 'Upper bonus (63 → +35)'
 yahtzee.total: 'Total'
 
+# --- Settings ---
+setting.yahtzee.rolls_per_turn: 'Rolls per turn'
+
 # --- Categories ---
 yahtzee.category.ones: 'Ones'
 yahtzee.category.twos: 'Twos'

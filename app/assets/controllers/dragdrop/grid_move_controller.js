@@ -5,8 +5,8 @@ import { CELL_SELECTED_CLASS, CELL_TARGET_CLASS } from '../../dragdrop.js';
 // How to use, see
 // docs/components/tokens-and-boards.md
 export default class extends Controller {
-    static targets = ['form', 'fromX', 'fromY', 'toX', 'toY'];
-    static values = { moves: Object, captureDistance: Number };
+    static targets = ['form', 'fromX', 'fromY', 'toX', 'toY', 'sacrifice'];
+    static values = { moves: Object, captureDistance: Number, sacrificeSquares: Array };
 
     connect() {
         this.selected = null;
@@ -25,6 +25,11 @@ export default class extends Controller {
         const x = Number(cell.dataset.x);
         const y = Number(cell.dataset.y);
         const key = `${x}:${y}`;
+
+        if (this.hasSacrificeSquaresValue && this.sacrificeSquaresValue.includes(key)) {
+            this.submitSacrifice(key);
+            return;
+        }
 
         if (this.movesValue[key]) {
             this.selected = this.selected === key ? null : key;
@@ -85,6 +90,14 @@ export default class extends Controller {
 
         this.selected = null;
         this.paint();
+    }
+
+    submitSacrifice(key) {
+        const [x, y] = key.split(':').map(Number);
+        this.cellAt(x, y)?.querySelector('[data-flip-id]')?.classList.add('ghost-fade');
+
+        this.sacrificeTarget.value = key;
+        this.formTarget.requestSubmit();
     }
 
     animateMove(fromX, fromY, toX, toY) {

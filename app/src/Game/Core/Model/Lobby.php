@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Game\Core\Model;
 
+// How to use, see
+// docs/components/engine-and-state.md
 final class Lobby
 {
     /** @var list<Player> */
@@ -12,6 +14,14 @@ final class Lobby
     public GameStatus $status = GameStatus::Waiting;
 
     public ?GameState $state = null;
+
+    /** @var array<string, string|int|bool>  */
+    public array $settings = [];
+
+    /** @var array<string, int> */
+    public array $roundWins = [];
+
+    public int $round = 1;
 
     public function __construct(
         public readonly string $code,

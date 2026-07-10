@@ -11,6 +11,10 @@ blackjack.hit: 'Hit'
 blackjack.stand: 'Stand'
 blackjack.double: 'Double'
 
+# --- Settings ---
+setting.blackjack.start_chips: 'Starting chips'
+setting.blackjack.dealer_stands_at: 'Dealer stands at'
+
 # --- Game log ---
 log.blackjack.round_started: 'Round %round% of %total% – place your bets.'
 log.blackjack.bet: '%player% bets %amount% chips.'

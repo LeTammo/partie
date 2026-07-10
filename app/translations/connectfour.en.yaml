@@ -1,6 +1,9 @@
 # --- Board ---
 connectfour.drop: 'Drop into column %column%'
 
+# --- Settings ---
+setting.connectfour.connect_count: 'Discs in a row to win'
+
 # --- Game log ---
 log.connectfour.dropped: '%player% dropped a disc into column %column%.'
 log.connectfour.won: '%player% connected four!'

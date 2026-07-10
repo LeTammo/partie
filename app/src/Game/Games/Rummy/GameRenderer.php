@@ -59,6 +59,7 @@ final class GameRenderer
             'canTakeback' => $myTurn && [] !== $state->data['turnMelds'],
             'hasOpened' => $hasOpened,
             'initialPoints' => $state->data['turnMeldPoints'],
+            'initialMeldPoints' => (int) ($state->data['settings']['initialMeldPoints'] ?? GameRules::INITIAL_MELD_POINTS),
         ];
     }
 }
