@@ -10,8 +10,7 @@ home.create.button: 'Lobby erstellen'
 home.join.button: 'Beitreten'
 home.players_exact: '%min% Spieler'
 home.players_range: '%min%-%max% Spieler'
-home.lobbies.title: 'Offene Lobbys'
-home.lobbies.empty: 'Gerade keine offenen Lobbys – erstelle eine!'
+home.lobbies.empty: 'Keine offenen Lobbys – erstelle eine!'
 home.lobbies.seats: '%taken%/%max%'
 
 # --- Nickname bearbeiten ---
