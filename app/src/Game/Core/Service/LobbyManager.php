@@ -11,9 +11,6 @@ use App\Game\Core\Model\Lobby;
 use App\Game\Core\Model\Player;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 
-/**
- * Stores lobbies in a filesystem cache pool, keyed by the 6-character invite code.
- */
 final class LobbyManager
 {
     private const string CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -21,6 +18,8 @@ final class LobbyManager
     private const int|float TTL_SECONDS = 60 * 60 * 12; // lobbies live for 12h
     private const int MAX_NICKNAME_LENGTH = 26;
     private const string INDEX_KEY = 'lobby_index';
+    private const int WAITING_STALE_SECONDS = 90;
+    private const int RUNNING_STALE_SECONDS = 60 * 5;
 
     private const array PLAYER_COLORS = ['#8fb3d9', '#9fbf9f', '#d9a08f', '#c9a9d9', '#d9c98f', '#8fd9cb'];
 
@@ -49,6 +48,7 @@ final class LobbyManager
         $lobby = new Lobby($code, $game->getId(), $host->id);
         $lobby->settings = GameSettingsResolver::resolve($game->settings(), []);
         $lobby->addPlayer($host);
+        $lobby->lastSeen[$host->id] = time();
 
         $this->save($lobby);
         $this->addToIndex($code);
@@ -70,9 +70,20 @@ final class LobbyManager
 
         $player = $this->createPlayer($nickname, \count($lobby->players));
         $lobby->addPlayer($player);
+        $lobby->lastSeen[$player->id] = time();
         $this->save($lobby);
 
         return [$lobby, $player];
+    }
+
+    public function heartbeat(Lobby $lobby, string $playerId): void
+    {
+        if (!$lobby->hasPlayer($playerId)) {
+            return;
+        }
+
+        $lobby->lastSeen[$playerId] = time();
+        $this->save($lobby);
     }
 
     public function startGame(Lobby $lobby, string $playerId): void
@@ -168,21 +179,48 @@ final class LobbyManager
      */
     public function listOpen(): array
     {
+        $this->pruneStale();
+
+        return array_values(array_filter(
+            $this->allLobbies(),
+            static fn (Lobby $lobby): bool => GameStatus::Waiting === $lobby->status,
+        ));
+    }
+
+    public function pruneStale(): int
+    {
+        $now = time();
+        $removed = 0;
+
+        foreach ($this->allLobbies() as $lobby) {
+            $lastActivity = [] !== $lobby->lastSeen ? max($lobby->lastSeen) : $lobby->createdAt->getTimestamp();
+            $threshold = GameStatus::Waiting === $lobby->status ? self::WAITING_STALE_SECONDS : self::RUNNING_STALE_SECONDS;
+
+            if ($now - $lastActivity > $threshold) {
+                $this->delete($lobby->code);
+                ++$removed;
+            }
+        }
+
+        return $removed;
+    }
+
+    /**
+     * @return list<Lobby>
+     */
+    private function allLobbies(): array
+    {
         $item = $this->cache->getItem(self::INDEX_KEY);
         $codes = $item->isHit() ? $item->get() : [];
 
         $stillValid = [];
-        $open = [];
+        $lobbies = [];
         foreach ($codes as $code) {
             if (!$this->exists($code)) {
                 continue;
             }
             $stillValid[] = $code;
-
-            $lobby = $this->getLobby($code);
-            if (GameStatus::Waiting === $lobby->status) {
-                $open[] = $lobby;
-            }
+            $lobbies[] = $this->getLobby($code);
         }
 
         if ($stillValid !== $codes) {
@@ -191,7 +229,7 @@ final class LobbyManager
             $this->cache->save($item);
         }
 
-        return $open;
+        return $lobbies;
     }
 
     public function save(Lobby $lobby): void
@@ -204,7 +242,15 @@ final class LobbyManager
 
     public function delete(string $code): void
     {
-        $this->cache->deleteItem($this->cacheKey(strtoupper($code)));
+        $code = strtoupper($code);
+        $this->cache->deleteItem($this->cacheKey($code));
+
+        $item = $this->cache->getItem(self::INDEX_KEY);
+        if ($item->isHit()) {
+            $item->set(array_values(array_filter($item->get(), static fn (string $c): bool => $c !== $code)));
+            $item->expiresAfter(self::TTL_SECONDS);
+            $this->cache->save($item);
+        }
     }
 
     private function cacheKey(string $code): string

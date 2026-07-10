@@ -31,6 +31,7 @@ src/Controller/
 │                          POST /lobby/join            Join via invite code
 │                          GET  /lobby/{code}          Waiting room or game view
 │                          POST /lobby/{code}/rename   Rename the seated player, broadcast
+│                          POST /lobby/{code}/heartbeat Keep-alive ping, updates Lobby::$lastSeen
 │                          POST /lobby/{code}/settings Host updates game settings (before start)
 │                          POST /lobby/{code}/start    Host starts the match
 │                          POST /lobby/{code}/replay   Host starts another round, same players/settings
@@ -72,3 +73,16 @@ takes a moment, so the UI reacts immediately and the morph just confirms it.
   spectator and can grab a seat while it's still `waiting`.
 - **Security**: every POST is CSRF-protected, moves are validated
   server-side, and a player can never move on another player's behalf.
+
+## Lobby cleanup
+
+Every seated player's browser pings `POST /lobby/{code}/heartbeat` every 25s
+(the `heartbeat` Stimulus controller, wired in `lobby/show.html.twig` whenever
+`me is not null`), which stamps `Lobby::$lastSeen[playerId] = time()`.
+`LobbyManager::pruneStale()` deletes a lobby once *every* player's last-seen
+timestamp is older than its threshold - 90s for a `waiting` lobby (nobody left
+to start it), 5 minutes for a `running`/`finished` one (a match nobody's
+watching). It runs opportunistically on every `listOpen()` call (the
+dashboard's open-lobbies list), and is also exposed as
+`php bin/console app:lobby:cleanup` for a real cron/scheduled task if you want
+pruning to happen even when nobody's visiting the dashboard.

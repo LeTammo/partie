@@ -23,6 +23,9 @@ final class Lobby
 
     public int $round = 1;
 
+    /** @var array<string, int> playerId => unix timestamp */
+    public array $lastSeen = [];
+
     public function __construct(
         public readonly string $code,
         public readonly string $gameId,

@@ -5,7 +5,12 @@
 {% block body %}
     <div {{ turbo_stream_listen(topic) }}></div>
 
-    <div id="lobby-{{ lobby.code }}" class="grid gap-6 lg:grid-cols-[1fr_300px]">
+    <div id="lobby-{{ lobby.code }}" class="grid gap-6 lg:grid-cols-[1fr_300px]"
+         {% if me is not null %}
+             data-controller="heartbeat"
+             data-heartbeat-url-value="{{ path('app_lobby_heartbeat', {code: lobby.code}) }}"
+             data-heartbeat-token-value="{{ csrf_token('lobby') }}"
+         {% endif %}>
 
         {# =================== main column =================== #}
         <div class="space-y-6">

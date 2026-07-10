@@ -138,6 +138,25 @@ final class LobbyController extends AbstractController
         return $this->redirectToRoute('app_lobby_show', ['code' => $code]);
     }
 
+    #[Route('/{code}/heartbeat', name: 'app_lobby_heartbeat', requirements: ['code' => '[A-Za-z0-9]{6}'], methods: ['POST'])]
+    public function heartbeat(string $code, Request $request): Response
+    {
+        if (!$this->isCsrfTokenValid('lobby', (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Invalid CSRF token.');
+        }
+
+        try {
+            $lobby = $this->lobbyManager->getLobby($code);
+            $me = $this->playerSession->playerFor($lobby);
+            if (null !== $me) {
+                $this->lobbyManager->heartbeat($lobby, $me->id);
+            }
+        } catch (GameException) {
+        }
+
+        return new Response(status: Response::HTTP_NO_CONTENT);
+    }
+
     #[Route('/{code}/settings', name: 'app_lobby_settings', requirements: ['code' => '[A-Za-z0-9]{6}'], methods: ['POST'])]
     public function settings(string $code, Request $request): Response
     {
