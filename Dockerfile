@@ -20,4 +20,4 @@ RUN composer dump-autoload --optimize --classmap-authoritative \
  && php bin/console cache:warmup \
  && mkdir -p var/lobbies var/sessions
 
-COPY docker/Caddyfile /etc/docker/Caddyfile
+COPY docker/Caddyfile /etc/frankenphp/Caddyfile
