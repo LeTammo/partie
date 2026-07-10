@@ -8,7 +8,27 @@
             <li class="flex items-center gap-3 rounded-2xl px-3 py-2 transition {{ isTurn ? 'bg-softblue-50 ring-2 ring-softblue-200' : 'bg-cream' }}">
                 <span class="size-3.5 shrink-0 rounded-full" style="background-color: {{ player.color }}"></span>
                 <span class="truncate font-bold">
-                    {{ player.nickname }}
+                    {% if me is defined and me is not null and me.id == player.id %}
+                        <span data-controller="nickname" data-nickname-name-value="{{ player.nickname }}" class="p-1 inline-flex items-center gap-1.5 align-middle">
+                            <span data-nickname-target="display" class="inline-flex items-center gap-1">
+                                <span data-nickname-target="text">{{ player.nickname }}</span>
+                                <button type="button" data-action="nickname#edit"
+                                        class="text-warmgray-300 transition hover:text-warmgray-500">
+                                    {% include 'icons/pencil.svg.twig' with {class: 'size-4.5'} only %}
+                                </button>
+                            </span>
+                            <form method="post" action="{{ path('app_lobby_rename', {code: lobby.code}) }}"
+                                  data-nickname-target="form" data-action="submit->nickname#save" style="display: none"
+                                  class="inline-flex items-center gap-1">
+                                <input type="hidden" name="_token" value="{{ csrf_token('lobby') }}">
+                                <input type="text" name="nickname" data-nickname-target="input" maxlength="26" required
+                                       data-action="keydown.esc->nickname#cancel blur->nickname#cancel"
+                                       class="w-24 rounded-lg bg-white px-2 py-0.5 text-sm font-bold inset-shadow-soft focus:outline-none focus:ring-2 focus:ring-softblue-300">
+                            </form>
+                        </span>
+                    {% else %}
+                        {{ player.nickname }}
+                    {% endif %}
                     {% if me is defined and me is not null and me.id == player.id %}
                         <span class="text-warmgray-400">{{ 'players.you'|trans }}</span>
                     {% endif %}

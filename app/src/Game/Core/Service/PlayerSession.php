@@ -33,9 +33,14 @@ final readonly class PlayerSession
         return null !== $playerId ? $lobby->playerById($playerId) : null;
     }
 
-    public function lastNickname(): string
+    public function nickname(): string
     {
         return (string) $this->requestStack->getSession()->get('nickname', '');
+    }
+
+    public function setNickname(string $nickname): void
+    {
+        $this->requestStack->getSession()->set('nickname', trim($nickname));
     }
 
     private function key(string $lobbyCode): string

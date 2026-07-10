@@ -36,7 +36,10 @@ final class LobbyController extends AbstractController
         }
 
         $gameId = (string) $request->request->get('game', '');
-        $nickname = (string) $request->request->get('nickname', '');
+        $nickname = trim((string) $request->request->get('nickname', ''));
+        if ('' === $nickname) {
+            $nickname = $this->playerSession->nickname();
+        }
 
         try {
             [$lobby, $host] = $this->lobbyManager->createLobby($gameId, $nickname);
@@ -59,7 +62,10 @@ final class LobbyController extends AbstractController
         }
 
         $code = strtoupper(trim((string) $request->request->get('code', '')));
-        $nickname = (string) $request->request->get('nickname', '');
+        $nickname = trim((string) $request->request->get('nickname', ''));
+        if ('' === $nickname) {
+            $nickname = $this->playerSession->nickname();
+        }
 
         try {
             $lobby = $this->lobbyManager->getLobby($code);
@@ -96,9 +102,40 @@ final class LobbyController extends AbstractController
             'lobby' => $lobby,
             'game' => $game,
             'me' => $me,
+            'nickname' => $this->playerSession->nickname(),
             'view' => null !== $lobby->state ? $game->buildView($lobby->state, $me?->id) : null,
             'topic' => GameBroadcaster::topicFor($lobby->code),
         ]);
+    }
+
+    #[Route('/{code}/rename', name: 'app_lobby_rename', requirements: ['code' => '[A-Za-z0-9]{6}'], methods: ['POST'])]
+    public function rename(string $code, Request $request): Response
+    {
+        if (!$this->isCsrfTokenValid('lobby', (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Invalid CSRF token.');
+        }
+
+        try {
+            $lobby = $this->lobbyManager->getLobby($code);
+            $me = $this->playerSession->playerFor($lobby);
+            if (null === $me) {
+                return $this->redirectToRoute('app_lobby_show', ['code' => $code]);
+            }
+
+            $nickname = trim((string) $request->request->get('nickname', ''));
+            if ('' === $nickname || mb_strlen($nickname) > 26) {
+                throw new GameException('error.nickname_length');
+            }
+
+            $me->nickname = $nickname;
+            $this->lobbyManager->save($lobby);
+            $this->playerSession->remember($lobby->code, $me);
+            $this->broadcaster->broadcast($lobby);
+        } catch (GameException $e) {
+            $this->addFlash('error', $e->translate($this->translator));
+        }
+
+        return $this->redirectToRoute('app_lobby_show', ['code' => $code]);
     }
 
     #[Route('/{code}/start', name: 'app_lobby_start', requirements: ['code' => '[A-Za-z0-9]{6}'], methods: ['POST'])]

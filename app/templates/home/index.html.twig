@@ -3,10 +3,16 @@
 {% block title %}Partie · {{ 'home.title'|trans }}{% endblock %}
 
 {% block body %}
-    <div class="mt-16 grid items-stretch gap-8 lg:grid-cols-[3fr_2fr]">
+    <div class="mt-16 grid items-start gap-8 lg:grid-cols-[3fr_2fr]"
+         data-controller="nickname"
+         data-nickname-url-value="{{ path('app_nickname_update') }}"
+         data-nickname-token-value="{{ csrf_token('nickname') }}"
+         data-nickname-name-value="{{ nickname }}"
+         data-nickname-live-value="true">
         {# ---------- Create lobby ---------- #}
         <form method="post" action="{{ path('app_lobby_create') }}" class="flex flex-col rounded-3xl bg-white p-6 shadow-soft">
             <input type="hidden" name="_token" value="{{ csrf_token('lobby') }}">
+            <input type="hidden" name="nickname" data-nickname-target="mirror" value="{{ nickname }}">
             <h2 class="text-xl font-extrabold">{{ 'home.create.title'|trans }}</h2>
 
             <div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -31,35 +37,84 @@
                 {% endfor %}
             </div>
 
-            <div class="mt-auto flex flex-col gap-3 pt-5 sm:flex-row">
-                <input type="text" name="nickname" value="{{ nickname }}" placeholder="{{ 'home.nickname'|trans }}" maxlength="20" required
-                       data-controller="nickname" data-action="input->nickname#save"
-                       class="w-full rounded-2xl bg-cream px-5 py-3 text-lg font-semibold inset-shadow-soft placeholder:text-warmgray-300 focus:outline-none focus:ring-2 focus:ring-softblue-300">
-                <button type="submit" class="btn btn-confirm shrink-0">
+            <div class="mt-auto pt-5">
+                <button type="submit" class="btn btn-confirm w-full cursor-pointer">
                     {{ 'home.create.button'|trans }}
                 </button>
             </div>
         </form>
 
-        {# ---------- Join lobby ---------- #}
-        <form method="post" action="{{ path('app_lobby_join') }}" class="flex flex-col rounded-3xl bg-white p-6 shadow-soft">
-            <input type="hidden" name="_token" value="{{ csrf_token('lobby') }}">
-            <h2 class="text-xl font-extrabold">{{ 'home.join.title'|trans }}</h2>
+        {# ---------- right column: username, open lobbies, join with a code ---------- #}
+        <div class="space-y-6">
+            {# ---------- username ---------- #}
+            <div class="rounded-3xl bg-white p-5 shadow-soft">
+                <div data-nickname-target="display" class="flex items-center justify-between gap-3">
+                    <span data-nickname-target="text" class="truncate text-lg font-extrabold">{{ nickname }} {{ 'players.you'|trans }}</span>
+                    <button type="button" data-action="nickname#edit"
+                            class="cursor-pointer grid size-9 shrink-0 place-items-center rounded-xl bg-cream text-warmgray-500 shadow-soft transition hover:shadow-lifted">
+                        {% include 'icons/pencil.svg.twig' with {class: 'size-4'} only %}
+                    </button>
+                </div>
 
-            <div class="mt-4 space-y-3">
-                <input type="text" name="code" placeholder="ABC123" maxlength="6" required
-                       pattern="[A-Za-z0-9]{6}" autocomplete="off" spellcheck="false"
-                       class="w-full rounded-2xl bg-cream px-5 py-3 text-center text-2xl font-extrabold uppercase tracking-[0.35em] inset-shadow-soft placeholder:tracking-[0.35em] placeholder:text-warmgray-300 focus:outline-none focus:ring-2 focus:ring-softblue-300">
-                <input type="text" name="nickname" value="{{ nickname }}" placeholder="{{ 'home.nickname'|trans }}" maxlength="20" required
-                       data-controller="nickname" data-action="input->nickname#save"
-                       class="w-full rounded-2xl bg-cream px-5 py-3 text-lg font-semibold inset-shadow-soft placeholder:text-warmgray-300 focus:outline-none focus:ring-2 focus:ring-softblue-300">
+                <form method="post" action="{{ path('app_nickname_update') }}" data-nickname-target="form"
+                      data-action="submit->nickname#save" style="display: none" class="flex gap-2">
+                    <input type="hidden" name="_token" value="{{ csrf_token('nickname') }}">
+                    <input type="text" name="nickname" data-nickname-target="input" maxlength="26" required
+                           data-action="keydown.esc->nickname#cancel"
+                           class="w-full rounded-xl bg-cream px-3 py-2 text-base font-semibold inset-shadow-soft focus:outline-none focus:ring-2 focus:ring-softblue-300">
+                    <button type="submit" class="btn btn-confirm shrink-0 px-4 py-2 text-sm">{{ 'nickname.save'|trans }}</button>
+                    <button type="button" data-action="nickname#cancel" class="btn btn-neutral shrink-0 px-4 py-2 text-sm">{{ 'nickname.cancel'|trans }}</button>
+                </form>
             </div>
-            <div class="mt-auto pt-3">
-                <button type="submit"
-                        class="w-full rounded-2xl bg-softblue-300 px-7 py-3 text-lg font-extrabold text-softblue-700 shadow-soft transition hover:bg-softblue-200 hover:shadow-lifted">
-                    {{ 'home.join.button'|trans }}
-                </button>
+
+            {# ---------- open lobbies ---------- #}
+            <div class="rounded-3xl bg-white p-5 shadow-soft">
+                <h3 class="text-xs font-extrabold uppercase tracking-wide text-warmgray-400">{{ 'home.lobbies.title'|trans }}</h3>
+
+                {% if lobbies is empty %}
+                    <p class="mt-3 text-sm font-semibold text-warmgray-400">{{ 'home.lobbies.empty'|trans }}</p>
+                {% else %}
+                    <ul class="mt-3 space-y-2">
+                        {% for lobby in lobbies %}
+                            {% set lobbyGame = games[lobby.gameId] %}
+                            <li>
+                                <a href="{{ path('app_lobby_show', {code: lobby.code}) }}"
+                                   class="flex items-center gap-3 rounded-2xl bg-cream p-3 transition hover:bg-softblue-50">
+                                    <span class="grid size-10 shrink-0 place-items-center rounded-xl bg-white text-warmgray-500 shadow-soft">
+                                        {% include 'icons/' ~ lobbyGame.icon ~ '.svg.twig' with {class: 'size-5'} only %}
+                                    </span>
+                                    <span class="min-w-0">
+                                        <span class="block truncate text-sm font-extrabold leading-tight">{{ lobbyGame.name|trans }}</span>
+                                        <span class="block text-xs font-bold uppercase tracking-wide text-softblue-500">
+                                            {{ 'home.lobbies.seats'|trans({'%taken%': lobby.players|length, '%max%': lobbyGame.maxPlayers}) }}
+                                        </span>
+                                    </span>
+                                    <span class="ml-auto shrink-0 text-xs font-extrabold uppercase tracking-wide text-warmgray-300">{{ lobby.code }}</span>
+                                </a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
             </div>
-        </form>
+
+            {# ---------- join with a code ---------- #}
+            <form method="post" action="{{ path('app_lobby_join') }}" class="flex flex-col rounded-3xl bg-white p-6 shadow-soft">
+                <input type="hidden" name="_token" value="{{ csrf_token('lobby') }}">
+                <input type="hidden" name="nickname" data-nickname-target="mirror" value="{{ nickname }}">
+                <h2 class="text-xl font-extrabold">{{ 'home.join.title'|trans }}</h2>
+
+                <div class="mt-4">
+                    <input type="text" name="code" placeholder="ABC123" maxlength="6" required
+                           pattern="[A-Za-z0-9]{6}" autocomplete="off" spellcheck="false"
+                           class="w-full rounded-2xl bg-cream px-5 py-3 text-center text-2xl font-extrabold uppercase tracking-[0.35em] inset-shadow-soft placeholder:tracking-[0.35em] placeholder:text-warmgray-300 focus:outline-none focus:ring-2 focus:ring-softblue-300">
+                </div>
+                <div class="mt-4">
+                    <button type="submit"
+                            class="w-full cursor-pointer rounded-2xl bg-softblue-300 px-7 py-3 text-lg font-extrabold text-softblue-700 shadow-soft transition hover:bg-softblue-200 hover:shadow-lifted">
+                        {{ 'home.join.button'|trans }}
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 {% endblock %}

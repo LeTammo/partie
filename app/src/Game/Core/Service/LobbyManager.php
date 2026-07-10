@@ -19,6 +19,8 @@ final class LobbyManager
     private const string CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
     private const int CODE_LENGTH = 6;
     private const int|float TTL_SECONDS = 60 * 60 * 12; // lobbies live for 12h
+    private const int MAX_NICKNAME_LENGTH = 26;
+    private const string INDEX_KEY = 'lobby_index';
 
     private const array PLAYER_COLORS = ['#8fb3d9', '#9fbf9f', '#d9a08f', '#c9a9d9', '#d9c98f', '#8fd9cb'];
 
@@ -48,6 +50,7 @@ final class LobbyManager
         $lobby->addPlayer($host);
 
         $this->save($lobby);
+        $this->addToIndex($code);
 
         return [$lobby, $host];
     }
@@ -112,6 +115,40 @@ final class LobbyManager
         return $this->cache->getItem($this->cacheKey($code))->isHit();
     }
 
+    /**
+     * Lobbies still waiting for players, for the dashboard's "open lobbies" list.
+     * Self-heals the code index: entries whose lobby has expired are dropped.
+     *
+     * @return list<Lobby>
+     */
+    public function listOpen(): array
+    {
+        $item = $this->cache->getItem(self::INDEX_KEY);
+        $codes = $item->isHit() ? $item->get() : [];
+
+        $stillValid = [];
+        $open = [];
+        foreach ($codes as $code) {
+            if (!$this->exists($code)) {
+                continue;
+            }
+            $stillValid[] = $code;
+
+            $lobby = $this->getLobby($code);
+            if (GameStatus::Waiting === $lobby->status) {
+                $open[] = $lobby;
+            }
+        }
+
+        if ($stillValid !== $codes) {
+            $item->set($stillValid);
+            $item->expiresAfter(self::TTL_SECONDS);
+            $this->cache->save($item);
+        }
+
+        return $open;
+    }
+
     public function save(Lobby $lobby): void
     {
         $item = $this->cache->getItem($this->cacheKey($lobby->code));
@@ -130,6 +167,20 @@ final class LobbyManager
         return 'lobby_'.$code;
     }
 
+    private function addToIndex(string $code): void
+    {
+        $item = $this->cache->getItem(self::INDEX_KEY);
+        $codes = $item->isHit() ? $item->get() : [];
+
+        if (!\in_array($code, $codes, true)) {
+            $codes[] = $code;
+        }
+
+        $item->set($codes);
+        $item->expiresAfter(self::TTL_SECONDS);
+        $this->cache->save($item);
+    }
+
     private function generateCode(): string
     {
         $code = '';
@@ -143,7 +194,7 @@ final class LobbyManager
     private function createPlayer(string $nickname, int $seat): Player
     {
         $nickname = trim($nickname);
-        if ('' === $nickname || mb_strlen($nickname) > 20) {
+        if ('' === $nickname || mb_strlen($nickname) > self::MAX_NICKNAME_LENGTH) {
             throw new GameException('error.nickname_length');
         }
 
