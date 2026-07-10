@@ -1,0 +1,28 @@
+{
+	frankenphp
+}
+
+{$SERVER_NAME:localhost} {
+	log {
+		# Mercure subscribers may pass their JWT as a query parameter
+		format filter {
+			request>uri query {
+				replace authorization REDACTED
+			}
+		}
+	}
+
+	root /app/public
+	encode zstd br gzip
+
+	mercure {
+		publisher_jwt {env.MERCURE_PUBLISHER_JWT_KEY}
+		subscriber_jwt {env.MERCURE_SUBSCRIBER_JWT_KEY}
+		# Lobby topics are public (unguessable 6-letter codes);
+		# browsers subscribe without a JWT, only publishing requires one.
+		anonymous
+		{$MERCURE_EXTRA_DIRECTIVES}
+	}
+
+	php_server
+}

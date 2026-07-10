@@ -21,3 +21,9 @@ services:
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
+
+    # Keep lobby state under var/ (instead of the system temp dir) so a
+    # volume mount can persist running games across deploys in production.
+    App\Game\Core\Service\LobbyManager:
+        arguments:
+            $cacheDir: '%kernel.project_dir%/var/lobbies'

@@ -6,52 +6,15 @@ A lightweight, modular multiplayer board game web app built with **Symfony 8.1**
 
 ## Table of contents
 
-1. [Quick start](#quick-start)
+1. [Setup](#setup)
 2. [Adding a new game](#adding-a-new-game)
 3. [Architecture](#architecture)
 4. [Frontend](#frontend)
-5. [Useful commands](#useful-commands)
-6. [Production notes](#production-notes)
 
-## Quick start
+## Setup
 
-```bash
-composer install
-
-# 1. Start the Mercure hub on http://localhost:3000
-#    Option A - standalone binary, no Docker:
-./bin/mercure-dev.sh
-#    Option B - Docker:
-docker compose up -d mercure
-
-# 2. Build the Tailwind CSS
-php bin/console tailwind:build  # add --watch during development
-
-# 3. Serve the app
-symfony serve  # or: php -S 127.0.0.1:8000 -t public
-```
-
-**One-time download of the Mercure binary** (for option A):
-
-```bash
-mkdir -p tools/mercure && cd tools/mercure \
-  && curl -sL https://github.com/dunglas/mercure/releases/download/v0.24.2/mercure_$(uname -s)_$(uname -m).tar.gz | tar xz \
-  && cd ../..
-```
-
-`bin/mercure-dev.sh` runs it with the dev config (`:3000`, permissive CORS, anonymous
-subscriptions) and the JWT secret matching `.env.dev`.
-
-Open http://127.0.0.1:8000, pick a nickname and a game, create a lobby and share the
-6-letter invite code. Open a second browser (or private window) to join and play.
-
-### Dev environment notes
-
-- `.env.dev` points `MERCURE_URL` / `MERCURE_PUBLIC_URL` to `http://localhost:3000/.well-known/mercure`
-  (matching the `mercure` service in `compose.override.yaml`, plain HTTP, anonymous subscriptions).
-- Lobbies/game states are cached in `var/cache/…/lobbies/` for 12 hours (see `LobbyManager`).
-  `php bin/console cache:pool:clear cache.app` does **not** touch them; simply delete the
-  directory or wait for expiry.
+- **Local development** - [docs/DEVELOPMENT.md](./docs/DEVELOPMENT.md)
+- **Production deployment** - [docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md)
 
 ---
 
@@ -196,25 +159,7 @@ own turn indicator, own legal moves).
 - **Turbo**: forms and navigation are intercepted by Turbo Drive; remote updates arrive as
   Turbo Streams over Mercure (see flow above).
 
-```bash
-php bin/console tailwind:build --watch   # rebuild CSS on change during development
-```
-
-## Useful commands
-
-| Command | Purpose |
-| --- | --- |
-| `docker compose up -d mercure` | start the dev Mercure hub on :3000 |
-| `php bin/console tailwind:build [--watch]` | compile Tailwind CSS |
-| `php bin/console debug:container --tag app.game` | list registered game modules |
-| `php bin/console debug:router` | list routes |
-| `php bin/console lint:twig templates` / `lint:container` | sanity checks |
-
-## Production notes
-
-- Set real values for `MERCURE_URL`, `MERCURE_PUBLIC_URL` and a strong `MERCURE_JWT_SECRET`
-  (must match the hub's publisher/subscriber keys), and serve the hub over HTTPS.
-- Run `php bin/console tailwind:build --minify` and `php bin/console asset-map:compile`
-  during deployment.
-- The filesystem cache is per-host; behind a load balancer either use sticky sessions or
-  swap the `FilesystemAdapter` in `LobbyManager` for a shared adapter (e.g. Redis).
+For local development see
+[docs/DEVELOPMENT.md](./docs/DEVELOPMENT.md#useful-commands).  
+For production deployment and reverse-proxy setups see
+[docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md).

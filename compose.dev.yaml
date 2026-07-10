@@ -1,0 +1,30 @@
+#   docker compose -f compose.dev.yaml up -d
+#   docker compose -f compose.dev.yaml down
+
+services:
+  mercure:
+    image: dunglas/mercure
+    restart: unless-stopped
+    environment:
+      SERVER_NAME: ':80'
+      MERCURE_PUBLISHER_JWT_KEY: '!ChangeThisMercureHubJWTSecretKey!'
+      MERCURE_SUBSCRIBER_JWT_KEY: '!ChangeThisMercureHubJWTSecretKey!'
+      MERCURE_EXTRA_DIRECTIVES: |
+        cors_origins http://127.0.0.1:8000 http://localhost:8000
+    command: /usr/bin/caddy run --config /etc/caddy/dev.Caddyfile
+    ports:
+      # Change if 3000 is taken locally - then update MERCURE_URL /
+      # MERCURE_PUBLIC_URL in app/.env.dev to match.
+      - "${MERCURE_PORT:-3000}:80"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "https://localhost/healthz"]
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    volumes:
+      - mercure_data:/data
+      - mercure_config:/config
+
+volumes:
+  mercure_data:
+  mercure_config:

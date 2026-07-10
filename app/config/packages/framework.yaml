@@ -1,0 +1,26 @@
+# see https://symfony.com/doc/current/reference/configuration/framework.html
+framework:
+    secret: '%env(APP_SECRET)%'
+
+    # Note that the session will be started ONLY if you read or write from it.
+    # Sessions are stored under var/ so a volume mount can persist them in production.
+    session:
+        handler_id: session.handler.native_file
+        save_path: '%kernel.project_dir%/var/sessions/%kernel.environment%'
+        cookie_secure: auto
+        cookie_samesite: lax
+
+    #esi: true
+    #fragments: true
+
+when@prod:
+    framework:
+        # Comma-separated IPs/ranges allowed to set X-Forwarded-* headers
+        # (set via the TRUSTED_PROXIES env var, see compose.yaml)
+        trusted_proxies: '%env(default::TRUSTED_PROXIES)%'
+
+when@test:
+    framework:
+        test: true
+        session:
+            storage_factory_id: session.storage.factory.mock_file

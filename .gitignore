@@ -1,26 +1,6 @@
-
-###> symfony/framework-bundle ###
-/.env.local
-/.env.local.php
-/.env.*.local
-/config/secrets/prod/prod.decrypt.private.php
-/public/bundles/
-/var/
-/vendor/
-###< symfony/framework-bundle ###
-
-###> phpunit/phpunit ###
-/phpunit.xml
-/.phpunit.cache/
-###< phpunit/phpunit ###
-
-###> symfony/asset-mapper ###
-/public/assets/
-/assets/vendor/
-###< symfony/asset-mapper ###
-
-# Local Mercure hub binary
-/tools/
+# Docker Compose env file - real ports/secrets, never committed.
+# (Symfony's own .env files live in app/ and are managed by app/.gitignore.)
+/.env
 
 .DS_Store
 .idea
