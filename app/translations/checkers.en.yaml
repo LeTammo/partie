@@ -1,6 +1,6 @@
 # --- Board ---
 checkers.must_continue: 'Keep jumping with the same piece!'
-checkers.choose_sacrifice: 'You missed multiple captures. Choose which piece is removed.'
+checkers.choose_sacrifice: 'Choose which piece is removed!'
 
 # --- Settings ---
 setting.checkers.forced_capture: 'Forced capture (a piece that could capture but doesn''t is removed)'

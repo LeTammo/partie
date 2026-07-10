@@ -1,6 +1,6 @@
 # --- Brett ---
 checkers.must_continue: 'Spring mit demselben Stein weiter!'
-checkers.choose_sacrifice: 'Du hast mehrere Schläge verpasst. Wähle, welcher Stein entfernt wird.'
+checkers.choose_sacrifice: 'Wähle, welcher Stein entfernt wird!'
 
 # --- Einstellungen ---
 setting.checkers.forced_capture: 'Schlagzwang (ein Stein, der schlagen könnte es aber nicht tut, wird entfernt)'

@@ -5,17 +5,10 @@
      data-dragdrop--grid-move-sacrifice-squares-value="{{ view.sacrificeSquares|json_encode|e('html_attr') }}"
      data-dragdrop--grid-move-capture-distance-value="2">
 
-    {% if view.mustContinue %}
-        <p class="anim-rise mb-3 rounded-2xl bg-terracotta-50 px-4 py-2 text-center text-base font-extrabold text-terracotta-700 shadow-soft">
-            {{ 'checkers.must_continue'|trans }}
-        </p>
-    {% endif %}
-
-    {% if view.pendingSacrifice %}
-        <p class="anim-rise mb-3 rounded-2xl bg-terracotta-50 px-4 py-2 text-center text-base font-extrabold text-terracotta-700 shadow-soft">
-            {{ 'checkers.choose_sacrifice'|trans }}
-        </p>
-    {% endif %}
+    {% set banner = view.mustContinue ? 'checkers.must_continue'|trans : (view.pendingSacrifice ? 'checkers.choose_sacrifice'|trans : null) %}
+    <p class="mb-3 flex min-h-14 items-center justify-center rounded-2xl bg-terracotta-50 px-4 text-center text-base font-extrabold text-terracotta-700 shadow-soft {{ banner is null ? 'invisible' }}">
+        {{ banner }}
+    </p>
 
     <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}" data-dragdrop--grid-move-target="form" class="hidden">
         <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
