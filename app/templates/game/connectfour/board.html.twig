@@ -1,7 +1,8 @@
 {% trans_default_domain 'connectfour' %}
+{# possible board widths: grid-cols-4 grid-cols-5 grid-cols-6 grid-cols-7 grid-cols-8 grid-cols-9 grid-cols-10 #}
 <div class="mx-auto w-fit" data-controller="optimistic">
     {# drop buttons #}
-    <div class="mb-2 grid grid-cols-7 gap-1.5 px-3 sm:gap-2">
+    <div class="mb-2 grid grid-cols-{{ view.boardWidth }} gap-1.5 px-3 sm:gap-2">
         {% for col in view.columns %}
             {% if col.playable %}
                 <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}" class="contents"
@@ -28,7 +29,7 @@
 
     {# the grid #}
     <div class="rounded-3xl bg-softblue-100 p-3 shadow-soft">
-        <div class="grid grid-cols-7 gap-1.5 sm:gap-2">
+        <div class="grid grid-cols-{{ view.boardWidth }} gap-1.5 sm:gap-2">
             {% for row in view.grid %}
                 {% for cell in row %}
                     <div data-col="{{ loop.index0 }}" class="grid size-10 place-items-center rounded-full bg-white/70 sm:size-12">

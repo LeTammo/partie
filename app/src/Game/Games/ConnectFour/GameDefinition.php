@@ -60,6 +60,22 @@ final readonly class GameDefinition extends AbstractGameDefinition
     {
         return [
             new GameSetting(
+                key: 'boardWidth',
+                labelKey: 'setting.connectfour.board_width',
+                type: GameSettingType::Int,
+                default: 7,
+                min: 4,
+                max: 10,
+            ),
+            new GameSetting(
+                key: 'boardHeight',
+                labelKey: 'setting.connectfour.board_height',
+                type: GameSettingType::Int,
+                default: 6,
+                min: 4,
+                max: 10,
+            ),
+            new GameSetting(
                 key: 'connectCount',
                 labelKey: 'setting.connectfour.connect_count',
                 type: GameSettingType::Int,
@@ -72,11 +88,17 @@ final readonly class GameDefinition extends AbstractGameDefinition
 
     public function createInitialState(array $players, array $settings = []): GameState
     {
-        $state = new GameState($this->getId(), $players, new Board(7, 6));
+        $state = new GameState($this->getId(), $players, null);
+        $state->data['settings'] = $settings;
+
+        $state->board = new Board(
+            (int) ($this->setting($state, 'boardWidth') ?? 7),
+            (int) ($this->setting($state, 'boardHeight') ?? 6)
+        );
+
         foreach ($players as $i => $player) {
             $state->data['colors'][$player->id] = self::TOKEN_COLORS[$i % 2];
         }
-        $state->data['settings'] = $settings;
 
         return $state;
     }

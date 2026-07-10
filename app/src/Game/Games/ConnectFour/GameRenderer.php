@@ -44,6 +44,7 @@ final readonly class GameRenderer
             'columns' => $columns,
             'myOuter' => $myColors[0] ?? null,
             'myInner' => $myColors[1] ?? null,
+            'boardWidth' => $state->board->width,
         ];
     }
 }
