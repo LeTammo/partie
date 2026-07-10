@@ -2,23 +2,8 @@ import { Controller } from '@hotwired/stimulus';
 import { glideFrom } from '../../animation.js';
 import { CELL_SELECTED_CLASS, CELL_TARGET_CLASS } from '../../dragdrop.js';
 
-/*
- * "grid_move" drag-and-drop type: a 2D board where cells hold pieces that
- * move from one cell to another. Tap a piece then a highlighted destination,
- * or drag the piece onto it - both submit the same hidden
- * fromX/fromY/toX/toY form. The move is animated optimistically (the piece
- * glides there before the server confirms); a rejected move morphs
- * everything back via the flip.js exit-ghost mechanism.
- *
- * The server renders the viewer's legal moves into `movesValue`
- * ({"x:y": [{toX, toY}, ...]}). Cells carry data-cell/data-x/data-y; a
- * cell's piece (if any) carries data-flip-id so it can glide.
- *
- * Optional captureDistanceValue: for games where moving exactly this many
- * columns implies jumping over and capturing whatever piece sits at the
- * midpoint (e.g. checkers) - that piece fades out. Leave it unset for games
- * with no capture-by-jump rule.
- */
+// How to use, see
+// docs/components/tokens-and-boards.md
 export default class extends Controller {
     static targets = ['form', 'fromX', 'fromY', 'toX', 'toY'];
     static values = { moves: Object, captureDistance: Number };
@@ -52,8 +37,6 @@ export default class extends Controller {
         }
         this.submitMove(x, y);
     }
-
-    // ---------- drag & drop ----------
 
     dragStart(event) {
         const key = `${event.currentTarget.dataset.x}:${event.currentTarget.dataset.y}`;
@@ -90,8 +73,6 @@ export default class extends Controller {
         this.paint();
     }
 
-    // ---------- move submission ----------
-
     submitMove(toX, toY) {
         const [fromX, fromY] = this.selected.split(':').map(Number);
         this.animateMove(fromX, fromY, toX, toY);
@@ -106,7 +87,6 @@ export default class extends Controller {
         this.paint();
     }
 
-    /** Optimistic move: glide the piece; fade a captured piece if captureDistanceValue matches. */
     animateMove(fromX, fromY, toX, toY) {
         const piece = this.cellAt(fromX, fromY)?.querySelector('[data-flip-id]');
         const target = this.cellAt(toX, toY);
@@ -126,8 +106,6 @@ export default class extends Controller {
             }
         }
     }
-
-    // ---------- helpers ----------
 
     isLegalTarget(x, y) {
         return (this.movesValue[this.selected] || []).some((m) => m.toX === x && m.toY === y);

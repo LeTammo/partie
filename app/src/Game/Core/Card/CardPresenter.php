@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace App\Game\Core\Card;
 
-/**
- * Maps playing cards to render-ready arrays for the `templates/components/card.html.twig` component.
- */
+// How to use, see
+// docs/components/cards.md
 final class CardPresenter
 {
     /**
@@ -19,8 +18,6 @@ final class CardPresenter
             'suit' => $card->joker ? null : $card->suit->symbol(),
             'red' => !$card->joker && $card->suit->isRed(),
             'joker' => $card->joker,
-            // a stable, card-game-agnostic identity string (e.g. for Twig `key`/`flip` attributes
-            // on components/card.html.twig), so games don't each recompute rank+suit by hand
             'identity' => $card->joker ? 'joker' : $card->rank->labelKey().'-'.$card->suit->symbol(),
         ];
     }

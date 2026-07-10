@@ -28,7 +28,6 @@ final class GameRenderer
 
         return [
             'grid' => $grid,
-            // lets the frontend place the viewer's symbol optimistically
             'myVariant' => null !== $viewerId ? ($state->data['variants'][$viewerId] ?? null) : null,
             'myColor' => null !== $viewerId ? $state->playerById($viewerId)?->color : null,
         ];

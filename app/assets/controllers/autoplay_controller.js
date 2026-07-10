@@ -1,5 +1,7 @@
 import { Controller } from '@hotwired/stimulus';
 
+// How to use, see
+// docs/components/engine-and-state.md
 export default class extends Controller {
     static values = {
         url: String,
@@ -32,7 +34,6 @@ export default class extends Controller {
                 body: new URLSearchParams({ _token: this.tokenValue, step: this.stepValue }),
             });
         } catch {
-            // connection hiccup: the next broadcast or another viewer retries
         }
     }
 }

@@ -1,26 +1,7 @@
-/*
- * Shared low-level move animations, factored out of flip.js and the game
- * controllers that were each reimplementing the same two mechanics:
- *
- *  - glideFrom: an element visibly slides from where it used to be to
- *    wherever it now sits (a "FLIP" glide). Used whenever a real DOM node
- *    moved (or was moved by the caller) and the jump should read as motion.
- *  - spawnGhost: a throwaway visual stand-in – a clone pinned as a fixed
- *    overlay – that either plays a CSS exit animation in place or travels
- *    toward a target, then removes itself. Used when the "real" element
- *    can't do the traveling itself (it's gone, or doesn't exist yet).
- *
- * Any game controller that wants an optimistic move/glide/ghost animation
- * should reach for these instead of hand-rolling getBoundingClientRect() +
- * Web Animations API again.
- */
+// How to use, see
+// docs/components/optimism.md
+// docs/components/ui-kit.md
 
-/**
- * Glides `el` from `beforeRect` to its current position. Call this AFTER
- * moving/reflowing `el` – it diffs `beforeRect` against where `el` now sits.
- * No-ops if the position barely changed, and cancels any animation already
- * running on `el` so rapid repeated moves don't fight each other.
- */
 export function glideFrom(el, beforeRect, { duration = 400, easing = 'cubic-bezier(0.22, 1, 0.36, 1)' } = {}) {
     const after = el.getBoundingClientRect();
     const dx = beforeRect.left - after.left;
@@ -36,13 +17,6 @@ export function glideFrom(el, beforeRect, { duration = 400, easing = 'cubic-bezi
     );
 }
 
-/**
- * Pins `node` (typically a clone) as a fixed-position overlay at `rect`,
- * appended to <body>, then either plays `exitClass` in place (default) or
- * animates it toward `travelTo` (an element or DOMRect, centered). Removes
- * itself once the animation/class settles, with a safety-net timeout in
- * case that event never fires. Returns `node`.
- */
 export function spawnGhost(node, rect, { exitClass, travelTo, duration, safetyNet = 1200 } = {}) {
     node.removeAttribute('id');
     node.removeAttribute('data-flip-id');

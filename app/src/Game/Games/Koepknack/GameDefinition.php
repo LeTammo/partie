@@ -165,11 +165,6 @@ final readonly class GameDefinition extends AbstractGameDefinition
         $this->endTurn($state);
     }
 
-    /**
-     * Starts the next round once everyone has seen the previous reveal.
-     * Any seated player may trigger this – it is nobody's "turn" while the
-     * cards lie revealed.
-     */
     private function newRound(GameState $state): void
     {
         if ('roundend' !== ($state->data['phase'] ?? null)) {
@@ -215,11 +210,6 @@ final readonly class GameDefinition extends AbstractGameDefinition
         }
     }
 
-    /**
-     * Reveals every hand, awards a point to the round's winner(s) (ties share
-     * the point), then either finishes the game or waits in the "roundend"
-     * phase for a player to start the next round.
-     */
     private function endRound(GameState $state): void
     {
         $values = [];

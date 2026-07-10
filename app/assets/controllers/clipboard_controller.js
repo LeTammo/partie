@@ -1,8 +1,6 @@
 import { Controller } from '@hotwired/stimulus';
 
-/*
- * Copies a value to the clipboard and shows a confirmation state.
- */
+/* Copies a value to the clipboard and shows a confirmation state. */
 export default class extends Controller {
     static values = { text: String };
     static targets = ['idle', 'done'];

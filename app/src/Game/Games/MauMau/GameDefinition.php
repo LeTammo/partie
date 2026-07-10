@@ -151,11 +151,6 @@ final readonly class GameDefinition extends AbstractGameDefinition
         }
     }
 
-    /**
-     * Always draws exactly one card, so the player drags one card at a time
-     * from the pile into their hand. A stacked penalty (from playing 7s)
-     * must be drawn one card per request until it is fully paid off.
-     */
     private function draw(GameState $state): void
     {
         $player = $state->currentPlayer();
@@ -197,7 +192,6 @@ final readonly class GameDefinition extends AbstractGameDefinition
         $this->endTurn($state);
     }
 
-    /** Clears the per-turn transient flags and advances to the next player. */
     private function endTurn(GameState $state): void
     {
         $state->data['hasDrawn'] = false;

@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace App\Game\Core\Model;
 
-/**
- * Coordinate-based grid (0-indexed, x = column, y = row) holding Tokens.
- */
+// How to use, see
+// docs/components/tokens-and-boards.md
 final class Board
 {
     /** @var array<string, Token> keyed by "x:y" */

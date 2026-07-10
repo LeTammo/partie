@@ -17,7 +17,7 @@ final class GameRules
     }
 
     /**
-     * @param int $direction +1 when the owner moves down the board, -1 up
+     * @param int $direction 1 for forward, -1 for backward
      *
      * @return list<array{toX: int, toY: int, captureX: ?int, captureY: ?int}>
      */

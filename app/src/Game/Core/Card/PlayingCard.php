@@ -4,10 +4,8 @@ declare(strict_types=1);
 
 namespace App\Game\Core\Card;
 
-/**
- * A classic French-suited playing card / joker.
- * Serializable as part of a cached GameState.
- */
+// How to use, see
+// docs/components/cards.md
 final readonly class PlayingCard
 {
     private function __construct(

@@ -22,7 +22,7 @@ final class GameRules
     }
 
     /**
-     * @param list<int> $values the five dice values
+     * @param list<int> $values
      */
     public function score(string $category, array $values): int
     {

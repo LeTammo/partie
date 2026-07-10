@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace App\Game\Core\Card;
 
-/**
- * Card ranks with their natural ordering value (Ace high = 14).
- */
+// How to use, see
+// docs/components/cards.md
 enum Rank: int
 {
     case Two = 2;
@@ -23,9 +22,6 @@ enum Rank: int
     case King = 13;
     case Ace = 14;
 
-    /**
-     * Key used for the localized short label, e.g. "card.rank.jack", renders as "J" in English and "B" in German.
-     */
     public function labelKey(): string
     {
         return match ($this) {

@@ -8,9 +8,8 @@ use App\Game\Core\Model\GameState;
 use App\Game\Core\Model\Player;
 use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
 
-/**
- * Game implementations are picked up automatically via the "app.game" tag
- */
+// How to use, see
+// docs/components/engine-and-state.md
 #[AutoconfigureTag('app.game')]
 interface GameEngineInterface
 {

@@ -4,10 +4,8 @@ declare(strict_types=1);
 
 namespace App\Game\Core\Model;
 
-/**
- * A generic game piece. Games configure shape and colors and may attach
- * a free-form "variant" (e.g. "king" in Checkers, "x"/"o" in Tic-tac-toe).
- */
+// How to use, see
+// docs/components/tokens-and-boards.md
 final class Token
 {
     public readonly string $id;

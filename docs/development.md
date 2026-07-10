@@ -2,7 +2,7 @@
 
 ---
 
-For production deployment, see [DEPLOYMENT.md](./DEPLOYMENT.md).
+For production deployment, see [DEPLOYMENT.md](deployment.md).
 
 ---
 

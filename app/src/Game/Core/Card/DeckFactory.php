@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace App\Game\Core\Card;
 
-/**
- * Well-known card sets. All factories return the deck shuffled.
- */
+// How to use, see
+// docs/components/cards.md
 final class DeckFactory
 {
     /**

@@ -19,7 +19,6 @@ final class GameRules
         [[2, 0], [1, 1], [0, 2]],
     ];
 
-    /** @return string|null winning player id */
     public function findWinner(Board $board): ?string
     {
         foreach (self::LINES as $line) {

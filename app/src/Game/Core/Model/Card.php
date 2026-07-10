@@ -4,12 +4,8 @@ declare(strict_types=1);
 
 namespace App\Game\Core\Model;
 
-/**
- * A card layout with configurable segments.
- *
- * Segments are free-form named regions where symbols or values can be
- * displayed, e.g. "center", "border", "corner-tl", "corner-br".
- */
+// Segmented-card layout for when the class PlayingCard doesn't fit.
+// All current card games use Core\Card\PlayingCard, see docs/components/cards.md
 final readonly class Card
 {
     /**

@@ -1,3 +1,5 @@
+{# How to use, see
+   docs/components/cards.md #}
 {% set base = 'anim-deal relative flex h-24 w-16 shrink-0 select-none flex-col rounded-xl shadow-soft ' ~ class|default('') %}
 {% set id = key|default(null) %}
 {% set attrs %}{% if id %} id="{{ id }}"{% endif %}{% if flip|default(null) %} data-flip-id="{{ flip }}"{% endif %}{% if exit|default(null) %} data-flip-exit="{{ exit }}"{% endif %}{% endset %}

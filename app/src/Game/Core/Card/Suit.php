@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Game\Core\Card;
 
+// How to use, see
+// docs/components/cards.md
 enum Suit: string
 {
     case Clubs = 'clubs';

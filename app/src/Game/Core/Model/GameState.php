@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Game\Core\Model;
 
+// How to use, see
+// docs/components/engine-and-state.md
 final class GameState
 {
     private const int MAX_LOG_ENTRIES = 30;
@@ -49,11 +51,6 @@ final class GameState
         return GameStatus::Running === $this->status && $this->currentPlayer()->id === $playerId;
     }
 
-    /**
-     * Convenience for renderers: whether it's this viewer's turn right now,
-     * folding in the "viewerId might be null (spectator)" check every
-     * GameRenderer otherwise has to repeat next to isPlayersTurn().
-     */
     public function isViewersTurn(?string $viewerId): bool
     {
         return null !== $viewerId && $this->isPlayersTurn($viewerId);

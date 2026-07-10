@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace App\Game\Core\Model;
 
-/**
- * A single die that can be rolled and locked (held) between rolls.
- */
+// How to use, see
+// docs/components/dice.md
 final class Dice
 {
     public function __construct(

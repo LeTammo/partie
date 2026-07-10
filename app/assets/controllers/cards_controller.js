@@ -1,18 +1,7 @@
 import { Controller } from '@hotwired/stimulus';
 
-/*
- * Multi-select for card hands. Toggled card indexes are mirrored into a
- * hidden input (comma-separated) so plain forms can submit the selection.
- *
- * Usage:
- * <div data-controller="cards">
- *     <button type="button" data-cards-target="card" data-index="0"
- *             data-action="cards#toggle">…</button>
- *     <form>
- *         <input type="hidden" name="cards" data-cards-target="input">
- *     </form>
- * </div>
- */
+// How to use, see
+// docs/components/cards.md
 export default class extends Controller {
     static targets = ['card', 'input'];
 

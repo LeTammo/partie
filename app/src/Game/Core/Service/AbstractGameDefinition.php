@@ -6,13 +6,8 @@ namespace App\Game\Core\Service;
 
 use App\Game\Core\Exception\InvalidMoveException;
 
-/**
- * Optional base for GameEngineInterface implementations. Games are free to
- * implement the interface directly instead; this only exists to remove the
- * repeated `domain: $this->getId()` argument every game's GameDefinition
- * otherwise has to type out at each `throw new InvalidMoveException(...)`
- * call site.
- */
+// How to use, see
+// docs/components/engine-and-state.md
 abstract readonly class AbstractGameDefinition implements GameEngineInterface
 {
     /**

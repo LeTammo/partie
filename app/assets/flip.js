@@ -1,13 +1,5 @@
-/*
- * FLIP + exit-ghost animations for Turbo morph refreshes.
- *
- * Elements opt in with data-flip-id (a stable identity). Around every morph:
- *  - an element whose flip-id survived but moved glides from its old to its
- *    new position (FLIP),
- *  - an element whose flip-id vanished is cloned and animated out as a ghost
- *    (data-flip-exit: "fade" (default), "fly-left", "fly-right" or "none"),
- *  - brand-new flip-ids are left to their CSS entry animations.
- */
+// How to use, see
+// docs/components/ui-kit.md
 
 import { glideFrom, spawnGhost } from './animation.js';
 
@@ -34,7 +26,7 @@ function play() {
 
         const old = snapshots.get(id);
         if (!old) {
-            return; // newly inserted: CSS entry animation handles it
+            return;
         }
 
         glideFrom(el, old.rect);

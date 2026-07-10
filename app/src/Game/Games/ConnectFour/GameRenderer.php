@@ -42,7 +42,6 @@ final readonly class GameRenderer
         return [
             'grid' => $grid,
             'columns' => $columns,
-            // lets the frontend drop the viewer's disc optimistically
             'myOuter' => $myColors[0] ?? null,
             'myInner' => $myColors[1] ?? null,
         ];

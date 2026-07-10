@@ -1,21 +1,8 @@
 import { Controller } from '@hotwired/stimulus';
 import { startDrag, hover, unhover, markTargets, clearTargets } from '../../dragdrop.js';
 
-/*
- * "zone_drop" drag-and-drop type: one or more draggable `source` elements
- * that, dropped onto a `zone`, submit the source's own <form> - dropping is
- * just an alternate way to trigger that form, alongside however else it's
- * activated (typically a plain click on the source itself). Sources and
- * zones are paired up via a shared `data-pair` value, so one controller
- * instance can serve several independent source(s)->zone relationships at
- * once (e.g. a hand of cards -> a discard pile, AND separately a draw
- * pile -> the hand).
- *
- * Dispatches a cancelable `zone-drop:drop` event (detail: { source }) before
- * submitting, so a listener can run an optimistic animation first, or call
- * event.preventDefault() to take over entirely (e.g. to show a dialog
- * instead of submitting immediately, and submit later itself).
- */
+// How to use, see
+// docs/components/cards.md
 export default class extends Controller {
     static targets = ['source', 'zone'];
 

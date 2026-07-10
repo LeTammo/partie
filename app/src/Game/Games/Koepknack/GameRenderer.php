@@ -16,9 +16,7 @@ final readonly class GameRenderer
     {
     }
 
-    /**
-     * @return array<string, mixed>
-     */
+    /** @return array<string, mixed> */
     public function buildView(GameState $state, ?string $viewerId): array
     {
         $running = GameStatus::Running === $state->status;
