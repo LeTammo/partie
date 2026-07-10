@@ -4,7 +4,7 @@
         {% for row in view.grid %}
             {% for cell in row %}
                 {% if cell.playable %}
-                    <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}"
+                    <form id="ttt-cell-{{ cell.x }}-{{ cell.y }}" method="post" action="{{ path('app_game_move', {code: lobby.code}) }}"
                           data-action="submit->optimistic#insert">
                         <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
                         <input type="hidden" name="x" value="{{ cell.x }}">
@@ -16,9 +16,9 @@
                         </template>
                     </form>
                 {% else %}
-                    <div class="grid size-20 place-items-center rounded-2xl bg-white shadow-soft sm:size-24">
+                    <div id="ttt-cell-{{ cell.x }}-{{ cell.y }}" class="grid size-20 place-items-center rounded-2xl bg-white shadow-soft sm:size-24">
                         {% if cell.variant %}
-                            <span class="anim-pop text-4xl font-extrabold sm:text-5xl" style="color: {{ cell.color }}">
+                            <span id="ttt-mark-{{ cell.x }}-{{ cell.y }}" class="anim-pop text-4xl font-extrabold sm:text-5xl" style="color: {{ cell.color }}">
                                 {{ cell.variant == 'x' ? '✕' : '◯' }}
                             </span>
                         {% endif %}
