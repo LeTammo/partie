@@ -13,9 +13,6 @@ final class GameState
     /** @var list<Dice> */
     public array $dice = [];
 
-    /** @var list<Card> */
-    public array $cards = [];
-
     /** @var array<string, mixed> game-specific payload (scorecards, flags, ...) */
     public array $data = [];
 

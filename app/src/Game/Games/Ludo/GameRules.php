@@ -127,7 +127,6 @@ final class GameRules
      */
     public function hasWon(array $ownPawns): bool
     {
-        return array_all($ownPawns, fn($progress) => self::FINISH_PROGRESS === $progress);
-
+        return array_all($ownPawns, fn ($progress) => $progress >= self::RING_LENGTH);
     }
 }
