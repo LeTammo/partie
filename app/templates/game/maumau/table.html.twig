@@ -3,7 +3,7 @@
     {# ---------- players ---------- #}
     <div class="flex flex-wrap justify-center gap-3">
         {% for p in view.players %}
-            {% embed 'components/player_chip.html.twig' with {p: p} %}
+            {% embed 'components/player_banner.html.twig' with {p: p} %}
                 {% block extra %}
                     <span class="inline-flex items-center gap-1 text-sm font-extrabold text-warmgray-400">
                         {% include 'icons/card-fan.svg.twig' with {class: 'size-4'} only %}
@@ -15,59 +15,59 @@
     </div>
 
     {# ---------- table: draw pile + discard ---------- #}
-    <div class="rounded-3xl bg-cream p-5">
-        <div class="flex items-center justify-center gap-6">
-            <div class="text-center">
-                <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}"
-                      data-action="submit->optimistic#ghost"
-                      data-optimistic-from-param="#mm-pile-back" data-optimistic-to-param="#mm-handzone">
-                    <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
-                    <input type="hidden" name="action" value="draw">
-                    <button type="submit" {% if not view.canDraw %}disabled{% endif %}
-                            {% if view.canDraw %}
-                                draggable="true" data-pair="draw"
-                                data-dragdrop--zone-drop-target="source"
-                                data-action="dragstart->dragdrop--zone-drop#dragStart dragend->dragdrop--zone-drop#dragEnd"
-                            {% endif %}
-                            class="block rounded-xl transition enabled:cursor-grab shadow shadow-soft enabled:hover:-translate-y-1 enabled:hover:shadow-lifted disabled:opacity-60"
-                            title="{{ 'maumau.draw'|trans }}">
-                        {% include 'components/card.html.twig' with {back: true, key: 'mm-pile-back'} only %}
-                    </button>
-                </form>
-                <p class="mt-1.5 text-xs font-extrabold uppercase tracking-wide text-warmgray-400">
-                    {{ 'maumau.pile'|trans({'%count%': view.drawCount}) }}
-                </p>
+    {% embed 'components/table_area.html.twig' with {view: view, lobby: lobby} %}
+        {% block body %}
+            <div class="flex items-center justify-center gap-6">
+                {% include 'components/pile.html.twig' with {
+                    back: true,
+                    key: 'mm-pile-back',
+                    count: view.drawCount,
+                    label: 'maumau.pile'|trans({'%count%': view.drawCount}),
+                    form: {
+                        action: 'draw',
+                        title: 'maumau.draw'|trans,
+                        disabled: not view.canDraw,
+                        ghostFrom: '#mm-pile-back',
+                        ghostTo: '#mm-handzone',
+                    },
+                    buttonAttr: view.canDraw ? {
+                        draggable: 'true',
+                        'data-pair': 'draw',
+                        'data-dragdrop--zone-drop-target': 'source',
+                        'data-action': 'dragstart->dragdrop--zone-drop#dragStart dragend->dragdrop--zone-drop#dragEnd',
+                    } : {},
+                } %}
+                <div id="mm-dropzone" class="text-center"
+                     data-dragdrop--zone-drop-target="zone" data-pair="play"
+                     data-action="dragover->dragdrop--zone-drop#dragOver drop->dragdrop--zone-drop#drop dragleave->dragdrop--zone-drop#dragLeave">
+                    {% include 'components/card.html.twig' with view.top|merge({
+                        key: 'mm-top-' ~ view.top.identity,
+                        flip: 'mm-' ~ view.top.identity,
+                        exit: 'none',
+                    }) only %}
+                    <p class="mt-1.5 text-xs font-extrabold uppercase tracking-wide text-warmgray-400">{{ 'maumau.discard'|trans }}</p>
+                </div>
             </div>
-            <div id="mm-dropzone" class="text-center"
-                 data-dragdrop--zone-drop-target="zone" data-pair="play"
-                 data-action="dragover->dragdrop--zone-drop#dragOver drop->dragdrop--zone-drop#drop dragleave->dragdrop--zone-drop#dragLeave">
-                {% include 'components/card.html.twig' with view.top|merge({
-                    key: 'mm-top-' ~ view.top.identity,
-                    flip: 'mm-' ~ view.top.identity,
-                    exit: 'none',
-                }) only %}
-                <p class="mt-1.5 text-xs font-extrabold uppercase tracking-wide text-warmgray-400">{{ 'maumau.discard'|trans }}</p>
-            </div>
-        </div>
 
-        <div class="mt-3 flex flex-wrap items-center justify-center gap-3 text-base font-extrabold">
-            {% if view.wishedSuit is not null %}
-                <span class="anim-pop rounded-xl bg-white px-3 py-1.5 shadow-soft {{ view.wishedSuitRed ? 'text-terracotta-500' : 'text-warmgray-800' }}">
-                    {{ 'maumau.wished'|trans }} {{ view.wishedSuit }}
-                </span>
-            {% endif %}
-            {% if view.pendingDraw > 0 %}
-                <span id="pending-draw-{{ view.pendingDraw }}" class="anim-pop rounded-xl bg-terracotta-100 px-3 py-1.5 text-terracotta-700 shadow-soft">
-                    {{ (view.penaltyLocked ? 'maumau.pending_draw_locked' : 'maumau.pending_draw')|trans({'%count%': view.pendingDraw}) }}
-                </span>
-            {% endif %}
-            {% if view.pendingSkip > 0 %}
-                <span id="pending-skip-{{ view.pendingSkip }}" class="anim-pop rounded-xl bg-softblue-100 px-3 py-1.5 text-softblue-700 shadow-soft">
-                    {{ 'maumau.pending_skip'|trans({'%count%': view.pendingSkip}) }}
-                </span>
-            {% endif %}
-        </div>
-    </div>
+            <div class="mt-3 flex flex-wrap items-center justify-center gap-3 text-base font-extrabold">
+                {% if view.wishedSuit is not null %}
+                    <span class="anim-pop rounded-xl bg-white px-3 py-1.5 shadow-soft {{ view.wishedSuitRed ? 'text-terracotta-500' : 'text-warmgray-800' }}">
+                        {{ 'maumau.wished'|trans }} {{ view.wishedSuit }}
+                    </span>
+                {% endif %}
+                {% if view.pendingDraw > 0 %}
+                    <span id="pending-draw-{{ view.pendingDraw }}" class="anim-pop rounded-xl bg-terracotta-100 px-3 py-1.5 text-terracotta-700 shadow-soft">
+                        {{ (view.penaltyLocked ? 'maumau.pending_draw_locked' : 'maumau.pending_draw')|trans({'%count%': view.pendingDraw}) }}
+                    </span>
+                {% endif %}
+                {% if view.pendingSkip > 0 %}
+                    <span id="pending-skip-{{ view.pendingSkip }}" class="anim-pop rounded-xl bg-softblue-100 px-3 py-1.5 text-softblue-700 shadow-soft">
+                        {{ 'maumau.pending_skip'|trans({'%count%': view.pendingSkip}) }}
+                    </span>
+                {% endif %}
+            </div>
+        {% endblock %}
+    {% endembed %}
 
     {# ---------- own hand ---------- #}
     {% if view.hand is not empty %}

@@ -1,0 +1,99 @@
+{# The one grid-board component: renders a CSS grid of cells with optional
+   tokens, piece-move zone wiring, click-to-place form cells, decorative
+   layers, and an optional gravity drop-row (Connect Four).
+   Include WITHOUT `only` - form cells and the drop row need `lobby`.
+   The surrounding game root carries the dragdrop--piece-move controller +
+   moves map when zones are used.
+   How to use, see docs/components/tokens-and-boards.md
+
+   Parameters (everything under one `board` map built by the renderer):
+   - board.cols / board.rows: grid dimensions
+   - board.class:  classes for the grid element (gap, padding, background)
+   - board.style:  extra inline style for the grid element
+   - board.layers: decorative divs behind the cells: list of {style, class}
+   - board.cells:  list of cell maps, rendered in order:
+       - style:  inline style (explicit grid-row/column and/or fill color;
+                 omit positioning for dense row-major grids)
+       - class:  cell classes (shape, size, colors)
+       - tag:    'div' (default) or 'button'
+       - key:    zone key - wires the cell as a piece-move zone
+       - attr:   map of extra attributes
+       - dot:    true renders a small decorative dot
+       - token:  token component params (the piece sitting on this cell)
+       - form:   a click-to-place cell (TicTacToe): {fields: map, attr: map,
+                 buttonClass, buttonAria, template: token params for the
+                 optimistic insert}
+   - board.panelClass: wraps the grid (not the drop row) in a panel div
+   - board.drop: gravity drop-row above the grid (Connect Four):
+       {columns: list of {column, playable, aria}, buttonClass,
+        template: token params for the optimistic insert}
+       Cells must carry attr {'data-col': x} for the insert target.
+#}
+{% set gridStyle = 'grid-template-columns: repeat(' ~ board.cols ~ ', minmax(0, 1fr));'
+    ~ 'grid-template-rows: repeat(' ~ board.rows ~ ', minmax(0, 1fr));'
+    ~ board.style|default('') %}
+
+{% if board.drop|default(null) %}
+    <div class="mb-2 grid gap-1.5 px-3 sm:gap-2" style="grid-template-columns: repeat({{ board.cols }}, minmax(0, 1fr));">
+        {% for col in board.drop.columns %}
+            {% if col.playable %}
+                <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}" class="contents"
+                      data-action="submit->optimistic#insert"
+                      data-optimistic-into-param="[data-col='{{ col.column }}']"
+                      data-optimistic-where-param="last-empty">
+                    <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
+                    <input type="hidden" name="column" value="{{ col.column }}">
+                    <button type="submit" aria-label="{{ col.aria|default('') }}"
+                            class="{{ board.drop.buttonClass|default('grid h-8 place-items-center rounded-xl bg-sage-100 text-sage-700 shadow-soft transition hover:bg-sage-200 hover:shadow-lifted') }}">
+                        {% include 'icons/chevron-down.svg.twig' with {class: 'size-4'} only %}
+                    </button>
+                    <template>
+                        {% include 'components/token.html.twig' with board.drop.template only %}
+                    </template>
+                </form>
+            {% else %}
+                <div class="h-8"></div>
+            {% endif %}
+        {% endfor %}
+    </div>
+{% endif %}
+
+{% if board.panelClass|default(null) %}<div class="{{ board.panelClass }}">{% endif %}
+<div class="{{ board.class|default('grid gap-1.5 sm:gap-2') }}" style="{{ gridStyle }}">
+    {% for layer in board.layers|default([]) %}
+        <div style="{{ layer.style }}" class="{{ layer.class|default('') }}"></div>
+    {% endfor %}
+
+    {% for cell in board.cells %}
+        {% if cell.form|default(null) %}
+            <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}"
+                  data-action="submit->optimistic#insert"
+                  {%- for name, value in cell.form.attr|default({}) %} {{ name }}="{{ value }}"{% endfor %}
+                  {% if cell.style|default(null) %}style="{{ cell.style }}"{% endif %}>
+                <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
+                {% for name, value in cell.form.fields %}
+                    <input type="hidden" name="{{ name }}" value="{{ value }}">
+                {% endfor %}
+                <button type="submit" aria-label="{{ cell.form.buttonAria|default('') }}"
+                        class="{{ cell.form.buttonClass|default('') }}"></button>
+                <template>
+                    {% include 'components/token.html.twig' with cell.form.template only %}
+                </template>
+            </form>
+        {% else %}
+            {% set tag = cell.tag|default('div') %}
+            <{{ tag }}{% if tag == 'button' %} type="button"{% endif %}
+                {%- if cell.key|default(null) %}
+                    data-dragdrop--piece-move-target="zone" data-zone="{{ cell.key }}"
+                    data-action="click->dragdrop--piece-move#pickZone dragover->dragdrop--piece-move#dragOver drop->dragdrop--piece-move#drop"
+                {%- endif %}
+                {%- for name, value in cell.attr|default({}) %} {{ name }}="{{ value }}"{% endfor %}
+                {% if cell.style|default(null) %}style="{{ cell.style }}"{% endif %}
+                class="{{ cell.class|default('') }}">
+                {%- if cell.dot|default(false) %}<span class="size-1.5 rounded-full bg-white"></span>{% endif -%}
+                {%- if cell.token|default(null) %}{% include 'components/token.html.twig' with cell.token only %}{% endif -%}
+            </{{ tag }}>
+        {% endif %}
+    {% endfor %}
+</div>
+{% if board.panelClass|default(null) %}</div>{% endif %}

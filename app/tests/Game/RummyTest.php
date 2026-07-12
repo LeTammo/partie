@@ -27,9 +27,9 @@ final class RummyTest extends GameTestCase
     private function state(array $handP0): GameState
     {
         $state = $this->game->createInitialState(self::players(2));
-        $state->data['hands']['p0'] = $handP0;
-        $state->data['stock'] = [self::card(Suit::Clubs, Rank::Two), self::card(Suit::Diamonds, Rank::Three)];
-        $state->data['discard'] = [self::card(Suit::Spades, Rank::Four)];
+        $state->table->hand('p0')->items = $handP0;
+        $state->table->zone('stock')->items = [self::card(Suit::Clubs, Rank::Two), self::card(Suit::Diamonds, Rank::Three)];
+        $state->table->zone('discard')->items = [self::card(Suit::Spades, Rank::Four)];
 
         return $state;
     }
@@ -87,7 +87,7 @@ final class RummyTest extends GameTestCase
         }
 
         $this->game->applyMove($state, 'p0', ['action' => 'draw']);
-        self::assertCount(3, $state->data['hands']['p0']);
+        self::assertCount(3, $state->table->hand('p0')->items);
 
         $this->game->applyMove($state, 'p0', ['action' => 'discard', 'cards' => '0']);
         self::assertSame('p1', $state->currentPlayer()->id);
@@ -117,8 +117,8 @@ final class RummyTest extends GameTestCase
         }
 
         $this->game->applyMove($state, 'p0', ['action' => 'takeback']);
-        self::assertCount(6, $state->data['hands']['p0']);
-        self::assertSame([], $state->data['melds']);
+        self::assertCount(6, $state->table->hand('p0')->items);
+        self::assertSame([], $state->table->matching('meld:'));
     }
 
     public function testOpeningMeldAndLayoff(): void
@@ -144,7 +144,7 @@ final class RummyTest extends GameTestCase
         self::assertTrue($state->data['hasMelded']['p0']);
 
         // lay the fourth king off onto the first meld (hand is now [K♦, 9♣, drawn])
-        $this->game->applyMove($state, 'p0', ['action' => 'layoff', 'cards' => '0', 'meld' => 0]);
-        self::assertCount(4, $state->data['melds'][0]['cards']);
+        $this->game->applyMove($state, 'p0', ['action' => 'layoff', 'cards' => '0', 'meld' => 'meld:0']);
+        self::assertCount(4, $state->table->zone('meld:0')->items);
     }
 }

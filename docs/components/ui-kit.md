@@ -15,35 +15,31 @@ with.
 ```
 
 They're declared in `@layer components`, so an extra Tailwind utility class
-on the same element still overrides them correctly - Tailwind's utilities
-layer always wins over components regardless of class order in the
-attribute:
+on the same element still overrides them correctly:
 
 ```twig
 <button class="btn btn-primary px-10 py-4 text-xl disabled:opacity-40">
 ```
 
-## Player chips: `player_chip.html.twig`
+## Player banners: `player_banner.html.twig`
 
-A colored dot + nickname, ring-highlighted on `p.current`, as an
-`{% embed %}` with an `extra` block for whatever a game shows alongside
-(card count, points, badges):
+The one player summary component - dot, nickname, current-turn ring, plus
+an `extra` block for whatever a game shows alongside (card count, points,
+chips, badges). Three layout variants cover every shape a game needs:
 
 ```twig
-{% for p in view.players %}
-    {% embed 'components/player_chip.html.twig' with {p: p} %}
-        {% block extra %}
-            <span>{{ p.cardCount }}</span>
-        {% endblock %}
-    {% endembed %}
-{% endfor %}
+{% embed 'components/player_banner.html.twig' with {p: p} %}                    {# 'inline' #}
+{% embed 'components/player_banner.html.twig' with {p: p, variant: 'tile'} %}   {# centered two-line (Koepknack) #}
+{% embed 'components/player_banner.html.twig' with {p: p, variant: 'row'} %}    {# seat header (Blackjack) #}
+    {% block extra %}
+        <span>{{ p.cardCount }}</span>
+    {% endblock %}
+{% endembed %}
 ```
 
-Only fits a horizontal dot+nickname+extras strip. A differently-shaped
-player summary (a two-line centered chip, a seat tile with cards) should
-stay its own markup rather than force a layout-mode parameter onto this
-component - see Koepknack/Blackjack for examples that deliberately don't
-use it.
+`p` comes from `PlayerViews::build()`. `dim: true` fades an
+eliminated/broke player. A new summary shape means a new variant on this
+component, not custom markup in a game template.
 
 ## FLIP glides & exit ghosts: `key` / `flip` / `exit`
 
@@ -68,8 +64,19 @@ these three things:
 }) only %}
 ```
 
-A brand-new `flip` id (nothing to glide from) just plays its own CSS entry
-animation (`anim-pop`, `anim-deal`, `anim-drop`, ...) - nothing to wire up.
+The card, token and chip components all accept `key`/`flip`/`exit`. A
+brand-new `flip` id (nothing to glide from) just plays its own CSS entry
+animation (`anim-pop`, `anim-deal`, `anim-drop`, ...).
+
+**`data-anim-restart`** - a morph may patch an element *in place*, which
+swallows its CSS entry animation. Stamp the element with a value that
+changes when the animation should replay, and `flip.js` restarts it after
+the morph (the dice components use `data-anim-restart="{{ die.value }}"`
+so a re-rolled die always spins):
+
+```twig
+<span id="die-0" data-anim-restart="{{ die.value }}" class="anim-roll block">...</span>
+```
 
 ## Low-level animation primitives
 

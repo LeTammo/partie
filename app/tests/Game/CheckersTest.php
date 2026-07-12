@@ -37,7 +37,7 @@ final class CheckersTest extends GameTestCase
         $state = $this->game->createInitialState(self::players(2));
 
         // p0 moves down: a piece on row 2 steps to row 3
-        $this->game->applyMove($state, 'p0', ['fromX' => 1, 'fromY' => 2, 'toX' => 2, 'toY' => 3]);
+        $this->game->applyMove($state, 'p0', ['from' => 'cell:1:2', 'to' => 'cell:2:3']);
 
         self::assertNull($state->board->get(1, 2));
         self::assertSame('p0', $state->board->get(2, 3)?->ownerId);
@@ -47,21 +47,21 @@ final class CheckersTest extends GameTestCase
     public function testBackwardMoveIsRejectedForMen(): void
     {
         $state = $this->game->createInitialState(self::players(2));
-        $this->game->applyMove($state, 'p0', ['fromX' => 1, 'fromY' => 2, 'toX' => 2, 'toY' => 3]);
-        $this->game->applyMove($state, 'p1', ['fromX' => 0, 'fromY' => 5, 'toX' => 1, 'toY' => 4]);
+        $this->game->applyMove($state, 'p0', ['from' => 'cell:1:2', 'to' => 'cell:2:3']);
+        $this->game->applyMove($state, 'p1', ['from' => 'cell:0:5', 'to' => 'cell:1:4']);
 
         $this->expectException(InvalidMoveException::class);
-        $this->game->applyMove($state, 'p0', ['fromX' => 2, 'fromY' => 3, 'toX' => 1, 'toY' => 2]);
+        $this->game->applyMove($state, 'p0', ['from' => 'cell:2:3', 'to' => 'cell:1:2']);
     }
 
     public function testJumpCaptureRemovesVictim(): void
     {
         $state = $this->game->createInitialState(self::players(2));
-        $this->game->applyMove($state, 'p0', ['fromX' => 1, 'fromY' => 2, 'toX' => 2, 'toY' => 3]);
-        $this->game->applyMove($state, 'p1', ['fromX' => 4, 'fromY' => 5, 'toX' => 3, 'toY' => 4]);
+        $this->game->applyMove($state, 'p0', ['from' => 'cell:1:2', 'to' => 'cell:2:3']);
+        $this->game->applyMove($state, 'p1', ['from' => 'cell:4:5', 'to' => 'cell:3:4']);
 
         // p0 jumps 2,3 -> 4,5 capturing the piece at 3,4
-        $this->game->applyMove($state, 'p0', ['fromX' => 2, 'fromY' => 3, 'toX' => 4, 'toY' => 5]);
+        $this->game->applyMove($state, 'p0', ['from' => 'cell:2:3', 'to' => 'cell:4:5']);
 
         self::assertNull($state->board->get(3, 4));
         self::assertSame('p0', $state->board->get(4, 5)?->ownerId);
@@ -107,7 +107,7 @@ final class CheckersTest extends GameTestCase
         $board->place(2, 3, $p0);
         $board->place(3, 4, $p1);
 
-        $this->game->applyMove($state, 'p0', ['fromX' => 2, 'fromY' => 3, 'toX' => 4, 'toY' => 5]);
+        $this->game->applyMove($state, 'p0', ['from' => 'cell:2:3', 'to' => 'cell:4:5']);
 
         self::assertSame(GameStatus::Finished, $state->status);
         self::assertSame('p0', $state->winnerId);

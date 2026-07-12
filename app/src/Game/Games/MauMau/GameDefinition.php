@@ -14,6 +14,9 @@ use App\Game\Core\Model\GameSetting;
 use App\Game\Core\Model\GameSettingType;
 use App\Game\Core\Model\GameState;
 use App\Game\Core\Service\AbstractGameDefinition;
+use App\Game\Core\Zone\Table;
+use App\Game\Core\Zone\Zone;
+use App\Game\Core\Zone\ZoneVisibility;
 
 final readonly class GameDefinition extends AbstractGameDefinition
 {
@@ -99,13 +102,16 @@ final readonly class GameDefinition extends AbstractGameDefinition
     {
         $state = new GameState($this->getId(), $players);
         $state->data['settings'] = $settings;
+        $table = $state->table = new Table();
 
         $deck = DeckFactory::deck32();
         foreach ($players as $player) {
-            $state->data['hands'][$player->id] = array_splice($deck, 0, self::HAND_SIZE);
+            $table->add(new Zone('hand:'.$player->id, $player->id, ZoneVisibility::Owner))
+                ->push(...array_splice($deck, 0, self::HAND_SIZE));
         }
-        $state->data['discard'] = array_splice($deck, 0, 1);
-        $state->data['drawPile'] = $deck;
+        $table->add(new Zone('discard'))->push(...array_splice($deck, 0, 1));
+        $table->add(new Zone('stock', visibility: ZoneVisibility::Hidden))->push(...$deck);
+
         $state->data['wishedSuit'] = null;
         $state->data['pendingDraw'] = 0;
         $state->data['pendingSkip'] = 0;
@@ -160,14 +166,14 @@ final readonly class GameDefinition extends AbstractGameDefinition
     private function play(GameState $state, int $cardIndex, string $wish): void
     {
         $player = $state->currentPlayer();
-        $hand = &$state->data['hands'][$player->id];
+        $hand = $state->table->hand($player->id);
         $options = Options::fromState($state);
 
-        if (!isset($hand[$cardIndex])) {
+        if (!isset($hand->items[$cardIndex])) {
             $this->invalidMove('error.maumau.unknown_card');
         }
 
-        $card = $hand[$cardIndex];
+        $card = $hand->items[$cardIndex];
         $top = $this->top($state);
         if (!$this->rules->playable($card, $top, $state->data['wishedSuit'], $state->data['pendingDraw'], $state->data['penaltyLocked'], $state->data['pendingSkip'], $options)) {
             $this->invalidMove('error.maumau.not_playable');
@@ -177,8 +183,8 @@ final readonly class GameDefinition extends AbstractGameDefinition
             $this->invalidMove('error.maumau.wish_required');
         }
 
-        array_splice($hand, $cardIndex, 1);
-        $state->data['discard'][] = $card;
+        $hand->removeAt($cardIndex);
+        $state->table->zone('discard')->push($card);
         $state->data['wishedSuit'] = null;
 
         $state->logGameEvent('log.maumau.played', [
@@ -187,7 +193,7 @@ final readonly class GameDefinition extends AbstractGameDefinition
             '%rank%' => 't:card.rank.'.$card->rank->labelKey(),
         ]);
 
-        if ([] === $hand) {
+        if ($hand->isEmpty()) {
             $state->finish($player->id);
             $state->logGameEvent('log.maumau.won', ['%player%' => $player->nickname]);
 
@@ -208,11 +214,36 @@ final readonly class GameDefinition extends AbstractGameDefinition
 
         $this->endTurn($state);
 
-        if ($card->rank === $options->skipRank && !$options->stackSkip) {
-            $state->logGameEvent('log.maumau.skipped', ['%player%' => $state->currentPlayer()->nickname]);
-            $state->data['pendingSkip'] = 0;
-            $state->advanceTurn();
+        if ($card->rank === $options->skipRank) {
+            if (!$options->stackSkip) {
+                $state->logGameEvent('log.maumau.skipped', ['%player%' => $state->currentPlayer()->nickname]);
+                $state->data['pendingSkip'] = 0;
+                $state->advanceTurn();
+            } else {
+                $this->autoResolveSkip($state, $options);
+            }
         }
+    }
+
+    private function autoResolveSkip(GameState $state, Options $options): void
+    {
+        if ($state->data['pendingSkip'] <= 0) {
+            return;
+        }
+
+        $player = $state->currentPlayer();
+        $canRespond = array_any(
+            $state->table->hand($player->id)->items,
+            static fn (PlayingCard $card): bool => $card->rank === $options->skipRank,
+        );
+
+        if ($canRespond) {
+            return;
+        }
+
+        $state->logGameEvent('log.maumau.skipped', ['%player%' => $player->nickname]);
+        $state->data['pendingSkip'] = 0;
+        $state->advanceTurn();
     }
 
     private function draw(GameState $state): void
@@ -250,7 +281,7 @@ final readonly class GameDefinition extends AbstractGameDefinition
     {
         if ($state->data['pendingSkip'] > 0) {
             $player = $state->currentPlayer();
-            --$state->data['pendingSkip'];
+            $state->data['pendingSkip'] = 0;
             $state->logGameEvent('log.maumau.skipped', ['%player%' => $player->nickname]);
             $state->advanceTurn();
 
@@ -275,16 +306,16 @@ final readonly class GameDefinition extends AbstractGameDefinition
     private function drawCards(GameState $state, string $playerId, int $count): void
     {
         $drawn = Piles::draw(
-            $state->data['drawPile'],
-            $state->data['discard'],
+            $state->table->zone('stock')->items,
+            $state->table->zone('discard')->items,
             $count,
             fn () => $state->logGameEvent('log.maumau.reshuffled'),
         );
-        array_push($state->data['hands'][$playerId], ...$drawn);
+        $state->table->hand($playerId)->push(...$drawn);
     }
 
     private function top(GameState $state): PlayingCard
     {
-        return $state->data['discard'][array_key_last($state->data['discard'])];
+        return $state->table->zone('discard')->top();
     }
 }

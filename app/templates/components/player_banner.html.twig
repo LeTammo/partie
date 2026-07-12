@@ -1,0 +1,37 @@
+{# The one player summary component - dot, nickname, current-turn ring, and
+   whatever a game shows alongside (points, chips, card counts, badges) in
+   the `extra` block.
+   How to use, see docs/components/ui-kit.md
+
+   Parameters:
+   - p:       {nickname, color, current, ...} from PlayerViews::build()
+   - variant: 'inline' (dot + name + extras in a row, default)
+              | 'tile'  (centered two-line tile)
+              | 'row'   (name left, extras right - a seat header)
+   - dim:     fade the banner (a broke/eliminated player)
+   - class:   extra classes
+#}
+{% set variant = variant|default('inline') %}
+{% if variant == 'row' %}
+    <div class="flex items-center justify-between gap-2 {{ class|default('') }}">
+        <p class="flex items-center gap-1.5 text-base font-extrabold text-warmgray-700">
+            <span class="size-2.5 rounded-full" style="background-color: {{ p.color }}"></span>
+            {{ p.nickname }}
+        </p>
+        {% block extra %}{% endblock %}
+    </div>
+{% elseif variant == 'tile' %}
+    <div class="rounded-2xl bg-cream px-4 py-2.5 text-center transition {{ p.current ? 'ring-2 ring-softblue-300' }} {{ dim|default(false) ? 'opacity-40' }} {{ class|default('') }}">
+        <p class="flex items-center justify-center gap-1.5 text-base font-extrabold text-warmgray-700">
+            <span class="size-2.5 rounded-full" style="background-color: {{ p.color }}"></span>
+            {{ p.nickname }}
+        </p>
+        {{ block('extra') }}
+    </div>
+{% else %}
+    <div class="flex items-center gap-2 rounded-2xl bg-cream px-4 py-2.5 transition {{ p.current ? 'ring-2 ring-softblue-300' }} {{ dim|default(false) ? 'opacity-40' }} {{ class|default('') }}">
+        <span class="size-2.5 rounded-full" style="background-color: {{ p.color }}"></span>
+        <span class="text-base font-extrabold text-warmgray-700">{{ p.nickname }}</span>
+        {{ block('extra') }}
+    </div>
+{% endif %}

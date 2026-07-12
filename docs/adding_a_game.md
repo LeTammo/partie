@@ -81,51 +81,54 @@ manual casting; `invalidMove` fills in the translation domain for you. See
 
 ### 4. Render it
 
+The renderer's job is to turn state into *component descriptors* - for a
+grid game, one `board` map the shared board component can render:
+
 ```php
-final class GameRenderer
+final readonly class GameRenderer
 {
     public function buildView(GameState $state, ?string $viewerId): array
     {
         $myTurn = $state->isViewersTurn($viewerId);
 
-        return [
-            'grid' => BoardViews::grid($state->board, static fn (int $x, int $y, ?Token $token) => [
-                'x' => $x, 'y' => $y,
-                'variant' => $token?->variant,
-                'playable' => $myTurn && null === $token,
-            ]),
-        ];
+        $cells = [];
+        foreach (BoardViews::grid($state->board, static fn (int $x, int $y, ?Token $token) => [
+            'x' => $x, 'y' => $y, 'token' => $token,
+            'playable' => $myTurn && null === $token,
+        ]) as $row) {
+            foreach ($row as $cell) {
+                $cells[] = $cell['playable']
+                    ? ['form' => [
+                        'fields' => ['x' => $cell['x'], 'y' => $cell['y']],
+                        'buttonClass' => '...cell classes...',
+                        'template' => ['shape' => 'plain', 'symbol' => '✕', 'symbolColor' => '...'],
+                    ]]
+                    : ['class' => '...cell classes...', 'token' => /* token params or null */ null];
+            }
+        }
+
+        return ['board' => ['cols' => 3, 'rows' => 3, 'class' => 'grid gap-2 rounded-3xl bg-cream p-3', 'cells' => $cells]];
     }
 }
 ```
 
-`BoardViews::grid()` runs the x/y loop for you - you only write what a cell
-looks like. See [tokens-and-boards.md](components/tokens-and-boards.md).
+`BoardViews::grid()` runs the x/y loop; the descriptor fields are listed in
+[tokens-and-boards.md](components/tokens-and-boards.md). See the real
+`TicTacToe\GameRenderer` for the full version.
 
 ### 5. The template
 
 ```twig
-<div data-controller="optimistic">
-    {% for row in view.grid %}
-        {% for cell in row %}
-            {% if cell.playable %}
-                <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}"
-                      data-action="submit->optimistic#insert">
-                    <input type="hidden" name="x" value="{{ cell.x }}">
-                    <input type="hidden" name="y" value="{{ cell.y }}">
-                    <button type="submit"></button>
-                    <template><span>{{ ... }}</span></template>
-                </form>
-            {% endif %}
-        {% endfor %}
-    {% endfor %}
+{% trans_default_domain 'tictactoe' %}
+<div class="mx-auto w-fit" data-controller="optimistic">
+    {% include 'components/board.html.twig' with {board: view.board} %}
 </div>
 ```
 
-No JavaScript. `data-controller="optimistic"` + `optimistic#insert` clones
-the `<template>` into the button the instant the form submits - see
-[optimism.md](components/optimism.md) for why the markup lives in a
-`<template>` instead of a hand-written DOM insert.
+That's the whole template. No JavaScript, no hand-rolled cell markup - the
+board component renders the form cells with `optimistic#insert` templates
+(see [optimism.md](components/optimism.md)). Games with movable pieces add
+the `dragdrop--piece-move` controller and a moves map instead.
 
 ### 6. Translations and rules
 
@@ -159,21 +162,23 @@ cleanly.
 
 ## Hello world: the other building blocks
 
-### Cards: a deck, a hand, drawing
+### Cards & zones: a deck, hands, piles
 
 ```php
+$table = $state->table = new Table();
 $deck = DeckFactory::deck52();               // shuffled list<PlayingCard>
-$hand = array_splice($deck, 0, 5);            // deal 5
 
-$drawn = Piles::draw($drawPile, $discardPile, 1, fn () => $state->logGameEvent('log.reshuffled'));
-array_push($hand, ...$drawn);                 // draws 1, reshuffling the discard if the pile is empty
+$table->add(new Zone('hand:'.$player->id, $player->id, ZoneVisibility::Owner))
+    ->push(...array_splice($deck, 0, 5));    // deal 5
+$table->add(new Zone('stock', visibility: ZoneVisibility::Hidden))->push(...$deck);
 
-$view = CardPresenter::views($hand);          // [{rank, suit, red, joker, identity}, ...]
+$drawn = Piles::draw($table->zone('stock')->items, $table->zone('discard')->items, 1);
+$view = CardPresenter::views($table->hand($playerId)->items);
 ```
 
-Full reference, including the three drag-and-drop shapes for cards
-(group_swap, zone_drop) and the `key`/`flip`/`exit` id conventions:
-[cards.md](components/cards.md).
+Zones/piles/table areas: [zones-and-tables.md](components/zones-and-tables.md).
+Cards, decks (incl. `CustomCard` number decks) and the three drag-and-drop
+shapes: [cards.md](components/cards.md).
 
 ### Tokens & boards: place and move a piece
 
@@ -219,8 +224,14 @@ variants and how round-replay reuses the same settings.
 | Doc | Covers |
 |---|---|
 | [engine-and-state.md](components/engine-and-state.md) | `GameEngineInterface`/`AbstractGameDefinition`, `GameState`, `PlayerViews`, autoplay, host-configurable settings, round replay, translations |
-| [tokens-and-boards.md](components/tokens-and-boards.md) | `Board`/`Token`, `BoardViews`, the `grid_move` drag-and-drop type |
-| [cards.md](components/cards.md) | `PlayingCard`/`DeckFactory`/`Piles`/`CardPresenter`, `cards`/`group_swap`/`zone_drop` |
-| [dice.md](components/dice.md) | `Dice`, `components/die.html.twig`, `components/dice_tray.html.twig` |
+| [tokens-and-boards.md](components/tokens-and-boards.md) | `Token` + `token.html.twig`, `Board`/`BoardViews`/`board.html.twig`, `Path`, `Gravity`, `MoveMap`, the `piece-move` controller |
+| [zones-and-tables.md](components/zones-and-tables.md) | `Zone`/`Table`/`ZoneVisibility`, `pile.html.twig`, `table_area.html.twig` |
+| [cards.md](components/cards.md) | `PlayingCard`/`CustomCard`/`DeckFactory`/`Piles`/presenters, `card.html.twig`, `cards`/`group_swap`/`zone_drop`/`piece-move` |
+| [chips.md](components/chips.md) | `Chip`/`ChipViews`, `chip.html.twig`, `chip_stack.html.twig` |
+| [dice.md](components/dice.md) | `Dice` (incl. custom faces), `die.html.twig`, `die_roller.html.twig`, `dice_tray.html.twig` |
+| [score-sheet.md](components/score-sheet.md) | `score_sheet.html.twig` - category × player scoring grids |
 | [optimism.md](components/optimism.md) | `assets/optimistic.js` defaults, the `optimistic` primitives, `choice-dialog` |
-| [ui-kit.md](components/ui-kit.md) | `.btn` classes, `player_chip`, FLIP/exit-ghost `key`/`flip`/`exit` conventions |
+| [ui-kit.md](components/ui-kit.md) | `.btn` classes, `player_banner`, FLIP/exit-ghost `key`/`flip`/`exit` conventions |
+
+Also read [development_policies.md](development_policies.md) - the
+reuse-first rules every change must follow.

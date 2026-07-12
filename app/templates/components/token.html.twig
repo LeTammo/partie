@@ -1,0 +1,71 @@
+{# The one token component - every playing piece renders through this.
+   How to use, see docs/components/tokens-and-boards.md
+
+   Parameters:
+   - outer:      color of the full disc (required unless shape == 'plain')
+   - middle:     color of the middle band (optional)
+   - center:     color of the center dot (optional)
+   - middleSize: middle band diameter in % of the token (default 92)
+   - centerSize: center dot diameter in % of the token (default 82)
+   - symbol:     char rendered in the center (optional)
+   - icon:       icon name rendered in the center, templates/icons/{icon}.svg.twig (optional)
+   - symbolColor: color for symbol/icon (default: center, then middle, then white)
+   - shape:      'round' (default) | 'square' | 'plain' (no disc, symbol only)
+   - size:       size classes, e.g. 'size-8 sm:size-11' (default 'size-8')
+   - ring:       true for a highlight ring (optional)
+   - shadow:     drop shadow (default true)
+   - key/flip/exit: DOM id / FLIP id / exit ghost, like the card component
+   - class:      extra classes on the root element
+   - attr:       map of extra attributes (draggable, data-*, ...) on the root element
+   - overlayIcon: icon name shown as a hover overlay (needs 'group' in class -
+                  a "click to remove/confirm" affordance)
+   - overlay:    block for fully custom overlays (embed only)
+#}
+{% set shape = shape|default('round') %}
+{% set radius = shape == 'square' ? 'rounded-md' : 'rounded-full' %}
+{% set symbolColor = symbolColor|default(center|default(middle|default('#ffffff'))) %}
+{% set rootAttrs %}
+    {%- if key|default(null) %} id="{{ key }}"{% endif -%}
+    {%- if flip|default(null) %} data-flip-id="{{ flip }}"{% endif -%}
+    {%- if exit|default(null) %} data-flip-exit="{{ exit }}"{% endif -%}
+    {%- for name, value in attr|default({}) %} {{ name }}="{{ value }}"{% endfor -%}
+{% endset %}
+{% if shape == 'plain' %}
+    {# a single span - extra wrappers would offset the glyph's line box #}
+    <span{{ rootAttrs }} class="font-extrabold {{ size|default('') }} {{ class|default('') }}"
+          style="color: {{ symbolColor }}">{{ symbol|default('') }}{% block overlay %}{% endblock %}</span>
+{% else %}
+    <span{{ rootAttrs }}
+          class="relative grid place-items-center {{ radius }} {{ size|default('size-8') }}
+                 {{ shadow|default(true) ? 'shadow-soft' }}
+                 {{ ring|default(false) ? 'ring-2 ring-white/80' }}
+                 {{ class|default('') }}"
+          style="background-color: {{ outer }}">
+        {% if middle|default(null) %}
+            <span class="grid place-items-center {{ radius }}"
+                  style="width: {{ middleSize|default(92) }}%; height: {{ middleSize|default(92) }}%; background-color: {{ middle }};">
+                {% if center|default(null) and not symbol|default(null) and not icon|default(null) %}
+                    {% set innerPct = (centerSize|default(82) / middleSize|default(92) * 100)|round %}
+                    <span class="{{ radius }}" style="width: {{ innerPct }}%; height: {{ innerPct }}%; background-color: {{ center }};"></span>
+                {% endif %}
+            </span>
+        {% elseif center|default(null) and not symbol|default(null) and not icon|default(null) %}
+            <span class="{{ radius }}" style="width: {{ centerSize|default(82) }}%; height: {{ centerSize|default(82) }}%; background-color: {{ center }};"></span>
+        {% endif %}
+        {% if symbol|default(null) or icon|default(null) %}
+            <span class="pointer-events-none absolute inset-0 grid place-items-center" style="color: {{ symbolColor }}">
+                {% if icon|default(null) %}
+                    {% include 'icons/' ~ icon ~ '.svg.twig' with {class: 'size-1/2'} only %}
+                {% else %}
+                    <span class="font-extrabold leading-none">{{ symbol }}</span>
+                {% endif %}
+            </span>
+        {% endif %}
+        {% if overlayIcon|default(null) %}
+            <span class="absolute inset-0 grid place-items-center rounded-full bg-terracotta-600/80 text-white opacity-0 transition group-hover:opacity-100">
+                {% include 'icons/' ~ overlayIcon ~ '.svg.twig' with {class: 'size-1/2'} only %}
+            </span>
+        {% endif %}
+        {{ block('overlay') }}
+    </span>
+{% endif %}

@@ -54,6 +54,7 @@ final readonly class GameDefinition extends AbstractGameDefinition
         $state->data['roll'] = null;
         $state->data['lastRoll'] = null;
         $state->data['rollAttempts'] = 0;
+        $state->data['rollSeq'] = 0;
 
         foreach ($players as $player) {
             $state->data['pawns'][$player->id] = array_fill(0, GameRules::PAWNS_PER_PLAYER, -1);
@@ -70,7 +71,7 @@ final readonly class GameDefinition extends AbstractGameDefinition
 
         match ($payload['action'] ?? '') {
             'roll' => $this->roll($state),
-            'move' => $this->move($state, $this->intParam($payload, 'pawn')),
+            'move' => $this->move($state, $this->stringParam($payload, 'from')),
             default => throw new InvalidMoveException('error.unknown_action'),
         };
     }
@@ -95,6 +96,7 @@ final readonly class GameDefinition extends AbstractGameDefinition
         $value = random_int(1, 6);
         $state->data['roll'] = $value;
         $state->data['lastRoll'] = $value;
+        ++$state->data['rollSeq'];
         $state->logGameEvent('log.ludo.rolled', ['%player%' => $player->nickname, '%value%' => $value]);
 
         if ($this->rules->hasAnyLegalMove($state->data['pawns'], $this->seats($state), $player->id, $value)) {
@@ -122,7 +124,7 @@ final readonly class GameDefinition extends AbstractGameDefinition
         $state->advanceTurn();
     }
 
-    private function move(GameState $state, int $pawnIndex): void
+    private function move(GameState $state, string $fromKey): void
     {
         $roll = $state->data['roll'];
         if (null === $roll) {
@@ -133,8 +135,10 @@ final readonly class GameDefinition extends AbstractGameDefinition
         $seats = $this->seats($state);
         $seat = $seats[$player->id];
 
+        $pawnIndex = $this->pawnIndexAtKey($state->data['pawns'][$player->id], $seat, $fromKey);
+
         $legal = $this->rules->legalMoves($state->data['pawns'], $seats, $player->id, $roll);
-        if (!\in_array($pawnIndex, $legal, true)) {
+        if (null === $pawnIndex || !\in_array($pawnIndex, $legal, true)) {
             $this->invalidMove('error.ludo.illegal_pawn');
         }
 
@@ -166,6 +170,43 @@ final readonly class GameDefinition extends AbstractGameDefinition
         if (6 !== $roll) {
             $state->advanceTurn();
         }
+    }
+
+    /**
+     * @param list<int> $ownPawns
+     */
+    private function pawnIndexAtKey(array $ownPawns, int $seat, string $key): ?int
+    {
+        if (preg_match('/^base:(\d+):(\d+)$/', $key, $m)) {
+            $slot = (int) $m[2];
+
+            return (int) $m[1] === $seat && -1 === ($ownPawns[$slot] ?? null) ? $slot : null;
+        }
+
+        if (preg_match('/^ring:(\d+)$/', $key, $m)) {
+            $ringIndex = (int) $m[1];
+            foreach ($ownPawns as $index => $progress) {
+                if ($progress >= 0 && $this->rules->ringIndexFor($seat, $progress) === $ringIndex) {
+                    return $index;
+                }
+            }
+
+            return null;
+        }
+
+        if (preg_match('/^home:(\d+):(\d+)$/', $key, $m)) {
+            if ((int) $m[1] !== $seat) {
+                return null;
+            }
+            $progress = GameRules::RING_LENGTH + (int) $m[2];
+            foreach ($ownPawns as $index => $pawnProgress) {
+                if ($pawnProgress === $progress) {
+                    return $index;
+                }
+            }
+        }
+
+        return null;
     }
 
     /**

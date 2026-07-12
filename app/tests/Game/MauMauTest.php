@@ -31,10 +31,10 @@ final class MauMauTest extends GameTestCase
     private function state(array $handP0, array $handP1, \App\Game\Core\Card\PlayingCard $top, array $settings = []): GameState
     {
         $state = $this->game->createInitialState(self::players(2), $settings);
-        $state->data['hands']['p0'] = $handP0;
-        $state->data['hands']['p1'] = $handP1;
-        $state->data['discard'] = [$top];
-        $state->data['drawPile'] = [
+        $state->table->hand('p0')->items = $handP0;
+        $state->table->hand('p1')->items = $handP1;
+        $state->table->zone('discard')->items = [$top];
+        $state->table->zone('stock')->items = [
             self::card(Suit::Clubs, Rank::Nine),
             self::card(Suit::Diamonds, Rank::Ten),
             self::card(Suit::Spades, Rank::Queen),
@@ -118,7 +118,7 @@ final class MauMauTest extends GameTestCase
         $this->game->applyMove($state, 'p1', ['action' => 'draw']);
         self::assertSame(0, $state->data['pendingDraw']);
         self::assertSame('p0', $state->currentPlayer()->id);
-        self::assertCount(3, $state->data['hands']['p1']);
+        self::assertCount(3, $state->table->hand('p1')->items);
     }
 
     public function testEightSkipsNextPlayer(): void
@@ -132,6 +132,64 @@ final class MauMauTest extends GameTestCase
         $this->game->applyMove($state, 'p0', ['action' => 'play', 'card' => 0]);
 
         // p1 is skipped, back to p0 (2 players, stackSkip off)
+        self::assertSame('p0', $state->currentPlayer()->id);
+        self::assertSame(0, $state->data['pendingSkip']);
+    }
+
+    public function testStackedSkipAutoSkipsPlayerWithoutMatchingCard(): void
+    {
+        $state = $this->state(
+            [self::card(Suit::Hearts, Rank::Eight), self::card(Suit::Clubs, Rank::King)],
+            [self::card(Suit::Spades, Rank::Nine)],
+            self::card(Suit::Hearts, Rank::Nine),
+            ['stackSkip' => true],
+        );
+
+        $this->game->applyMove($state, 'p0', ['action' => 'play', 'card' => 0]);
+
+        // p1 has no eight to extend the skip, so they are auto-skipped
+        // without needing to click "pass" — it's p0's turn again.
+        self::assertSame('p0', $state->currentPlayer()->id);
+        self::assertSame(0, $state->data['pendingSkip']);
+    }
+
+    public function testStackedSkipLetsPlayerExtend(): void
+    {
+        $state = $this->state(
+            [self::card(Suit::Hearts, Rank::Eight), self::card(Suit::Diamonds, Rank::Eight)],
+            [self::card(Suit::Clubs, Rank::Eight), self::card(Suit::Spades, Rank::Nine)],
+            self::card(Suit::Hearts, Rank::Nine),
+            ['stackSkip' => true],
+        );
+
+        $this->game->applyMove($state, 'p0', ['action' => 'play', 'card' => 0]);
+
+        // p1 has an eight and is not auto-skipped; they must act.
+        self::assertSame('p1', $state->currentPlayer()->id);
+        self::assertSame(1, $state->data['pendingSkip']);
+
+        $this->game->applyMove($state, 'p1', ['action' => 'play', 'card' => 0]);
+
+        // p1 stacked their own eight; p0 must now respond in turn.
+        self::assertSame('p0', $state->currentPlayer()->id);
+        self::assertSame(2, $state->data['pendingSkip']);
+    }
+
+    public function testPassingOnPendingSkipFullyResolvesIt(): void
+    {
+        $state = $this->state(
+            [self::card(Suit::Clubs, Rank::King)],
+            [self::card(Suit::Spades, Rank::Nine)],
+            self::card(Suit::Hearts, Rank::Nine),
+            ['stackSkip' => true],
+        );
+        $state->data['pendingSkip'] = 2;
+        $state->currentTurnIndex = 1;
+
+        $this->game->applyMove($state, 'p1', ['action' => 'pass']);
+
+        // A pass fully absorbs the pending skip in one turn, it does not
+        // decrement by one and roll the remainder onto the next player.
         self::assertSame('p0', $state->currentPlayer()->id);
         self::assertSame(0, $state->data['pendingSkip']);
     }
@@ -169,7 +227,7 @@ final class MauMauTest extends GameTestCase
         }
 
         $this->game->applyMove($state, 'p0', ['action' => 'draw']);
-        self::assertCount(2, $state->data['hands']['p0']);
+        self::assertCount(2, $state->table->hand('p0')->items);
 
         try {
             $this->game->applyMove($state, 'p0', ['action' => 'draw']);

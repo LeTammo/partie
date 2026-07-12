@@ -16,31 +16,32 @@ final class GameRenderer
      */
     public function buildView(GameState $state, ?string $viewerId): array
     {
+        $table = $state->table;
         $myTurn = $state->isViewersTurn($viewerId);
 
         $players = PlayerViews::build($state, static fn (Player $player): array => [
-            'cardCount' => \count($state->data['hands'][$player->id]),
+            'cardCount' => $table->hand($player->id)->count(),
             'hasMelded' => $state->data['hasMelded'][$player->id],
         ]);
 
         $melds = [];
-        foreach ($state->data['melds'] as $index => $meld) {
+        foreach ($table->matching('meld:') as $zone) {
             $melds[] = [
-                'index' => $index,
-                'owner' => $state->playerById($meld['ownerId'])?->nickname,
-                'type' => $meld['type'],
-                'cards' => CardPresenter::views($meld['cards']),
+                'key' => $zone->key,
+                'owner' => $state->playerById($zone->ownerId)?->nickname,
+                'type' => $zone->meta['type'],
+                'cards' => CardPresenter::views($zone->items),
             ];
         }
 
         $hand = [];
-        if (null !== $viewerId && isset($state->data['hands'][$viewerId])) {
-            foreach ($state->data['hands'][$viewerId] as $index => $card) {
+        if (null !== $viewerId && $table->has('hand:'.$viewerId)) {
+            foreach ($table->hand($viewerId)->items as $index => $card) {
                 $hand[] = CardPresenter::view($card) + ['index' => $index];
             }
         }
 
-        $discard = $state->data['discard'];
+        $discardTop = $table->zone('discard')->top();
         $hasOpened = null !== $viewerId && ($state->data['hasMelded'][$viewerId] ?? false);
 
         return [
@@ -48,10 +49,8 @@ final class GameRenderer
             'players' => $players,
             'melds' => $melds,
             'hand' => $hand,
-            'stockCount' => \count($state->data['stock']),
-            'discardTop' => [] !== $discard
-                ? CardPresenter::view($discard[array_key_last($discard)])
-                : null,
+            'stockCount' => $table->zone('stock')->count(),
+            'discardTop' => null !== $discardTop ? CardPresenter::view($discardTop) : null,
             'hasDrawn' => $state->data['hasDrawn'],
             'canDraw' => $myTurn && !$state->data['hasDrawn'],
             'canAct' => $myTurn && $state->data['hasDrawn'],

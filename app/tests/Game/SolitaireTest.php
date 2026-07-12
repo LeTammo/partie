@@ -27,14 +27,14 @@ final class SolitaireTest extends GameTestCase
     private function emptyState(): GameState
     {
         $state = $this->game->createInitialState(self::players(1));
-        foreach (array_keys($state->data['tableau']) as $col) {
-            $state->data['tableau'][$col] = [];
+        foreach ($state->table->matching('tableau:') as $zone) {
+            $zone->items = [];
         }
         foreach (Suit::cases() as $suit) {
-            $state->data['foundations'][$suit->value] = [];
+            $state->table->zone('foundation:'.$suit->value)->items = [];
         }
-        $state->data['stock'] = [];
-        $state->data['waste'] = [];
+        $state->table->zone('stock')->items = [];
+        $state->table->zone('waste')->items = [];
 
         return $state;
     }
@@ -43,15 +43,15 @@ final class SolitaireTest extends GameTestCase
     {
         $state = $this->game->createInitialState(self::players(1));
 
-        self::assertCount(GameRules::COLUMNS, $state->data['tableau']);
-        foreach ($state->data['tableau'] as $col => $pile) {
-            self::assertCount($col + 1, $pile);
-            foreach ($pile as $i => $slot) {
+        self::assertCount(GameRules::COLUMNS, $state->table->matching('tableau:'));
+        foreach ($state->table->matching('tableau:') as $col => $zone) {
+            self::assertCount($col + 1, $zone->items);
+            foreach ($zone->items as $i => $slot) {
                 self::assertSame($i === $col, $slot['faceUp']);
             }
         }
-        self::assertCount(24, $state->data['stock']);
-        self::assertSame([], $state->data['waste']);
+        self::assertSame(24, $state->table->zone('stock')->count());
+        self::assertSame([], $state->table->zone('waste')->items);
     }
 
     public function testStackingRules(): void
@@ -80,53 +80,53 @@ final class SolitaireTest extends GameTestCase
     public function testDrawMovesStockToWaste(): void
     {
         $state = $this->emptyState();
-        $state->data['stock'] = [self::card(Suit::Hearts, Rank::Two), self::card(Suit::Clubs, Rank::Three)];
+        $state->table->zone('stock')->items = [self::card(Suit::Hearts, Rank::Two), self::card(Suit::Clubs, Rank::Three)];
 
         $this->game->applyMove($state, 'p0', ['action' => 'draw']);
 
-        self::assertCount(1, $state->data['stock']);
-        self::assertCount(1, $state->data['waste']);
-        self::assertTrue($state->data['waste'][0]->is(Suit::Clubs, Rank::Three));
+        self::assertSame(1, $state->table->zone('stock')->count());
+        self::assertSame(1, $state->table->zone('waste')->count());
+        self::assertTrue($state->table->zone('waste')->items[0]->is(Suit::Clubs, Rank::Three));
     }
 
     public function testEmptyStockRecyclesWaste(): void
     {
         $state = $this->emptyState();
-        $state->data['waste'] = [self::card(Suit::Hearts, Rank::Two), self::card(Suit::Clubs, Rank::Three)];
+        $state->table->zone('waste')->items = [self::card(Suit::Hearts, Rank::Two), self::card(Suit::Clubs, Rank::Three)];
 
         $this->game->applyMove($state, 'p0', ['action' => 'draw']);
 
-        self::assertSame([], $state->data['waste']);
-        self::assertCount(2, $state->data['stock']);
+        self::assertSame([], $state->table->zone('waste')->items);
+        self::assertSame(2, $state->table->zone('stock')->count());
         // recycle reverses so the first-drawn card comes out first again
-        self::assertTrue(end($state->data['stock'])->is(Suit::Hearts, Rank::Two));
+        self::assertTrue($state->table->zone('stock')->top()->is(Suit::Hearts, Rank::Two));
     }
 
     public function testMoveRunBetweenTableauColumns(): void
     {
         $state = $this->emptyState();
-        $state->data['tableau'][0] = [
+        $state->table->zone('tableau:0')->items = [
             ['card' => self::card(Suit::Spades, Rank::Ten), 'faceUp' => false],
             ['card' => self::card(Suit::Hearts, Rank::Six), 'faceUp' => true],
             ['card' => self::card(Suit::Clubs, Rank::Five), 'faceUp' => true],
         ];
-        $state->data['tableau'][1] = [
+        $state->table->zone('tableau:1')->items = [
             ['card' => self::card(Suit::Spades, Rank::Seven), 'faceUp' => true],
         ];
 
         // move the 6♥-5♣ run onto the 7♠
         $this->game->applyMove($state, 'p0', ['action' => 'move', 'from' => 'tableau:0:1', 'to' => 'tableau:1']);
 
-        self::assertCount(1, $state->data['tableau'][0]);
-        self::assertTrue($state->data['tableau'][0][0]['faceUp']); // exposed card flipped
-        self::assertCount(3, $state->data['tableau'][1]);
+        self::assertSame(1, $state->table->zone('tableau:0')->count());
+        self::assertTrue($state->table->zone('tableau:0')->items[0]['faceUp']); // exposed card flipped
+        self::assertSame(3, $state->table->zone('tableau:1')->count());
     }
 
     public function testIllegalTableauMoveRejected(): void
     {
         $state = $this->emptyState();
-        $state->data['tableau'][0] = [['card' => self::card(Suit::Hearts, Rank::Six), 'faceUp' => true]];
-        $state->data['tableau'][1] = [['card' => self::card(Suit::Diamonds, Rank::Seven), 'faceUp' => true]];
+        $state->table->zone('tableau:0')->items = [['card' => self::card(Suit::Hearts, Rank::Six), 'faceUp' => true]];
+        $state->table->zone('tableau:1')->items = [['card' => self::card(Suit::Diamonds, Rank::Seven), 'faceUp' => true]];
 
         $this->expectException(InvalidMoveException::class);
         // red on red
@@ -147,9 +147,9 @@ final class SolitaireTest extends GameTestCase
             if (Suit::Hearts === $suit) {
                 array_pop($pile); // hearts still waits for its king
             }
-            $state->data['foundations'][$suit->value] = $pile;
+            $state->table->zone('foundation:'.$suit->value)->items = $pile;
         }
-        $state->data['waste'] = [self::card(Suit::Hearts, Rank::King)];
+        $state->table->zone('waste')->items = [self::card(Suit::Hearts, Rank::King)];
 
         $this->game->applyMove($state, 'p0', ['action' => 'move', 'from' => 'waste', 'to' => 'foundation:hearts']);
 

@@ -81,6 +81,7 @@ final readonly class GameDefinition extends AbstractGameDefinition
             ownerId: $playerId,
             shape: TokenShape::Custom,
             outerColor: $player->color,
+            symbol: 'x' === $variant ? '✕' : '◯',
             variant: $variant,
         ));
 

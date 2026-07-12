@@ -16,7 +16,7 @@ final class TicTacToeTest extends GameTestCase
 
     protected function setUp(): void
     {
-        $this->game = new GameDefinition(new GameRules(), new GameRenderer());
+        $this->game = new GameDefinition(new GameRules(), new GameRenderer(self::translator()));
     }
 
     public function testInitialState(): void

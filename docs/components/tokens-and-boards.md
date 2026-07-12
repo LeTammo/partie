@@ -1,112 +1,173 @@
 # Tokens & boards
 
-For any game where pieces sit on a grid: Tic-Tac-Toe, Connect Four,
-Checkers.
-
-## `Board` (`src/Game/Core/Model/Board.php`)
-
-A 0-indexed `width` × `height` grid of `Token`s.
-
-```php
-$board = new Board(8, 8);
-
-$board->place(2, 3, new Token(ownerId: $player->id, outerColor: '#a3b8a3'));
-$board->get(2, 3);           // ?Token
-$board->isEmpty(2, 3);       // bool
-$board->move(2, 3, 3, 4);    // throws if there's nothing at 2,3
-$board->remove(3, 4);        // returns the removed Token, or null
-$board->tokens();            // list<{x, y, token}> - every occupied cell
-$board->countTokensOf($player->id);
-```
+For any game where pieces sit on a grid or track: Tic-Tac-Toe, Connect
+Four, Checkers, Ludo.
 
 ## `Token` (`src/Game/Core/Model/Token.php`)
 
-A generic piece: `ownerId`, `shape` (`TokenShape::Round`/`Custom`),
-`outerColor`, `innerColor`, and a free-form `variant` string for
-game-specific state (`"x"`/`"o"` in Tic-Tac-Toe, `"king"` in Checkers -
-`$token->promote('king')`). Every `Token` gets a random `id` for free.
-
-## Rendering: `BoardViews::grid()`
+A generic piece with up to three concentric colorable areas plus an
+optional symbol:
 
 ```php
-$grid = BoardViews::grid($board, static fn (int $x, int $y, ?Token $token): array => [
-    'x' => $x,
-    'y' => $y,
-    'outer' => $token?->outerColor,
-    'inner' => $token?->innerColor,
-]);
+new Token(
+    ownerId: $player->id,
+    outerColor: 'var(--color-softblue-500)',  // the disc
+    middleColor: 'var(--color-softblue-700)', // optional band
+    centerColor: 'var(--color-softblue-300)', // optional dot
+    symbol: '✕',                              // optional char in the center
+    variant: 'king',                          // free-form game state
+);
+$token->promote('king');   // mutate the variant later
 ```
 
-Runs the `for $y` / `for $x` loop for you; your closure returns whatever a
-cell needs to render - that's the only per-game part.
+Ring, shadow and interactivity are *view* concerns - configured on the
+component at render time, never stored on the model.
 
-## Moving a piece: the `dragdrop--grid-move` type
+## `components/token.html.twig`
 
-Handles both tap-to-move and drag-and-drop with one controller
-(`assets/controllers/dragdrop/grid_move_controller.js`), animates the move
-optimistically, and fades a captured piece if you set `captureDistance`.
-
-**The legal-moves map** is the contract between your renderer and the
-controller:
-
-```php
-// array<string, list<array{toX: int, toY: int}>>, keyed by "x:y"
-$moves = [
-    '2:3' => [['toX' => 3, 'toY' => 4], ['toX' => 1, 'toY' => 4]],
-];
-```
-
-Build it while you compute legal moves for the viewer (see
-`Checkers\GameRenderer` for a full example with capture rules), then pass it
-to the template as `view.moves`.
-
-**Template wiring:**
+The one token component - every piece renders through it:
 
 ```twig
-<div data-controller="dragdrop--grid-move"
-     data-dragdrop--grid-move-moves-value="{{ view.moves|json_encode|e('html_attr') }}"
-     data-dragdrop--grid-move-capture-distance-value="2">
+{% include 'components/token.html.twig' with {
+    outer: cell.outer,
+    center: cell.inner, centerSize: 45,     {# disc + small dot (Connect Four) #}
+    icon: cell.king ? 'crown' : null,       {# icon center (Checkers king) #}
+    overlayIcon: sacrifice ? 'x' : null,    {# hover overlay, needs 'group' in class #}
+    ring: cell.selectable,                  {# highlight ring #}
+    size: 'size-8 sm:size-11',
+    flip: 'piece-' ~ cell.tokenId, exit: 'fade',
+    attr: {'data-source': key, draggable: 'true', 'data-action': '...'},
+} only %}
+```
 
-    {# a hidden form the controller fills in and submits #}
-    <form data-dragdrop--grid-move-target="form" class="hidden">
-        <input type="hidden" name="fromX" data-dragdrop--grid-move-target="fromX">
-        <input type="hidden" name="fromY" data-dragdrop--grid-move-target="fromY">
-        <input type="hidden" name="toX" data-dragdrop--grid-move-target="toX">
-        <input type="hidden" name="toY" data-dragdrop--grid-move-target="toY">
-    </form>
+- Three areas: `outer` (full disc), `middle` (band, default 92%),
+  `center` (dot, default 82%); override with `middleSize`/`centerSize`.
+  Ludo's pawns use `middleSize: 84, centerSize: 60`.
+- `shape: 'plain'` renders only the symbol - Tic-Tac-Toe's ✕/◯.
+- `attr` carries the interaction wiring (drag actions, `data-source`).
+- `key`/`flip`/`exit` work like on the card component.
 
-    {% for row in view.grid %}
-        {% for cell in row %}
-            <button data-cell data-x="{{ cell.x }}" data-y="{{ cell.y }}"
-                    data-action="click->dragdrop--grid-move#pick dragover->dragdrop--grid-move#dragOver drop->dragdrop--grid-move#drop">
-                {% if cell.outer %}
-                    <span data-flip-id="piece-{{ cell.tokenId }}"
-                          {% if cell.mine %}
-                              draggable="true" data-x="{{ cell.x }}" data-y="{{ cell.y }}"
-                              data-action="dragstart->dragdrop--grid-move#dragStart dragend->dragdrop--grid-move#dragEnd"
-                          {% endif %}
-                          style="background-color: {{ cell.outer }}"></span>
-                {% endif %}
-            </button>
-        {% endfor %}
-    {% endfor %}
+## `Board` (`src/Game/Core/Model/Board.php`)
+
+A 0-indexed `width` × `height` grid of `Token`s:
+
+```php
+$board = new Board(8, 8);
+$board->place(2, 3, $token);
+$board->get(2, 3); $board->isEmpty(2, 3);
+$board->move(2, 3, 3, 4); $board->remove(3, 4);
+$board->tokens(); $board->countTokensOf($player->id);
+```
+
+## `Path` (`src/Game/Core/Zone/Path.php`)
+
+A named, ordered list of coordinates - a race track, home lane, or base
+row. `seatStride` rotates it per seat (Ludo: seat S starts 10 squares
+further along the ring):
+
+```php
+$ring = new Path('ring', $cells, seatStride: 10);
+$ring->cellFor($seat, $progress);   // [x, y] for a seat's progress step
+$ring->indexFor($seat, $progress);  // absolute ring index
+```
+
+A race game's state stays progress-based (`$state->data['pawns']`); the
+Path turns progress into board cells at render time. See Ludo's
+`GameRenderer`.
+
+## `Gravity` (`src/Game/Core/Rules/Gravity.php`)
+
+The drop rule for rack games:
+
+```php
+$y = Gravity::dropRow($board, $column);   // lowest empty row, or null when full
+```
+
+## Rendering: `components/board.html.twig`
+
+One include renders the whole grid - cells, tokens, zone wiring, click-to-
+place forms, decorative layers, and an optional gravity drop-row. Your
+renderer builds a `board` descriptor; the template stays tiny:
+
+```twig
+<div class="mx-auto w-fit" data-controller="dragdrop--piece-move"
+     data-dragdrop--piece-move-moves-value="{{ view.moves|json_encode|e('html_attr') }}">
+    {% include 'components/board.html.twig' with {board: view.board} %}
 </div>
 ```
 
-- Every cell: `data-cell data-x data-y` + the click/dragover/drop actions.
-- A cell's piece (if any): `data-flip-id` so it can glide; only *your own*
-  draggable pieces get `draggable="true"` + the dragstart/dragend actions.
-- `captureDistanceValue` (optional): if set, moving exactly that many
-  columns fades out whatever piece sits at the midpoint (Checkers' jump
-  capture). Omit it for games with no capture-by-jump rule.
-- Highlighting: `cell-selected` (the picked cell) / `cell-target` (its
-  legal destinations) are painted automatically from the moves map - style
-  them in CSS, don't toggle them yourself. The class names are exported as
-  `CELL_SELECTED_CLASS`/`CELL_TARGET_CLASS` from `assets/dragdrop.js` if you
-  need them in JS.
-- A rejected move reverts automatically via the FLIP exit-ghost mechanism
-  (see [ui-kit.md](ui-kit.md)) - nothing to do on your end.
+The descriptor (see the parameter list at the top of the component, and
+TicTacToe/ConnectFour/Checkers/Ludo renderers for full examples):
 
-Don't write a custom controller for a grid game. If `grid_move` seems to be
-missing something, that's a sign the core type should grow, not that your
-game needs its own JS.
+- `cols`/`rows`, `class`, `style`, `panelClass` - grid scaffolding.
+- `cells` - in-order cell maps: `class`/`style` (fill colors, explicit
+  `grid-row/column` for sparse boards), `key` (wires the cell as a
+  piece-move zone), `token` (token component params), `form` (a
+  click-to-place cell with an `optimistic#insert` template - Tic-Tac-Toe),
+  `dot` (decorative), `attr`.
+- `layers` - decorative divs behind the cells (Ludo's colored backdrops).
+- `drop` - the gravity drop-row above the grid (Connect Four); cells then
+  carry `attr: {'data-col': x}` so the optimistic disc falls into the
+  right column.
+
+`BoardViews::grid()` still runs the x/y loop for you when you build cell
+descriptors from a `Board`.
+
+## Moving pieces: the `piece-move` controller
+
+**The one map-driven movement controller** - grid cells, card piles and
+track squares all use it. Zone keys are opaque strings; the legal-moves
+map is the contract between renderer and controller:
+
+```php
+$moves = new MoveMap();
+$moves->add(MoveMap::cellKey(2, 3), MoveMap::cellKey(3, 4), MoveMap::cellKey(1, 4));
+// solitaire: $moves->add('tableau:0:1', 'tableau:4', 'foundation:hearts');
+// ludo:      $moves->add('ring:6', 'ring:10');
+'moves' => $moves->toArray(),
+```
+
+Template wiring (the board component does the zone side for you):
+
+```twig
+<div data-controller="dragdrop--piece-move"
+     data-dragdrop--piece-move-moves-value="{{ view.moves|json_encode|e('html_attr') }}"
+     data-dragdrop--piece-move-capture-distance-value="2"     {# Checkers' jump fade #}
+     data-dragdrop--piece-move-auto-select-value="true"       {# preselect a lone mover #}
+     data-dragdrop--piece-move-runs-value="true"              {# Solitaire card runs #}
+     data-dragdrop--piece-move-free-drag-value="true"         {# any card may be picked up #}
+     data-dragdrop--piece-move-drag-highlight-value="foundation:">  {# drag highlights only these zones #}
+
+    <form data-dragdrop--piece-move-target="form" class="hidden" method="post" action="...">
+        <input type="hidden" name="from" data-dragdrop--piece-move-target="from">
+        <input type="hidden" name="to" data-dragdrop--piece-move-target="to">
+    </form>
+</div>
+```
+
+- **Zones** (drop targets): `data-dragdrop--piece-move-target="zone"
+  data-zone="{key}"` + the `pickZone`/`dragOver`/`drop` actions. A zone
+  with `data-mode="replace"` swaps its content on an optimistic drop (a
+  foundation pile showing only its top card).
+- **Sources** (pickable pieces): `data-source="{key}"` + the drag actions;
+  standalone card buttons also register as `target="source"` with the
+  `pick` click action. A grid cell containing exactly one source picks it
+  on click automatically.
+- **Choices**: `choicesValue` (a list of keys) + a `choice` input target
+  turn marked zones into one-click choice submits (Checkers' sacrifice).
+- **Drag feel**: `freeDrag` lets every source be picked up even without a
+  legal move (the drop just never lands); `dragHighlight` limits the
+  target highlight during a drag to zones with the given key prefix.
+  While dragging, the selection box is never painted - the piece under
+  the cursor is feedback enough. Click-to-move always paints selection
+  and all targets.
+- The move submits `from`/`to` zone keys; parse coordinates back with
+  `MoveMap::coordsOf($key)`.
+- Selected/target highlighting uses the `cell-selected`/`cell-target` CSS
+  classes automatically.
+
+`dragdrop--zone-drop` ("dropping submits the source's own form", Mau-Mau)
+and `dragdrop--group-swap` (slot swapping, Koepknack) remain separate -
+their state machines genuinely differ. Anything map-driven belongs in
+`piece-move`; if it seems to be missing something, grow the controller,
+don't write a game-specific one.

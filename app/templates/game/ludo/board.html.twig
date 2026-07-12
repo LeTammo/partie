@@ -1,82 +1,24 @@
 {% trans_default_domain 'ludo' %}
-{% macro pawn(cell, code) %}
-    {% if cell.pawn %}
-        {% set inside %}
-            <span class="grid size-[84%] place-items-center rounded-full" style="background-color: var(--color-{{ cell.pawn.color }}-700);">
-                <span class="size-[72%] rounded-full" style="background-color: var(--color-{{ cell.pawn.color }}-300);"></span>
-            </span>
-        {% endset %}
-        {% if cell.clickable %}
-            <form method="post" action="{{ path('app_game_move', {code: code}) }}" class="contents">
-                <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
-                <input type="hidden" name="action" value="move">
-                <input type="hidden" name="pawn" value="{{ cell.pawnIndex }}">
-                <button type="submit" aria-label="{{ 'ludo.move_pawn'|trans }}" draggable="true"
-                        data-action="dragstart->ludo#dragStart dragend->ludo#dragEnd"
-                        class="grid size-6 cursor-grab place-items-center rounded-full shadow-soft ring-2 ring-white transition hover:scale-110 sm:size-8"
-                        style="background-color: var(--color-{{ cell.pawn.color }}-500);">
-                    {{ inside }}
-                </button>
-            </form>
-        {% else %}
-            <span class="grid size-6 place-items-center rounded-full sm:size-8 shadow-strong"
-                  style="background-color: var(--color-{{ cell.pawn.color }}-500);">
-                {{ inside }}
-            </span>
-        {% endif %}
-    {% endif %}
-{% endmacro %}
-
-<div class="mx-auto w-fit" data-controller="ludo optimistic">
+<div class="mx-auto w-fit" data-controller="dragdrop--piece-move optimistic"
+     data-dragdrop--piece-move-moves-value="{{ view.moves|json_encode|e('html_attr') }}">
     <div class="mb-3 flex min-h-11 flex-wrap items-center justify-center gap-3">
-        {% set dieValue = view.roll|default(1) %}
-        {% set die %}
-            <span id="ludo-die-{{ dieValue }}" data-die class="anim-roll block">
-                {% include 'components/die.html.twig' with {value: dieValue, class: 'size-20'} only %}
-            </span>
-        {% endset %}
-
-        {% if view.canRoll %}
-            <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}"
-                  data-action="submit->optimistic#pending"
-                  data-optimistic-selector-param="[data-die]"
-                  data-optimistic-class-param="anim-rolling">
-                <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
-                <input type="hidden" name="action" value="roll">
-                <button type="submit" title="{{ 'ludo.roll'|trans }}"
-                        class="block rounded-2xl {{ view.roll is null ? 'opacity-60 hover:opacity-100' }} cursor-pointer shadow-soft transition hover:-translate-y-0.5 hover:shadow-lifted">
-                    {{ die }}
-                </button>
-            </form>
-        {% elseif view.roll is not null %}
-            {{ die }}
+        {% if view.canRoll or view.roll is not null %}
+            {% include 'components/die_roller.html.twig' with {
+                value: view.roll|default(1),
+                symbol: view.roll is null ? '?' : null,
+                restartKey: view.rollSeq,
+                canRoll: view.canRoll,
+                class: 'size-20',
+            } %}
         {% endif %}
     </div>
 
-    <div class="relative grid grid-cols-11 grid-rows-11 gap-1 rounded-3xl bg-cream p-3 shadow-soft"
-         style="width: min(92vw, 34rem); aspect-ratio: 1;">
+    <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}" data-dragdrop--piece-move-target="form" class="hidden">
+        <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
+        <input type="hidden" name="action" value="move">
+        <input type="hidden" name="from" data-dragdrop--piece-move-target="from">
+        <input type="hidden" name="to" data-dragdrop--piece-move-target="to">
+    </form>
 
-        {% for backdrop in view.backdrops %}
-            <div style="{{ backdrop.style }}" class="rounded-2xl"></div>
-        {% endfor %}
-
-        {% for spot in view.background %}
-            <div style="{{ spot.style }}" class="grid place-items-center">
-                <span class="size-1.5 rounded-full bg-white"></span>
-            </div>
-        {% endfor %}
-
-        {% for cell in view.cells %}
-            <div style="{{ cell.style }}" class="grid place-items-center rounded-full bg-white shadow-soft"
-                 {% if cell.target %}data-ludo-target="zone" data-action="dragover->ludo#dragOver dragleave->ludo#dragLeave drop->ludo#drop"{% endif %}>
-                {{ _self.pawn(cell, lobby.code) }}
-            </div>
-        {% endfor %}
-
-        {% for slot in view.baseSlots %}
-            <div style="{{ slot.style }}" class="grid place-items-center">
-                {{ _self.pawn(slot, lobby.code) }}
-            </div>
-        {% endfor %}
-    </div>
+    {% include 'components/board.html.twig' with {board: view.board} %}
 </div>

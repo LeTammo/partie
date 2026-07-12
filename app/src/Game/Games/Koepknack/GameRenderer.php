@@ -19,6 +19,7 @@ final readonly class GameRenderer
     /** @return array<string, mixed> */
     public function buildView(GameState $state, ?string $viewerId): array
     {
+        $table = $state->table;
         $running = GameStatus::Running === $state->status;
         $phase = $state->data['phase'] ?? 'playing';
         $roundEnd = $running && 'roundend' === $phase;
@@ -31,8 +32,8 @@ final readonly class GameRenderer
 
         $hand = null;
         $handValue = null;
-        if (null !== $viewerId && isset($state->data['hands'][$viewerId])) {
-            $cards = $state->data['hands'][$viewerId];
+        if (null !== $viewerId && $table->has('hand:'.$viewerId)) {
+            $cards = $table->hand($viewerId)->items;
             $hand = CardPresenter::views($cards);
             $handValue = $this->rules->format($this->rules->value($cards));
         }
@@ -40,7 +41,8 @@ final readonly class GameRenderer
         $reveal = [];
         if ($roundEnd) {
             foreach ($state->players as $player) {
-                $cards = $state->data['hands'][$player->id];
+                // endRound() flipped every hand zone to ZoneVisibility::All
+                $cards = $table->hand($player->id)->items;
                 $reveal[] = [
                     'nickname' => $player->nickname,
                     'color' => $player->color,
@@ -56,14 +58,14 @@ final readonly class GameRenderer
             'round' => $state->data['round'],
             'roundsTotal' => $state->data['roundsTotal'],
             'players' => $players,
-            'middle' => CardPresenter::views($state->data['middle']),
+            'middle' => CardPresenter::views($table->zone('middle')->items),
             'hand' => $hand,
             'handValue' => $handValue,
             'closed' => null !== $closerId,
             'closerName' => null !== $closerId ? $state->playerById($closerId)?->nickname : null,
             'canAct' => $myTurn,
             'canClose' => $myTurn && null === $closerId,
-            'deckCount' => \count($state->data['deck']),
+            'deckCount' => $table->zone('stock')->count(),
             'roundEnd' => $roundEnd,
             'reveal' => $reveal,
             'canStartNewRound' => $roundEnd && null !== $viewerId,

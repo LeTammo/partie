@@ -1,0 +1,31 @@
+{# A labeled area of the table: cream panel, optional title line, optional
+   current-turn ring, hidden/revealed state. Content goes in the body block
+   ({% embed %}).
+   How to use, see docs/components/zones-and-tables.md
+
+   Parameters:
+   - title:   caption above the content (pass pre-translated text, optional)
+   - active:  highlight ring, e.g. "this area is acting" (optional)
+   - hidden:  renders nothing (a zone not yet revealed)
+   - tone:    'cream' (default) | 'white' | 'accent' (sunny reveal panel)
+   - rise:    entrance animation for freshly revealed areas
+   - class:   extra classes
+   - attr:    map of extra attributes on the panel
+#}
+{% if not hidden|default(false) %}
+    {% set toneClass = {
+        cream: 'bg-cream',
+        white: 'bg-white shadow-soft',
+        accent: 'bg-sunny-50 shadow-soft',
+    }[tone|default('cream')] %}
+    <div class="rounded-3xl p-5 transition {{ toneClass }}
+                {{ active|default(false) ? 'ring-2 ring-softblue-300' }}
+                {{ rise|default(false) ? 'anim-rise' }}
+                {{ class|default('') }}"
+         {%- for name, value in attr|default({}) %} {{ name }}="{{ value }}"{% endfor %}>
+        {% if title|default(null) %}
+            <p class="mb-3 text-center text-sm font-extrabold uppercase tracking-wide text-warmgray-400">{{ title }}</p>
+        {% endif %}
+        {% block body %}{% endblock %}
+    </div>
+{% endif %}

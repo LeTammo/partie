@@ -1,6 +1,5 @@
 # --- Tisch ---
 yahtzee.category: 'Kategorie'
-yahtzee.score_action: '%points% Punkte auf %category% eintragen'
 yahtzee.upper_bonus: 'Bonus oben (63 → +35)'
 yahtzee.total: 'Gesamt'
 

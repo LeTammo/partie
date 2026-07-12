@@ -8,19 +8,22 @@ How the app is wired together. For how to build a game on top of it, see
 ```
 src/Game/
 ├── Core/                     Reusable across every game - see docs/components/
-│   ├── Model/                Board, Token, Dice, Player, GameState, Lobby, GameStatus,
+│   ├── Model/                Board, Token, Chip, Dice, Player, GameState, Lobby, GameStatus,
 │   │                         GameSetting, GameSettingType, ...
-│   ├── Card/                 PlayingCard, DeckFactory, Piles, CardPresenter, Rank, Suit
-│   ├── View/                 BoardViews, PlayerViews (render-data helpers for GameRenderers)
+│   ├── Card/                 PlayingCard, CustomCard, DeckFactory, Piles, presenters, Rank, Suit
+│   ├── Zone/                 Zone, Table, ZoneVisibility, Path (card zones & board tracks)
+│   ├── Rules/                Gravity (shared rule helpers)
+│   ├── View/                 BoardViews, PlayerViews, ChipViews, MoveMap (render-data helpers)
 │   ├── Service/              GameEngineInterface, AbstractGameDefinition, AutoPlayingEngineInterface,
 │   │                         GameSettingsResolver, GameRegistry, LobbyManager, GameBroadcaster, PlayerSession
 │   └── Exception/            GameException, InvalidMoveException, LobbyNotFoundException
 └── Games/
     ├── TicTacToe/, ConnectFour/, Checkers/   grid games
-    ├── Ludo/                                 track/race game, custom (non-grid) board
+    ├── Ludo/                                 track/race game (Path over an 11x11 board)
     ├── MauMau/, Rummy/, Koepknack/           card games
+    ├── Solitaire/, ElevenOut/                card games on zones
     ├── Blackjack/                            card game, dealer auto-plays
-    └── Yahtzee/                              dice game
+    └── Yahtzee/                              dice game with a score sheet
     (each: GameDefinition + GameRules + GameRenderer)
 ```
 

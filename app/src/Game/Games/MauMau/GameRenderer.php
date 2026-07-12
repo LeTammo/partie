@@ -22,8 +22,9 @@ final readonly class GameRenderer
      */
     public function buildView(GameState $state, ?string $viewerId): array
     {
+        $table = $state->table;
         $myTurn = $state->isViewersTurn($viewerId);
-        $top = $state->data['discard'][array_key_last($state->data['discard'])];
+        $top = $table->zone('discard')->top();
         $pendingDraw = $state->data['pendingDraw'];
         $pendingSkip = $state->data['pendingSkip'] ?? 0;
         $wishedSuit = $state->data['wishedSuit'];
@@ -31,12 +32,12 @@ final readonly class GameRenderer
         $options = Options::fromState($state);
 
         $players = PlayerViews::build($state, static fn (Player $player): array => [
-            'cardCount' => \count($state->data['hands'][$player->id]),
+            'cardCount' => $table->hand($player->id)->count(),
         ]);
 
         $hand = [];
-        if (null !== $viewerId && isset($state->data['hands'][$viewerId])) {
-            foreach ($state->data['hands'][$viewerId] as $index => $card) {
+        if (null !== $viewerId && $table->has('hand:'.$viewerId)) {
+            foreach ($table->hand($viewerId)->items as $index => $card) {
                 $hand[] = CardPresenter::view($card) + [
                     'index' => $index,
                     'playable' => $myTurn && $this->rules->playable($card, $top, $wishedSuit, $pendingDraw, $penaltyLocked, $pendingSkip, $options),
@@ -59,7 +60,7 @@ final readonly class GameRenderer
             'pendingDraw' => $pendingDraw,
             'pendingSkip' => $pendingSkip,
             'penaltyLocked' => $penaltyLocked,
-            'drawCount' => \count($state->data['drawPile']),
+            'drawCount' => $table->zone('stock')->count(),
             'hand' => $hand,
             'hasDrawn' => $state->data['hasDrawn'],
             'canPass' => $myTurn && ($pendingSkip > 0 || $state->data['hasDrawn']),

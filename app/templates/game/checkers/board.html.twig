@@ -1,62 +1,22 @@
 {% trans_default_domain 'checkers' %}
 <div class="mx-auto w-fit"
-     data-controller="dragdrop--grid-move"
-     data-dragdrop--grid-move-moves-value="{{ view.moves|json_encode|e('html_attr') }}"
-     data-dragdrop--grid-move-sacrifice-squares-value="{{ view.sacrificeSquares|json_encode|e('html_attr') }}"
-     data-dragdrop--grid-move-capture-distance-value="2">
+     data-controller="dragdrop--piece-move"
+     data-dragdrop--piece-move-moves-value="{{ view.moves|json_encode|e('html_attr') }}"
+     data-dragdrop--piece-move-choices-value="{{ view.sacrificeSquares|json_encode|e('html_attr') }}"
+     data-dragdrop--piece-move-capture-distance-value="2"
+     data-dragdrop--piece-move-auto-select-value="true">
 
     {% set banner = view.mustContinue ? 'checkers.must_continue'|trans : (view.pendingSacrifice ? 'checkers.choose_sacrifice'|trans : null) %}
     <p class="mb-3 flex min-h-14 items-center justify-center rounded-2xl bg-terracotta-50 px-4 text-center text-base font-extrabold text-terracotta-700 shadow-soft {{ banner is null ? 'invisible' }}">
         {{ banner }}
     </p>
 
-    <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}" data-dragdrop--grid-move-target="form" class="hidden">
+    <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}" data-dragdrop--piece-move-target="form" class="hidden">
         <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
-        <input type="hidden" name="fromX" data-dragdrop--grid-move-target="fromX">
-        <input type="hidden" name="fromY" data-dragdrop--grid-move-target="fromY">
-        <input type="hidden" name="toX" data-dragdrop--grid-move-target="toX">
-        <input type="hidden" name="toY" data-dragdrop--grid-move-target="toY">
-        <input type="hidden" name="sacrifice" data-dragdrop--grid-move-target="sacrifice">
+        <input type="hidden" name="from" data-dragdrop--piece-move-target="from">
+        <input type="hidden" name="to" data-dragdrop--piece-move-target="to">
+        <input type="hidden" name="sacrifice" data-dragdrop--piece-move-target="choice">
     </form>
 
-    <div class="grid grid-cols-8 overflow-hidden rounded-3xl shadow-soft">
-        {% for row in view.grid %}
-            {% for cell in row %}
-                <button type="button"
-                        data-cell data-x="{{ cell.x }}" data-y="{{ cell.y }}"
-                        data-action="click->dragdrop--grid-move#pick dragover->dragdrop--grid-move#dragOver drop->dragdrop--grid-move#drop"
-                        {% if not cell.selectable and not cell.sacrificeCandidate and cell.outer is null %}tabindex="-1"{% endif %}
-                        class="relative grid size-10 place-items-center sm:size-14
-                               {{ cell.dark ? 'bg-warmgray-300/80' : 'bg-cream' }}
-                               {{ cell.selectable or cell.sacrificeCandidate ? 'cursor-pointer hover:brightness-105' : 'cursor-default' }}">
-                    {% if cell.outer %}
-                        <span data-flip-id="piece-{{ cell.tokenId }}" data-flip-exit="fade"
-                              {% if cell.mine and not cell.sacrificeCandidate %}
-                                  draggable="true" data-x="{{ cell.x }}" data-y="{{ cell.y }}"
-                                  data-action="dragstart->dragdrop--grid-move#dragStart dragend->dragdrop--grid-move#dragEnd"
-                              {% endif %}
-                              class="group relative grid size-8 place-items-center rounded-full shadow-soft sm:size-11
-                                     {{ cell.selectable ? 'ring-2 ring-white/80' }}
-                                     {{ cell.sacrificeCandidate ? 'ring-2 ring-terracotta-500' }}
-                                     {{ cell.mine and not cell.sacrificeCandidate ? 'cursor-grab' }}"
-                              style="background-color: {{ cell.outer }}">
-                            {% if cell.king %}
-                                <span style="color: {{ cell.inner }}">
-                                    {% include 'icons/crown.svg.twig' with {class: 'size-4 sm:size-6'} only %}
-                                </span>
-                            {% else %}
-                                <span class="size-3.5 rounded-full sm:size-5" style="background-color: {{ cell.inner }}"></span>
-                            {% endif %}
-                            {% if cell.sacrificeCandidate %}
-                                <span class="absolute inset-0 grid place-items-center rounded-full bg-terracotta-600/80 text-white opacity-0 transition group-hover:opacity-100">
-                                    {% include 'icons/x.svg.twig' with {class: 'size-4 sm:size-6'} only %}
-                                </span>
-                            {% endif %}
-                        </span>
-                    {% endif %}
-                </button>
-            {% endfor %}
-        {% endfor %}
-    </div>
-
+    {% include 'components/board.html.twig' with {board: view.board} %}
 </div>

@@ -9,9 +9,18 @@ use App\Game\Core\Card\Rank;
 use App\Game\Core\Card\Suit;
 use App\Game\Core\Model\Player;
 use PHPUnit\Framework\TestCase;
+use Symfony\Contracts\Translation\TranslatorInterface;
+use Symfony\Contracts\Translation\TranslatorTrait;
 
 abstract class GameTestCase extends TestCase
 {
+    protected static function translator(): TranslatorInterface
+    {
+        return new class implements TranslatorInterface {
+            use TranslatorTrait;
+        };
+    }
+
     /**
      * @return list<Player>
      */

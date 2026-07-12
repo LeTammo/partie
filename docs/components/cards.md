@@ -1,7 +1,7 @@
 # Cards
 
-For any card game: Mau-Mau, Rummy, Koepknack, Blackjack, Yahtzee's dice
-aside.
+For any card game: Mau-Mau, Rummy, Koepknack, Blackjack, Solitaire,
+Eleven Out.
 
 ## The card itself
 
@@ -15,54 +15,58 @@ $card->is(Suit::Hearts, Rank::Ace); // bool
 ```
 
 `Rank`'s backing value is its natural ordering, Ace high (`Rank::Ace->value
-=== 14`). `Rank::labelKey()` gives you a localized-label key (`'jack'` →
-renders "J" in English, "B" in German); `Suit::symbol()` gives you
-`♣ ♠ ♥ ♦`; `Suit::isRed()` tells you the display color.
+=== 14`). `Rank::labelKey()` gives you a localized-label key; `Suit::symbol()`
+gives you `♣ ♠ ♥ ♦`; `Suit::isRed()` the display color.
+
+**Custom-face cards.** For games whose cards are colored numbers/symbols
+instead of suits (Eleven Out), use `CustomCard` (`{color, value}`,
+`identity()` gives a stable `"color-value"` string):
+
+```php
+new CustomCard('red', '11');
+```
 
 ## Building a deck: `DeckFactory`
 
 ```php
 DeckFactory::deck32();   // 7 to Ace, shuffled - Mau-Mau, Koepknack
-DeckFactory::deck52();   // 2 to Ace, shuffled - Blackjack
+DeckFactory::deck52();   // 2 to Ace, shuffled - Blackjack, Solitaire
 DeckFactory::deck55();   // 2 to Ace + 3 jokers
 DeckFactory::deck110();  // two 2-to-Ace decks + 6 jokers - Rummy
+
+DeckFactory::customRangeDeck(['red', 'yellow', 'green', 'blue'], 1, 20);  // Eleven Out
+DeckFactory::customSymbolDeck($colors, ['A', 'B', 'C']);                  // arbitrary values
 ```
 
-Deal a hand by splicing it:
+Deal into zones (see [zones-and-tables.md](zones-and-tables.md)):
 
 ```php
-$deck = DeckFactory::deck52();
-$hand = array_splice($deck, 0, 5);
+$table->hand($player->id)->push(...array_splice($deck, 0, 5));
 ```
 
 ## Draw/discard piles: `Piles::draw()`
 
-Any game with a face-down draw pile eventually needs "the pile ran dry,
-shuffle the discard back in, keep its top card in place." Don't
-reimplement this - every card game so far needed it exactly once:
+"The pile ran dry, shuffle the discard back in, keep its top card" - works
+directly on zone items:
 
 ```php
-$drawn = Piles::draw($state->data['drawPile'], $state->data['discard'], 1, function () use ($state) {
+$drawn = Piles::draw($table->zone('stock')->items, $table->zone('discard')->items, 1, function () use ($state) {
     $state->logGameEvent('log.<id>.reshuffled');
 });
 ```
 
-Returns the drawn cards - fewer than requested if the discard pile can't
-refill any further (e.g. only its own top card remains). `$onReshuffle`
-fires once per reshuffle so you can log it; pass `null` if you don't care.
+Returns the drawn cards - fewer than requested if the discard can't refill
+any further. `$onReshuffle` fires once per reshuffle; pass `null` to skip.
 
-## Rendering: `CardPresenter`
+## Rendering: presenters + `components/card.html.twig`
 
 ```php
-CardPresenter::view($card);   // {rank, suit, red, joker, identity}
-CardPresenter::views($cards); // list of the above
+CardPresenter::view($card);         // {rank, suit, red, joker, identity}
+CardPresenter::views($cards);
+CustomCardPresenter::view($card);   // {value, color, identity}
 ```
 
-`identity` is a stable, card-game-agnostic string (`'ace-♥'`, or `'joker'`)
-- use it everywhere you'd otherwise recompute rank+suit by hand: DOM ids,
-FLIP ids, translation params.
-
-## `components/card.html.twig`
+Both presenter shapes render through the same component:
 
 ```twig
 {% include 'components/card.html.twig' with card|merge({
@@ -72,20 +76,23 @@ FLIP ids, translation params.
 }) only %}
 ```
 
-- `key` - the DOM `id`. Give every rendered card a unique one so Turbo's
-  morph can match old/new elements instead of replacing the whole hand.
-- `flip` - the FLIP id (`data-flip-id`). Cards sharing a `flip` id across a
-  morph glide between their old and new position instead of popping.
-- `exit` - the exit-ghost animation when a card's `flip` id disappears
-  (`'fade'` default, `'fly-left'`, `'fly-right'`, or `'none'` to skip it).
-- `{back: true, key: '...'}` renders a face-down card.
+- `key`/`flip`/`exit` - DOM id, FLIP id, exit-ghost animation (see
+  [ui-kit.md](ui-kit.md)).
+- `{back: true}` - face-down; `backColor` recolors the back design.
+- `size: 'md'` (default) or `'sm'` - never pass size classes manually.
+- A `{value, color}` map renders the custom face; the color names
+  `red`/`yellow`/`green`/`blue` map to the app palette, anything else
+  renders neutral.
+- A truly one-off front can override the `front` block via `{% embed %}`.
 
-See [ui-kit.md](ui-kit.md) for how `key`/`flip`/`exit` work under the hood.
+Piles (stock, discard, waste) render via `components/pile.html.twig` - see
+[zones-and-tables.md](zones-and-tables.md).
 
 ## Selecting cards from a hand: the `cards` controller
 
-Multi-select toggle that mirrors the selection into a hidden comma-separated
-input, so a plain form can submit it (Rummy's meld/discard):
+Multi-select toggle that mirrors the selection into a hidden
+comma-separated input, so a plain form can submit it (Rummy's
+meld/discard):
 
 ```twig
 <div data-controller="cards">
@@ -103,74 +110,25 @@ input, so a plain form can submit it (Rummy's meld/discard):
 </div>
 ```
 
-Read it back server-side with `$this->intListParam($payload, 'cards')` (see
-[engine-and-state.md](engine-and-state.md)).
+Read it back server-side with `$this->intListParam($payload, 'cards')`.
 
-## Swapping a card between two groups: `dragdrop--group-swap`
+## Moving cards between zones
 
-For "drag a card from your hand onto a card on the table (or vice versa) to
-swap them" (Koepknack). Groups are identified by each item's own radio
-input's `name` - no separate group config.
+Three shapes, three controllers - pick by the interaction, not the game:
 
-```twig
-<div data-controller="dragdrop--group-swap"
-     data-dragdrop--group-swap-id-template-value="kk-{group}-{slot}-{identity}">
-    <form data-action="submit->dragdrop--group-swap#beforeSubmit">
-        {% for card in view.middle %}
-            <label data-dragdrop--group-swap-target="item" data-slot="{{ loop.index0 }}"
-                   draggable="true"
-                   data-action="dragstart->dragdrop--group-swap#dragStart dragend->dragdrop--group-swap#dragEnd
-                                dragover->dragdrop--group-swap#dragOver drop->dragdrop--group-swap#drop dragleave->dragdrop--group-swap#dragLeave">
-                <input type="radio" name="middle" value="{{ loop.index0 }}" class="peer sr-only">
-                {% include 'components/card.html.twig' with card|merge({flip: 'kk-' ~ card.identity}) only %}
-            </label>
-        {% endfor %}
-        {# same block again for view.hand, with name="hand" #}
-        <button type="submit" name="action" value="swap" data-dragdrop--group-swap-target="submitButton">Swap</button>
-    </form>
-</div>
-```
+1. **Map-driven movement** (`dragdrop--piece-move`): the renderer computes
+   a legal-moves map (`sourceKey => [destKeys]`); picking/dragging any
+   source onto any legal zone submits `from`/`to`. Solitaire (with
+   `runs: true` so a card brings its stacked run along). Full reference in
+   [tokens-and-boards.md](tokens-and-boards.md).
 
-Dropping (or checking both radios + submitting) swaps the two cards'
-positions and glides them there. `idTemplateValue`'s `{group}`/`{slot}`/
-`{identity}` placeholders build the new DOM id from the destination slot
-and the moved card's own `flip`-id identity - so give it a
-`{game}-{group}-{slot}-{identity}` shape matching how your renderer keys
-that slot.
+2. **Drop-submits-the-form** (`dragdrop--zone-drop`): every playable card
+   is its own form; dropping it on a paired zone just submits that form
+   (Mau-Mau's hand → discard, draw pile → hand). Sources and zones pair up
+   via `data-pair`. Interceptable via the cancelable `zone-drop:drop`
+   event or [choice-dialog](optimism.md) (Mau-Mau's jack wish).
 
-## Dragging a card onto a drop zone: `dragdrop--zone-drop`
-
-For "drag this card onto that pile" where dropping just submits the card's
-own form (Mau-Mau: hand card → discard pile, draw pile → hand). Sources and
-zones pair up via a shared `data-pair` value:
-
-```twig
-<div data-controller="dragdrop--zone-drop">
-    <div data-dragdrop--zone-drop-target="zone" data-pair="play"
-         data-action="dragover->dragdrop--zone-drop#dragOver drop->dragdrop--zone-drop#drop dragleave->dragdrop--zone-drop#dragLeave">
-        {# discard pile #}
-    </div>
-
-    <form>
-        <button type="submit" draggable="true" data-pair="play"
-                data-dragdrop--zone-drop-target="source"
-                data-action="dragstart->dragdrop--zone-drop#dragStart dragend->dragdrop--zone-drop#dragEnd">
-            {% include 'components/card.html.twig' with card only %}
-        </button>
-    </form>
-</div>
-```
-
-A valid drop submits the source's own `<form>` - dropping is just an
-alternate way to trigger whatever the button already does on click. Need to
-intercept before it submits (Mau-Mau's jack needs a wish first)? Listen for
-the cancelable `zone-drop:drop` event, or use
-[choice-dialog](optimism.md#choice-dialog) instead of a custom listener.
-
-One controller instance can serve several source(s)→zone relationships at
-once - just give each pair its own `data-pair` value (Mau-Mau uses `"play"`
-and `"draw"` on the same controller).
-
-Don't merge `group_swap`/`zone_drop`/`grid_move` into one controller - their
-state machines differ enough that a forced union would be less reusable,
-not more.
+3. **Slot swapping** (`dragdrop--group-swap`): drag a card onto a card of
+   the other group (or check both radios) to swap their positions
+   (Koepknack). `idTemplateValue`'s `{group}`/`{slot}`/`{identity}`
+   placeholders rebuild DOM ids after the swap.

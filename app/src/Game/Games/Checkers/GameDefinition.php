@@ -14,6 +14,7 @@ use App\Game\Core\Model\Player;
 use App\Game\Core\Model\Token;
 use App\Game\Core\Model\TokenShape;
 use App\Game\Core\Service\AbstractGameDefinition;
+use App\Game\Core\View\MoveMap;
 
 final readonly class GameDefinition extends AbstractGameDefinition
 {
@@ -93,7 +94,7 @@ final readonly class GameDefinition extends AbstractGameDefinition
                             ownerId: $players[$seat]->id,
                             shape: TokenShape::Round,
                             outerColor: $outer,
-                            innerColor: $inner,
+                            centerColor: $inner,
                         ));
                     }
                 }
@@ -115,10 +116,13 @@ final readonly class GameDefinition extends AbstractGameDefinition
             return;
         }
 
-        $fromX = $this->intParam($payload, 'fromX');
-        $fromY = $this->intParam($payload, 'fromY');
-        $toX = $this->intParam($payload, 'toX');
-        $toY = $this->intParam($payload, 'toY');
+        $from = MoveMap::coordsOf($this->stringParam($payload, 'from'));
+        $to = MoveMap::coordsOf($this->stringParam($payload, 'to'));
+        if (null === $from || null === $to) {
+            throw new InvalidMoveException('error.move_not_allowed');
+        }
+        [$fromX, $fromY] = $from;
+        [$toX, $toY] = $to;
 
         $board = $state->board;
         $token = $board->get($fromX, $fromY);
@@ -196,7 +200,7 @@ final readonly class GameDefinition extends AbstractGameDefinition
         $candidates = $state->data['pendingSacrifice'];
         $raw = $this->stringParam($payload, 'sacrifice');
 
-        $chosen = array_find($candidates, static fn (array $c): bool => $raw === $c[0].':'.$c[1]);
+        $chosen = array_find($candidates, static fn (array $c): bool => $raw === MoveMap::cellKey($c[0], $c[1]));
         if (null === $chosen) {
             $this->invalidMove('error.checkers.choose_sacrifice');
         }

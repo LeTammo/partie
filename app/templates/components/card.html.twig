@@ -1,10 +1,24 @@
 {# How to use, see
-   docs/components/cards.md #}
-{% set base = 'anim-deal relative flex h-24 w-16 shrink-0 select-none flex-col rounded-xl shadow-soft ' ~ class|default('') %}
+   docs/components/cards.md
+
+   Parameters (all optional unless rendering a face card):
+   - rank/suit/red/joker: from CardPresenter::view()
+   - value/color: from CustomCardPresenter::view() - a custom-face number/
+     symbol card; color names red/yellow/green/blue map to the app palette,
+     anything else renders neutral
+   - back: true renders a face-down card
+   - backColor: back design color (default softblue)
+   - size: 'md' (default, h-24 w-16) | 'sm' (h-16 w-11)
+   - key/flip/exit: DOM id / FLIP id / exit ghost
+   - class: extra classes
+   - block front: override the face design (use {% embed %} for one-off fronts)
+#}
+{% set sizeClass = {md: 'h-24 w-16', sm: 'h-16 w-11'}[size|default('md')] %}
+{% set base = 'anim-deal relative flex shrink-0 select-none flex-col rounded-xl shadow-soft ' ~ sizeClass ~ ' ' ~ class|default('') %}
 {% set id = key|default(null) %}
 {% set attrs %}{% if id %} id="{{ id }}"{% endif %}{% if flip|default(null) %} data-flip-id="{{ flip }}"{% endif %}{% if exit|default(null) %} data-flip-exit="{{ exit }}"{% endif %}{% endset %}
 {% if back|default(false) %}
-    <span{{ attrs }} class="{{ base }} overflow-hidden bg-softblue-500" aria-hidden="true">
+    <span{{ attrs }} class="{{ base }} overflow-hidden" style="background-color: {{ backColor|default('var(--color-softblue-500)') }}" aria-hidden="true">
         <span class="absolute inset-1.5 rounded-lg border-2 border-white/50"></span>
         <span class="absolute inset-2.5 rounded-md"
               style="background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.55) 0 3px, transparent 3px 9px), repeating-linear-gradient(-45deg, rgba(255,255,255,0.55) 0 3px, transparent 3px 9px);"></span>
@@ -17,12 +31,26 @@
         {% include 'icons/star.svg.twig' with { class: 'size-8' } only %}
         <span class="mt-0.5 text-xs font-extrabold uppercase tracking-wide text-warmgray-400">{{ 'card.joker'|trans }}</span>
     </span>
+{% elseif value|default(null) is not null %}
+    {% set theme = {
+        red: 'border border-terracotta-200 bg-terracotta-50 text-terracotta-700',
+        yellow: 'border border-sunny-200 bg-sunny-50 text-sunny-700',
+        green: 'border border-sage-200 bg-sage-50 text-sage-700',
+        blue: 'border border-softblue-200 bg-softblue-50 text-softblue-700',
+    }[color|default('')]|default('border border-warmgray-200 bg-white text-warmgray-700') %}
+    <span{{ attrs }} class="{{ base }} {{ theme }}" role="img" aria-label="{{ value }}">
+        <span class="absolute left-1.5 top-1 text-xs font-extrabold leading-none">{{ value }}</span>
+        <span class="absolute inset-0 flex items-center justify-center text-3xl font-black leading-none">{{ value }}</span>
+        <span class="absolute bottom-1 right-1.5 rotate-180 text-xs font-extrabold leading-none">{{ value }}</span>
+    </span>
 {% else %}
     {% set color = red ? 'text-terracotta-500' : 'text-warmgray-800' %}
     {% set label = ('card.rank.' ~ rank)|trans %}
     <span{{ attrs }} class="{{ base }} bg-white {{ color }}" role="img" aria-label="{{ label }}{{ suit }}">
-        <span class="absolute left-1.5 top-1 text-sm font-extrabold leading-tight">{{ label }}<br>{{ suit }}</span>
-        <span class="absolute inset-0 flex items-center justify-center text-3xl">{{ suit }}</span>
-        <span class="absolute bottom-1 right-1.5 rotate-180 text-sm font-extrabold leading-tight">{{ label }}<br>{{ suit }}</span>
+        {% block front %}
+            <span class="absolute left-1.5 top-1 text-sm font-extrabold leading-tight">{{ label }}<br>{{ suit }}</span>
+            <span class="absolute inset-0 flex items-center justify-center text-3xl">{{ suit }}</span>
+            <span class="absolute bottom-1 right-1.5 rotate-180 text-sm font-extrabold leading-tight">{{ label }}<br>{{ suit }}</span>
+        {% endblock %}
     </span>
 {% endif %}

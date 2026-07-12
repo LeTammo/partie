@@ -1,6 +1,5 @@
 # --- Table ---
 yahtzee.category: 'Category'
-yahtzee.score_action: 'Score %points% points on %category%'
 yahtzee.upper_bonus: 'Upper bonus (63 → +35)'
 yahtzee.total: 'Total'
 

@@ -8,6 +8,7 @@ use App\Game\Core\Card\CardPresenter;
 use App\Game\Core\Model\GameState;
 use App\Game\Core\Model\GameStatus;
 use App\Game\Core\Model\Player;
+use App\Game\Core\View\ChipViews;
 use App\Game\Core\View\PlayerViews;
 
 final readonly class GameRenderer
@@ -28,11 +29,12 @@ final readonly class GameRenderer
             || ('dealer' === $phase && !($state->data['dealerRevealed'] ?? true));
 
         $players = PlayerViews::build($state, function (Player $player) use ($state): array {
-            $hand = $state->data['hands'][$player->id];
+            $hand = $state->table->hand($player->id)->items;
             $bet = $state->data['bets'][$player->id];
 
             return [
                 'chips' => $state->data['chips'][$player->id],
+                'chipStack' => ChipViews::stack($state->data['chips'][$player->id], maxChips: 4),
                 'bet' => $bet,
                 'cards' => CardPresenter::views($hand),
                 'value' => [] !== $hand ? $this->rules->value($hand) : null,
@@ -42,8 +44,9 @@ final readonly class GameRenderer
             ];
         });
 
+        $dealerHand = $state->table->zone('dealer')->items;
         $dealerCards = [];
-        foreach ($state->data['dealer'] as $i => $card) {
+        foreach ($dealerHand as $i => $card) {
             $dealerCards[] = $i > 0 && $holeCardHidden
                 ? ['back' => true]
                 : CardPresenter::view($card);
@@ -53,13 +56,16 @@ final readonly class GameRenderer
         $canDouble = false;
         if ($myTurn && 'betting' === $phase) {
             $chips = $state->data['chips'][$viewerId];
-            $betOptions = array_values(array_filter(
-                GameRules::BET_OPTIONS,
-                static fn (int $amount): bool => $amount <= $chips,
-            ));
+            $betOptions = array_map(
+                static fn (int $amount): array => ['amount' => $amount, 'chip' => ChipViews::single($amount)],
+                array_values(array_filter(
+                    GameRules::BET_OPTIONS,
+                    static fn (int $amount): bool => $amount <= $chips,
+                )),
+            );
         }
         if ($myTurn && 'playing' === $phase) {
-            $canDouble = 2 === \count($state->data['hands'][$viewerId])
+            $canDouble = 2 === $state->table->hand($viewerId)->count()
                 && $state->data['chips'][$viewerId] >= $state->data['bets'][$viewerId];
         }
 
@@ -70,8 +76,8 @@ final readonly class GameRenderer
             'myTurn' => $myTurn,
             'players' => $players,
             'dealer' => $dealerCards,
-            'dealerUpValue' => [] !== $state->data['dealer']
-                ? $this->rules->value($holeCardHidden ? [$state->data['dealer'][0]] : $state->data['dealer'])
+            'dealerUpValue' => [] !== $dealerHand
+                ? $this->rules->value($holeCardHidden ? [$dealerHand[0]] : $dealerHand)
                 : null,
             'dealerActing' => \in_array($phase, ['dealer', 'settle'], true),
             'autoPending' => $running && \in_array($phase, ['dealer', 'settle', 'roundend'], true),

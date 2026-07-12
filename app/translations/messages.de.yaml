@@ -116,3 +116,6 @@ dice.no_rolls_left: 'Keine Würfe mehr – wähle eine Kategorie!'
 dice.held: 'gehalten'
 dice.hold: 'Diesen Würfel halten'
 dice.release: 'Diesen Würfel freigeben'
+
+# score sheet (shared component)
+sheet.score_action: '%points% Punkte auf %category% eintragen'

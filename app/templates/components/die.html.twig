@@ -1,5 +1,13 @@
 {# How to use, see
-   docs/components/dice.md #}
+   docs/components/dice.md
+
+   Parameters:
+   - value:  face 1..6, rendered as pips (unless symbol is set)
+   - symbol: a char/string face rendered instead of pips (from Dice::face())
+   - face:   die background color
+   - pip:    pip/symbol color
+   - class:  size classes (default 'size-10')
+#}
 {% set layouts = [
     [[24, 24]],
     [[14, 14], [34, 34]],
@@ -8,10 +16,15 @@
     [[14, 14], [34, 14], [24, 24], [14, 34], [34, 34]],
     [[14, 13], [34, 13], [14, 24], [34, 24], [14, 35], [34, 35]],
 ] %}
-<svg viewBox="0 0 48 48" class="{{ class|default('size-10') }}" role="img" aria-label="{{ value }}">
+<svg viewBox="0 0 48 48" class="{{ class|default('size-10') }}" role="img" aria-label="{{ symbol|default(value) }}">
     <rect x="2" y="2" width="44" height="44" rx="10" fill="{{ face|default('#ffffff') }}"/>
     <rect x="1" y="1" width="46" height="46" rx="10" fill="none" stroke="rgba(0,0,0,0.08)" stroke-width="2"/>
-    {% for pos in layouts[value - 1] %}
-        <circle cx="{{ pos[0] }}" cy="{{ pos[1] }}" r="4.4" fill="{{ pip|default('#5b5348') }}"/>
-    {% endfor %}
+    {% if symbol|default(null) is not null %}
+        <text x="24" y="25" text-anchor="middle" dominant-baseline="central" font-size="22" font-weight="800"
+              fill="{{ pip|default('#5b5348') }}">{{ symbol }}</text>
+    {% else %}
+        {% for pos in layouts[value - 1] %}
+            <circle cx="{{ pos[0] }}" cy="{{ pos[1] }}" r="4.4" fill="{{ pip|default('#5b5348') }}"/>
+        {% endfor %}
+    {% endif %}
 </svg>

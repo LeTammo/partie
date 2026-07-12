@@ -16,8 +16,7 @@ final class ConnectFourTest extends GameTestCase
 
     protected function setUp(): void
     {
-        $rules = new GameRules();
-        $this->game = new GameDefinition($rules, new GameRenderer($rules));
+        $this->game = new GameDefinition(new GameRules(), new GameRenderer(self::translator()));
     }
 
     public function testInitialStateUsesSettings(): void

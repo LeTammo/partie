@@ -6,6 +6,7 @@ namespace App\Game\Games\Yahtzee;
 
 use App\Game\Core\Model\Dice;
 use App\Game\Core\Model\GameState;
+use App\Game\Core\View\PlayerViews;
 
 final readonly class GameRenderer
 {
@@ -53,15 +54,13 @@ final readonly class GameRenderer
             ];
         }
 
-        $upperSubtotals = [];
+        $upperBonusValues = [];
         $totals = [];
         foreach ($state->players as $player) {
             $card = $state->data['scorecards'][$player->id];
             $upper = $this->rules->upperSubtotal($card);
-            $upperSubtotals[] = [
-                'subtotal' => $upper,
-                'bonus' => $upper >= GameRules::UPPER_BONUS_THRESHOLD ? GameRules::UPPER_BONUS : 0,
-            ];
+            $bonus = $upper >= GameRules::UPPER_BONUS_THRESHOLD ? GameRules::UPPER_BONUS : 0;
+            $upperBonusValues[] = $upper.($bonus > 0 ? ' +'.$bonus : '');
             $totals[] = $this->rules->total($card);
         }
 
@@ -74,8 +73,9 @@ final readonly class GameRenderer
             'rollsLeft' => $rollsLeft,
             'canRoll' => $myTurn && $rollsLeft > 0,
             'canScore' => $myTurn && $hasRolled,
+            'players' => PlayerViews::build($state),
             'rows' => $rows,
-            'upperSubtotals' => $upperSubtotals,
+            'upperBonusValues' => $upperBonusValues,
             'totals' => $totals,
         ];
     }

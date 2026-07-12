@@ -10,6 +10,9 @@ use App\Game\Core\Model\GameSetting;
 use App\Game\Core\Model\GameSettingType;
 use App\Game\Core\Model\GameState;
 use App\Game\Core\Service\AbstractGameDefinition;
+use App\Game\Core\Zone\Table;
+use App\Game\Core\Zone\Zone;
+use App\Game\Core\Zone\ZoneVisibility;
 
 final readonly class GameDefinition extends AbstractGameDefinition
 {
@@ -69,10 +72,15 @@ final readonly class GameDefinition extends AbstractGameDefinition
     {
         $state = new GameState($this->getId(), $players);
         $state->data['settings'] = $settings;
+        $table = $state->table = new Table();
 
         foreach ($players as $player) {
+            $table->add(new Zone('hand:'.$player->id, $player->id, ZoneVisibility::Owner));
             $state->data['points'][$player->id] = 0;
         }
+        $table->add(new Zone('middle'));
+        $table->add(new Zone('stock', visibility: ZoneVisibility::Hidden));
+
         $state->data['round'] = 0;
         $state->data['roundsTotal'] = (int) ($settings['roundsTotal'] ?? self::ROUNDS);
         $state->data['starterIndex'] = 0;
@@ -117,15 +125,15 @@ final readonly class GameDefinition extends AbstractGameDefinition
     {
         $this->assertPlaying($state);
 
-        $playerId = $state->currentPlayer()->id;
-        $hand = &$state->data['hands'][$playerId];
+        $hand = $state->table->hand($state->currentPlayer()->id);
+        $middle = $state->table->zone('middle');
 
-        if (!isset($hand[$handIndex]) || !isset($state->data['middle'][$middleIndex])) {
+        if (!isset($hand->items[$handIndex]) || !isset($middle->items[$middleIndex])) {
             $this->invalidMove('error.koepknack.select_cards');
         }
 
-        [$hand[$handIndex], $state->data['middle'][$middleIndex]]
-            = [$state->data['middle'][$middleIndex], $hand[$handIndex]];
+        [$hand->items[$handIndex], $middle->items[$middleIndex]]
+            = [$middle->items[$middleIndex], $hand->items[$handIndex]];
         $state->data['passes'] = 0;
 
         $state->logGameEvent('log.koepknack.swapped', ['%player%' => $state->currentPlayer()->nickname]);
@@ -136,9 +144,9 @@ final readonly class GameDefinition extends AbstractGameDefinition
     {
         $this->assertPlaying($state);
 
-        $playerId = $state->currentPlayer()->id;
-        [$state->data['hands'][$playerId], $state->data['middle']]
-            = [$state->data['middle'], $state->data['hands'][$playerId]];
+        $hand = $state->table->hand($state->currentPlayer()->id);
+        $middle = $state->table->zone('middle');
+        [$hand->items, $middle->items] = [$middle->items, $hand->items];
         $state->data['passes'] = 0;
 
         $state->logGameEvent('log.koepknack.swapped_all', ['%player%' => $state->currentPlayer()->nickname]);
@@ -154,8 +162,9 @@ final readonly class GameDefinition extends AbstractGameDefinition
         if (null === $state->data['closerId']) {
             ++$state->data['passes'];
             if ($state->data['passes'] >= \count($state->players)) {
-                if (\count($state->data['deck']) >= 3) {
-                    $state->data['middle'] = array_splice($state->data['deck'], 0, 3);
+                $stock = $state->table->zone('stock');
+                if ($stock->count() >= 3) {
+                    $state->table->zone('middle')->items = array_splice($stock->items, 0, 3);
                     $state->data['passes'] = 0;
                     $state->logGameEvent('log.koepknack.middle_refreshed');
                 } else {
@@ -201,7 +210,7 @@ final readonly class GameDefinition extends AbstractGameDefinition
 
     private function afterExchange(GameState $state): void
     {
-        $hand = $state->data['hands'][$state->currentPlayer()->id];
+        $hand = $state->table->hand($state->currentPlayer()->id)->items;
         $value = $this->rules->value($hand);
 
         if ($value >= GameRules::KNACK) {
@@ -233,7 +242,9 @@ final readonly class GameDefinition extends AbstractGameDefinition
         $fireIds = [];
         $summary = [];
         foreach ($state->players as $player) {
-            $hand = $state->data['hands'][$player->id];
+            $handZone = $state->table->hand($player->id);
+            $handZone->visibility = ZoneVisibility::All; // round-end reveal
+            $hand = $handZone->items;
             $values[$player->id] = $this->rules->value($hand);
             if ($this->rules->isFire($hand)) {
                 $fireIds[] = $player->id;
@@ -290,12 +301,13 @@ final readonly class GameDefinition extends AbstractGameDefinition
         $state->data['phase'] = 'playing';
 
         $deck = DeckFactory::deck32();
-        $state->data['hands'] = [];
         foreach ($state->players as $player) {
-            $state->data['hands'][$player->id] = array_splice($deck, 0, 3);
+            $hand = $state->table->hand($player->id);
+            $hand->items = array_splice($deck, 0, 3);
+            $hand->visibility = ZoneVisibility::Owner;
         }
-        $state->data['middle'] = array_splice($deck, 0, 3);
-        $state->data['deck'] = $deck;
+        $state->table->zone('middle')->items = array_splice($deck, 0, 3);
+        $state->table->zone('stock')->items = $deck;
         $state->data['closerId'] = null;
         $state->data['passes'] = 0;
         $state->currentTurnIndex = $state->data['starterIndex'];

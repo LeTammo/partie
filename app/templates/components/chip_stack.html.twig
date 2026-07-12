@@ -1,0 +1,23 @@
+{# An overlapping row of chips plus a total, from ChipViews::stack().
+   How to use, see docs/components/chips.md
+
+   Parameters:
+   - chips: list of {color, label, value} (from ChipViews::stack())
+   - total: amount shown after the stack (optional)
+   - size:  per-chip size classes (default 'size-6')
+   - class: extra classes on the wrapper
+#}
+<span class="inline-flex items-center gap-1.5 {{ class|default('') }}">
+    <span class="flex -space-x-[0.9em]">
+        {% for chip in chips %}
+            {% include 'components/chip.html.twig' with {
+                color: chip.color,
+                size: size|default('size-6'),
+                class: 'ring-1 ring-white/60',
+            } only %}
+        {% endfor %}
+    </span>
+    {% if total|default(null) is not null %}
+        <span class="text-base font-extrabold text-warmgray-500">{{ total }}</span>
+    {% endif %}
+</span>

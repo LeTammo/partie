@@ -4,15 +4,13 @@
     {# ---------- players & points ---------- #}
     <div class="flex flex-wrap justify-center gap-3">
         {% for p in view.players %}
-            <div class="rounded-2xl bg-cream px-4 py-2.5 text-center transition {{ p.current ? 'ring-2 ring-softblue-300' }}">
-                <p class="flex items-center justify-center gap-1.5 text-base font-extrabold text-warmgray-700">
-                    <span class="size-2.5 rounded-full" style="background-color: {{ p.color }}"></span>
-                    {{ p.nickname }}
-                </p>
-                <p class="mt-1 text-xs font-extrabold uppercase tracking-wide text-softblue-500">
-                    {{ 'koepknack.points'|trans({'%points%': p.points}) }}
-                </p>
-            </div>
+            {% embed 'components/player_banner.html.twig' with {p: p, variant: 'tile'} %}
+                {% block extra %}
+                    <p class="mt-1 text-xs font-extrabold uppercase tracking-wide text-softblue-500">
+                        {{ 'koepknack.points'|trans({'%points%': p.points}) }}
+                    </p>
+                {% endblock %}
+            {% endembed %}
         {% endfor %}
     </div>
 
@@ -24,33 +22,39 @@
 
     {# ---------- round-end reveal ---------- #}
     {% if view.roundEnd %}
-        <div class="anim-rise space-y-4 rounded-3xl bg-sunny-50 p-5 text-center shadow-soft">
-            <p class="text-xs font-extrabold uppercase tracking-wide text-warmgray-500">{{ 'koepknack.reveal'|trans }}</p>
-            <div class="flex flex-wrap justify-center gap-4">
-                {% for p in view.reveal %}
-                    <div class="rounded-2xl bg-white p-3 shadow-soft">
-                        <p class="mb-2 flex items-center justify-center gap-1.5 text-sm font-extrabold text-warmgray-700">
-                            <span class="size-2.5 rounded-full" style="background-color: {{ p.color }}"></span>
-                            {{ p.nickname }} · {{ 'koepknack.value'|trans({'%value%': p.value}) }}
-                        </p>
-                        <div class="flex justify-center gap-1.5">
-                            {% for card in p.cards %}
-                                {% include 'components/card.html.twig' with card|merge({class: 'h-16 w-11'}) only %}
-                            {% endfor %}
+        {% embed 'components/table_area.html.twig' with {
+            tone: 'accent',
+            rise: true,
+            title: 'koepknack.reveal'|trans,
+            class: 'space-y-4 text-center',
+        } %}
+            {% block body %}
+                <div class="flex flex-wrap justify-center gap-4">
+                    {% for p in view.reveal %}
+                        <div class="rounded-2xl bg-white p-3 shadow-soft">
+                            <p class="mb-2 flex items-center justify-center gap-1.5 text-sm font-extrabold text-warmgray-700">
+                                <span class="size-2.5 rounded-full" style="background-color: {{ p.color }}"></span>
+                                {{ p.nickname }} · {{ 'koepknack.value'|trans({'%value%': p.value}) }}
+                            </p>
+                            <div class="flex justify-center gap-1.5">
+                                {% for card in p.cards %}
+                                    {% include 'components/card.html.twig' with card|merge({size: 'sm'}) only %}
+                                {% endfor %}
+                            </div>
                         </div>
-                    </div>
-                {% endfor %}
-            </div>
-            {% if view.canStartNewRound %}
-                <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}">
-                    <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
-                    <input type="hidden" name="action" value="newround">
-                    <button type="submit" class="btn btn-confirm">
-                        {{ 'koepknack.new_round'|trans }}
-                    </button>
-                </form>
-            {% endif %}
-        </div>
+                    {% endfor %}
+                </div>
+                {% if view.canStartNewRound %}
+                    <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}" class="mt-4">
+                        <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
+                        <input type="hidden" name="action" value="newround">
+                        <button type="submit" class="btn btn-confirm">
+                            {{ 'koepknack.new_round'|trans }}
+                        </button>
+                    </form>
+                {% endif %}
+            {% endblock %}
+        {% endembed %}
     {% endif %}
 
     {% if not view.roundEnd %}
@@ -59,29 +63,30 @@
         <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
 
         {# ---------- middle cards ---------- #}
-        <div class="rounded-3xl bg-cream p-5">
-            <p class="mb-3 text-center text-sm font-extrabold uppercase tracking-wide text-warmgray-400">
-                {{ 'koepknack.round'|trans({'%round%': view.round, '%total%': view.roundsTotal}) }} · {{ 'koepknack.middle'|trans }}
-            </p>
-            <div class="flex justify-center gap-3">
-                {% for card in view.middle %}
-                    <label class="{{ view.canAct ? 'cursor-pointer' }}" data-dragdrop--group-swap-target="item" data-slot="{{ loop.index0 }}"
-                           {% if view.canAct %}draggable="true"{% endif %}
-                           data-action="dragstart->dragdrop--group-swap#dragStart dragend->dragdrop--group-swap#dragEnd
-                                        dragover->dragdrop--group-swap#dragOver drop->dragdrop--group-swap#drop dragleave->dragdrop--group-swap#dragLeave">
-                        <input type="radio" name="middle" value="{{ loop.index0 }}" class="peer sr-only"
-                               {% if not view.canAct %}disabled{% endif %}>
-                        <span class="block rounded-xl transition peer-checked:-translate-y-1.5 peer-checked:ring-4 peer-checked:ring-softblue-300">
-                            {% include 'components/card.html.twig' with card|merge({
-                                key: 'kk-middle-' ~ loop.index0 ~ '-' ~ card.identity,
-                                flip: 'kk-' ~ card.identity,
-                                exit: ['fly-left', 'fade', 'fly-right'][loop.index0 % 3],
-                            }) only %}
-                        </span>
-                    </label>
-                {% endfor %}
-            </div>
-        </div>
+        {% embed 'components/table_area.html.twig' with {
+            title: 'koepknack.round'|trans({'%round%': view.round, '%total%': view.roundsTotal}) ~ ' · ' ~ 'koepknack.middle'|trans,
+        } %}
+            {% block body %}
+                <div class="flex justify-center gap-3">
+                    {% for card in view.middle %}
+                        <label class="{{ view.canAct ? 'cursor-pointer' }}" data-dragdrop--group-swap-target="item" data-slot="{{ loop.index0 }}"
+                               {% if view.canAct %}draggable="true"{% endif %}
+                               data-action="dragstart->dragdrop--group-swap#dragStart dragend->dragdrop--group-swap#dragEnd
+                                            dragover->dragdrop--group-swap#dragOver drop->dragdrop--group-swap#drop dragleave->dragdrop--group-swap#dragLeave">
+                            <input type="radio" name="middle" value="{{ loop.index0 }}" class="peer sr-only"
+                                   {% if not view.canAct %}disabled{% endif %}>
+                            <span class="block rounded-xl transition peer-checked:-translate-y-1.5 peer-checked:ring-4 peer-checked:ring-softblue-300">
+                                {% include 'components/card.html.twig' with card|merge({
+                                    key: 'kk-middle-' ~ loop.index0 ~ '-' ~ card.identity,
+                                    flip: 'kk-' ~ card.identity,
+                                    exit: ['fly-left', 'fade', 'fly-right'][loop.index0 % 3],
+                                }) only %}
+                            </span>
+                        </label>
+                    {% endfor %}
+                </div>
+            {% endblock %}
+        {% endembed %}
 
         {# ---------- own hand ---------- #}
         {% if view.hand is not null %}

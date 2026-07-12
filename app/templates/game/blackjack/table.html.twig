@@ -7,38 +7,33 @@
              data-autoplay-step-value="{{ view.autoStep }}"></div>
     {% endif %}
     {# ---------- dealer ---------- #}
-    <div class="rounded-3xl bg-cream p-5 transition {{ view.dealerActing ? 'ring-2 ring-softblue-300' }}">
-        <p class="mb-3 text-center text-sm font-extrabold uppercase tracking-wide text-warmgray-400">
-            {{ 'blackjack.round'|trans({'%round%': view.round, '%total%': view.roundsTotal}) }} · {{ 'blackjack.dealer'|trans }}
-            {% if view.dealerUpValue is not null %}· {{ 'blackjack.shows'|trans({'%value%': view.dealerUpValue}) }}{% endif %}
-        </p>
-        <div class="flex justify-center gap-3">
-            {% if view.dealer is empty %}
-                {% include 'components/card.html.twig' with {back: true, class: 'opacity-40'} only %}
-                {% include 'components/card.html.twig' with {back: true, class: 'opacity-40'} only %}
-            {% else %}
-                {% for card in view.dealer %}
-                    {% set cardKey = 'dealer-' ~ loop.index0 ~ '-' ~ (card.back|default(false) ? 'back' : card.identity) %}
-                    {% include 'components/card.html.twig' with card|merge({key: cardKey, flip: cardKey}) only %}
-                {% endfor %}
-            {% endif %}
-        </div>
-    </div>
+    {% set dealerTitle = 'blackjack.round'|trans({'%round%': view.round, '%total%': view.roundsTotal}) ~ ' · ' ~ 'blackjack.dealer'|trans
+        ~ (view.dealerUpValue is not null ? ' · ' ~ 'blackjack.shows'|trans({'%value%': view.dealerUpValue}) : '') %}
+    {% embed 'components/table_area.html.twig' with {title: dealerTitle, active: view.dealerActing, dealerCards: view.dealer} %}
+        {% block body %}
+            <div class="flex justify-center gap-3">
+                {% if dealerCards is empty %}
+                    {% include 'components/card.html.twig' with {back: true, class: 'opacity-40'} only %}
+                    {% include 'components/card.html.twig' with {back: true, class: 'opacity-40'} only %}
+                {% else %}
+                    {% for card in dealerCards %}
+                        {% set cardKey = 'dealer-' ~ loop.index0 ~ '-' ~ (card.back|default(false) ? 'back' : card.identity) %}
+                        {% include 'components/card.html.twig' with card|merge({key: cardKey, flip: cardKey}) only %}
+                    {% endfor %}
+                {% endif %}
+            </div>
+        {% endblock %}
+    {% endembed %}
 
     {# ---------- players ---------- #}
     <div class="grid gap-3 sm:grid-cols-2 {{ view.players|length > 2 ? 'lg:grid-cols-3' }}">
         {% for p in view.players %}
             <div class="rounded-3xl bg-white p-4 shadow-soft transition {{ p.current ? 'ring-2 ring-softblue-300' }} {{ p.broke ? 'opacity-40' }}">
-                <div class="flex items-center justify-between gap-2">
-                    <p class="flex items-center gap-1.5 text-base font-extrabold text-warmgray-700">
-                        <span class="size-2.5 rounded-full" style="background-color: {{ p.color }}"></span>
-                        {{ p.nickname }}
-                    </p>
-                    <p class="flex items-center gap-1 text-base font-extrabold text-warmgray-500">
-                        {% include 'icons/chip.svg.twig' with {class: 'size-4'} only %}
-                        {{ p.chips }}
-                    </p>
-                </div>
+                {% embed 'components/player_banner.html.twig' with {p: p, variant: 'row'} %}
+                    {% block extra %}
+                        {% include 'components/chip_stack.html.twig' with {chips: p.chipStack, total: p.chips, size: 'size-5'} only %}
+                    {% endblock %}
+                {% endembed %}
                 <div class="mt-3 flex min-h-24 flex-wrap gap-2">
                     {% for card in p.cards %}
                         {% set cardKey = 'seat-' ~ loop.parent.loop.index0 ~ '-' ~ loop.index0 ~ '-' ~ (card.back|default(false) ? 'back' : card.identity) %}
@@ -71,11 +66,11 @@
             <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
             {% if view.phase == 'betting' %}
                 <input type="hidden" name="action" value="bet">
-                {% for amount in view.betOptions %}
-                    <button type="submit" name="amount" value="{{ amount }}"
+                {% for option in view.betOptions %}
+                    <button type="submit" name="amount" value="{{ option.amount }}"
                             class="btn btn-neutral inline-flex items-center gap-2">
-                        {% include 'icons/chip.svg.twig' with {class: 'size-4'} only %}
-                        {{ amount }}
+                        {% include 'components/chip.html.twig' with {color: option.chip.color, size: 'size-5'} only %}
+                        {{ option.amount }}
                     </button>
                 {% endfor %}
             {% else %}

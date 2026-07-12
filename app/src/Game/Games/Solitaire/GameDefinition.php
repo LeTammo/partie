@@ -12,6 +12,9 @@ use App\Game\Core\Model\GameSetting;
 use App\Game\Core\Model\GameSettingType;
 use App\Game\Core\Model\GameState;
 use App\Game\Core\Service\AbstractGameDefinition;
+use App\Game\Core\Zone\Table;
+use App\Game\Core\Zone\Zone;
+use App\Game\Core\Zone\ZoneVisibility;
 
 final readonly class GameDefinition extends AbstractGameDefinition
 {
@@ -68,27 +71,23 @@ final readonly class GameDefinition extends AbstractGameDefinition
     {
         $state = new GameState($this->getId(), $players);
         $state->data['settings'] = $settings;
+        $table = $state->table = new Table();
 
         $deck = DeckFactory::deck52();
 
-        $tableau = [];
         for ($col = 0; $col < GameRules::COLUMNS; ++$col) {
-            $pile = [];
+            $zone = $table->add(new Zone("tableau:$col"));
             for ($i = 0; $i <= $col; ++$i) {
-                $pile[] = ['card' => array_pop($deck), 'faceUp' => $i === $col];
+                $zone->push(['card' => array_pop($deck), 'faceUp' => $i === $col]);
             }
-            $tableau[] = $pile;
         }
-        $state->data['tableau'] = $tableau;
 
-        $foundations = [];
         foreach (Suit::cases() as $suit) {
-            $foundations[$suit->value] = [];
+            $table->add(new Zone('foundation:'.$suit->value));
         }
-        $state->data['foundations'] = $foundations;
 
-        $state->data['stock'] = $deck;
-        $state->data['waste'] = [];
+        $table->add(new Zone('stock', visibility: ZoneVisibility::Hidden))->push(...$deck);
+        $table->add(new Zone('waste'));
 
         return $state;
     }
@@ -119,22 +118,23 @@ final readonly class GameDefinition extends AbstractGameDefinition
     private function draw(GameState $state): void
     {
         $player = $state->currentPlayer();
+        $stock = $state->table->zone('stock');
+        $waste = $state->table->zone('waste');
 
-        if ([] === $state->data['stock']) {
-            if ([] === $state->data['waste']) {
+        if ($stock->isEmpty()) {
+            if ($waste->isEmpty()) {
                 $this->invalidMove('error.solitaire.nothing_to_draw');
             }
 
-            $state->data['stock'] = array_reverse($state->data['waste']);
-            $state->data['waste'] = [];
+            $stock->items = array_reverse($waste->clear());
             $state->logGameEvent('log.solitaire.recycled', ['%player%' => $player->nickname]);
 
             return;
         }
 
         $count = (int) ($this->setting($state, 'drawCount') ?? 1);
-        for ($i = 0; $i < $count && [] !== $state->data['stock']; ++$i) {
-            $state->data['waste'][] = array_pop($state->data['stock']);
+        for ($i = 0; $i < $count && !$stock->isEmpty(); ++$i) {
+            $waste->push($stock->pop());
         }
         $state->logGameEvent('log.solitaire.drew', ['%player%' => $player->nickname]);
     }
@@ -183,18 +183,23 @@ final readonly class GameDefinition extends AbstractGameDefinition
     private function cardsAt(GameState $state, string $from): ?array
     {
         if ('waste' === $from) {
-            $waste = $state->data['waste'];
+            $top = $state->table->zone('waste')->top();
 
-            return [] !== $waste ? [$waste[array_key_last($waste)]] : null;
+            return null !== $top ? [$top] : null;
         }
 
         if (!preg_match('/^tableau:(\d+):(\d+)$/', $from, $m)) {
             return null;
         }
 
-        $pile = $state->data['tableau'][(int) $m[1]] ?? null;
+        $zoneKey = 'tableau:'.$m[1];
+        if (!$state->table->has($zoneKey)) {
+            return null;
+        }
+
+        $pile = $state->table->zone($zoneKey)->items;
         $index = (int) $m[2];
-        if (null === $pile || !isset($pile[$index]) || !$pile[$index]['faceUp']) {
+        if (!isset($pile[$index]) || !$pile[$index]['faceUp']) {
             return null;
         }
 
@@ -204,9 +209,11 @@ final readonly class GameDefinition extends AbstractGameDefinition
     private function canPlace(GameState $state, string $to, PlayingCard $bottomOfRun): bool
     {
         if (preg_match('/^tableau:(\d+)$/', $to, $m)) {
-            $pile = $state->data['tableau'][(int) $m[1]] ?? null;
+            if (!$state->table->has($to)) {
+                return false;
+            }
 
-            return null !== $pile && $this->rules->canDropOnTableau($bottomOfRun, $pile);
+            return $this->rules->canDropOnTableau($bottomOfRun, $state->table->zone($to)->items);
         }
 
         if (preg_match('/^foundation:(\w+)$/', $to, $m)) {
@@ -215,7 +222,7 @@ final readonly class GameDefinition extends AbstractGameDefinition
                 return false;
             }
 
-            return $this->rules->canDropOnFoundation($bottomOfRun, $state->data['foundations'][$suit->value]);
+            return $this->rules->canDropOnFoundation($bottomOfRun, $state->table->zone($to)->items);
         }
 
         return false;
@@ -224,13 +231,13 @@ final readonly class GameDefinition extends AbstractGameDefinition
     private function removeFrom(GameState $state, string $from, int $count): void
     {
         if ('waste' === $from) {
-            array_pop($state->data['waste']);
+            $state->table->zone('waste')->pop();
 
             return;
         }
 
-        $col = $this->columnOf($from);
-        array_splice($state->data['tableau'][$col], -$count);
+        $zone = $state->table->zone('tableau:'.$this->columnOf($from));
+        array_splice($zone->items, -$count);
     }
 
     /**
@@ -238,15 +245,15 @@ final readonly class GameDefinition extends AbstractGameDefinition
      */
     private function appendTo(GameState $state, string $to, array $cards): void
     {
-        if (preg_match('/^foundation:(\w+)$/', $to, $m)) {
-            array_push($state->data['foundations'][$m[1]], ...$cards);
+        if (str_starts_with($to, 'foundation:')) {
+            $state->table->zone($to)->push(...$cards);
 
             return;
         }
 
-        $col = $this->columnOf($to);
+        $zone = $state->table->zone('tableau:'.$this->columnOf($to));
         foreach ($cards as $card) {
-            $state->data['tableau'][$col][] = ['card' => $card, 'faceUp' => true];
+            $zone->push(['card' => $card, 'faceUp' => true]);
         }
     }
 
@@ -257,16 +264,16 @@ final readonly class GameDefinition extends AbstractGameDefinition
             return;
         }
 
-        $pile = &$state->data['tableau'][$col];
-        if ([] !== $pile) {
-            $pile[array_key_last($pile)]['faceUp'] = true;
+        $zone = $state->table->zone("tableau:$col");
+        if (!$zone->isEmpty()) {
+            $zone->items[array_key_last($zone->items)]['faceUp'] = true;
         }
     }
 
     private function isWon(GameState $state): bool
     {
-        foreach ($state->data['foundations'] as $pile) {
-            if (13 !== \count($pile)) {
+        foreach ($state->table->matching('foundation:') as $foundation) {
+            if (13 !== $foundation->count()) {
                 return false;
             }
         }

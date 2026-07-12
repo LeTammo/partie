@@ -1,0 +1,102 @@
+{# A choice/score sheet: category rows × player columns, where a cell is a
+   filled score, a clickable potential score (submits action+category), or
+   an empty dot. For Yahtzee-style "roll then pick a category" games.
+   Include WITHOUT `only` - the score forms need `lobby`.
+   How to use, see docs/components/score-sheet.md
+
+   Parameters:
+   - rows:        list of {category, cells: list of {score: ?int, potential: ?int}}
+                  (cells in player seat order)
+   - players:     list of {nickname, color} in seat order
+   - domain:      translation domain for category labels/hints
+   - labelPrefix: category label key prefix, e.g. 'yahtzee.category.'
+   - hintPrefix:  optional tooltip key prefix, e.g. 'yahtzee.hint.'
+   - canScore:    whether potential cells are clickable for the viewer
+   - action:      move action value (default 'score')
+   - inserts:     optional map category => {title, values: list<string>} -
+                  an extra summary tile rendered after that category's tile
+                  (Yahtzee's upper bonus)
+   - totals:      optional {title, values: list<string|int>} footer bar
+#}
+{% set multiplayer = players|length > 1 %}
+<div>
+    <div class="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-4">
+        {% for row in rows %}
+            {% set categoryLabel = (labelPrefix ~ row.category)|trans({}, domain) %}
+            <div class="rounded-2xl bg-cream p-3">
+                <p class="text-xs font-extrabold uppercase tracking-wide text-warmgray-500">
+                    {% if hintPrefix|default(null) %}
+                        <span data-tip="{{ (hintPrefix ~ row.category)|trans({}, domain) }}" tabindex="0"
+                              class="underline decoration-dotted decoration-warmgray-300 underline-offset-4">{{ categoryLabel }}</span>
+                    {% else %}
+                        {{ categoryLabel }}
+                    {% endif %}
+                </p>
+                <div class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5">
+                    {% for cell in row.cells %}
+                        {% set player = players[loop.index0] %}
+                        <span class="inline-flex items-center gap-1.5">
+                            {% if multiplayer %}
+                                <span class="size-2.5 shrink-0 rounded-full" title="{{ player.nickname }}" style="background-color: {{ player.color }}"></span>
+                            {% endif %}
+                            {% if cell.score is not null %}
+                                <span class="anim-pop text-xl font-extrabold text-warmgray-700">{{ cell.score }}</span>
+                            {% elseif cell.potential is not null and canScore|default(false) %}
+                                <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}" class="inline"
+                                      data-action="submit->optimistic#replace">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
+                                    <input type="hidden" name="action" value="{{ action|default('score') }}">
+                                    <input type="hidden" name="category" value="{{ row.category }}">
+                                    <button type="submit" title="{{ 'sheet.score_action'|trans({'%points%': cell.potential, '%category%': categoryLabel}) }}"
+                                            class="rounded-xl bg-sage-100 px-3 py-1 text-lg font-extrabold text-sage-700 shadow-soft transition hover:bg-sage-200 hover:shadow-lifted">
+                                        +{{ cell.potential }}
+                                    </button>
+                                    <template>
+                                        <span class="anim-pop text-xl font-extrabold text-warmgray-700">{{ cell.potential }}</span>
+                                    </template>
+                                </form>
+                            {% else %}
+                                <span class="text-xl font-extrabold text-warmgray-300">·</span>
+                            {% endif %}
+                        </span>
+                    {% endfor %}
+                </div>
+            </div>
+            {% if inserts|default({})[row.category] is defined %}
+                {% set insert = inserts[row.category] %}
+                <div class="rounded-2xl bg-warmgray-100 p-3">
+                    <p class="text-xs font-extrabold uppercase tracking-wide text-warmgray-500">{{ insert.title }}</p>
+                    <div class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5">
+                        {% for value in insert.values %}
+                            {% set player = players[loop.index0] %}
+                            <span class="inline-flex items-center gap-1.5 text-lg font-extrabold text-warmgray-500">
+                                {% if multiplayer %}
+                                    <span class="size-2.5 shrink-0 rounded-full" title="{{ player.nickname }}" style="background-color: {{ player.color }}"></span>
+                                {% endif %}
+                                {{ value }}
+                            </span>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+
+    {% if totals|default(null) %}
+        <div class="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-softblue-100 px-5 py-3">
+            <span class="text-sm font-extrabold uppercase tracking-wide text-softblue-700">{{ totals.title }}</span>
+            <span class="flex flex-wrap items-center gap-x-6 gap-y-2">
+                {% for value in totals.values %}
+                    {% set player = players[loop.index0] %}
+                    <span class="inline-flex items-center gap-2 text-2xl font-extrabold text-softblue-700"
+                          {% if multiplayer %}title="{{ player.nickname }}"{% endif %}>
+                        {% if multiplayer %}
+                            <span class="size-3 shrink-0 rounded-full" style="background-color: {{ player.color }}"></span>
+                        {% endif %}
+                        {{ value }}
+                    </span>
+                {% endfor %}
+            </span>
+        </div>
+    {% endif %}
+</div>

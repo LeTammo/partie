@@ -55,7 +55,7 @@ final class BlackjackTest extends GameTestCase
     private function bettingState(array $deckTopFirst): GameState
     {
         $state = $this->game->createInitialState(self::players(1), ['startChips' => 100]);
-        $state->data['deck'] = array_reverse($deckTopFirst);
+        $state->table->zone('stock')->items = array_reverse($deckTopFirst);
 
         return $state;
     }
@@ -74,10 +74,10 @@ final class BlackjackTest extends GameTestCase
 
         self::assertSame('playing', $state->data['phase']);
         self::assertSame(80, $state->data['chips']['p0']);
-        self::assertSame(16, $this->rules->value($state->data['hands']['p0']));
+        self::assertSame(16, $this->rules->value($state->table->hand('p0')->items));
 
         $this->game->applyMove($state, 'p0', ['action' => 'hit']);
-        self::assertSame(21, $this->rules->value($state->data['hands']['p0']));
+        self::assertSame(21, $this->rules->value($state->table->hand('p0')->items));
         // reaching 21 auto-stands and hands over to the dealer
         self::assertSame('dealer', $state->data['phase']);
     }
@@ -113,7 +113,7 @@ final class BlackjackTest extends GameTestCase
         $this->game->applyAutoStep($state);
         self::assertTrue($state->data['dealerRevealed']);
         $this->game->applyAutoStep($state);
-        self::assertSame(18, $this->rules->value($state->data['dealer']));
+        self::assertSame(18, $this->rules->value($state->table->zone('dealer')->items));
         $this->game->applyAutoStep($state);
         self::assertSame('settle', $state->data['phase']);
 
@@ -137,7 +137,7 @@ final class BlackjackTest extends GameTestCase
 
         self::assertSame(40, $state->data['bets']['p0']);
         self::assertSame(60, $state->data['chips']['p0']);
-        self::assertCount(3, $state->data['hands']['p0']);
+        self::assertCount(3, $state->table->hand('p0')->items);
         self::assertSame('dealer', $state->data['phase']);
     }
 }

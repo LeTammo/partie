@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Game\Core\Model;
 
+use App\Game\Core\Zone\Table;
+
 // How to use, see
 // docs/components/engine-and-state.md
 final class GameState
@@ -29,6 +31,9 @@ final class GameState
     public array $log = [];
 
     private int $logSeq = 0;
+
+    /** Card/table games put their piles, hands and zones here. */
+    public ?Table $table = null;
 
     /** @param list<Player> $players in seat order */
     public function __construct(

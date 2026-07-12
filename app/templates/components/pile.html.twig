@@ -1,0 +1,70 @@
+{# A card pile: face-down stack, face-up top card, or dashed empty slot,
+   with an optional count/label line and an optional built-in move form.
+   Include WITHOUT `only` when using `form` - it needs `lobby`.
+   How to use, see docs/components/zones-and-tables.md
+
+   Parameters:
+   - top:        card view (CardPresenter::view) shown face-up, or null
+   - back:       true shows a face-down card instead of `top`
+   - backColor:  face-down design color
+   - count:      stack size (only used by your own label text)
+   - label:      caption under the pile (pass pre-translated text)
+   - emptyIcon:  icon name shown in the dashed empty slot (optional)
+   - emptyIconClass: classes on that icon (default 'size-5')
+   - emptySymbol: char shown in the dashed empty slot (optional)
+   - emptyClass: border/text colors of the empty slot
+                 (default 'border-warmgray-200 text-warmgray-300')
+   - key/flip/exit: ids for the visible card
+   - form:       {action: 'draw', title: '...', disabled: bool,
+                  ghostFrom: '#sel', ghostTo: '#sel'}  - wraps the pile in a
+                  move form; ghost params wire optimistic#ghost for drawing
+   - buttonAttr: extra attributes on the pile button (drag wiring, targets);
+                 without `form` it renders a plain grab button (a draggable
+                 top card, e.g. Solitaire's waste)
+   - attr:       extra attributes on the wrapper (zone wiring for a pile
+                 that is itself a drop target, e.g. a foundation)
+   - class:      extra classes on the wrapper
+#}
+{% set face %}
+    {% if back|default(false) %}
+        {% include 'components/card.html.twig' with {back: true, backColor: backColor|default(null), key: key|default(null)} only %}
+    {% elseif top|default(null) %}
+        {% include 'components/card.html.twig' with top|merge({key: key|default(null), flip: flip|default(null), exit: exit|default(null)}) only %}
+    {% else %}
+        <span class="relative flex h-24 w-16 shrink-0 items-center justify-center rounded-xl border-2 border-dashed {{ emptyClass|default('border-warmgray-200 text-warmgray-300') }}">
+            {% if emptyIcon|default(null) %}
+                {% include 'icons/' ~ emptyIcon ~ '.svg.twig' with {class: emptyIconClass|default('size-5')} only %}
+            {% elseif emptySymbol|default(null) %}
+                <span class="text-2xl">{{ emptySymbol }}</span>
+            {% endif %}
+        </span>
+    {% endif %}
+{% endset %}
+
+<div class="text-center {{ class|default('') }}"{% for name, value in attr|default({}) %} {{ name }}="{{ value }}"{% endfor %}>
+    {% if form|default(null) %}
+        <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}"
+              {% if form.ghostFrom|default(null) %}
+                  data-action="submit->optimistic#ghost"
+                  data-optimistic-from-param="{{ form.ghostFrom }}" data-optimistic-to-param="{{ form.ghostTo }}"
+              {% endif %}>
+            <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
+            <input type="hidden" name="action" value="{{ form.action }}">
+            <button type="submit" {% if form.disabled|default(false) %}disabled{% endif %}
+                    {% for name, value in buttonAttr|default({}) %}{{ name }}="{{ value }}" {% endfor %}
+                    class="block rounded-xl shadow-soft transition enabled:cursor-grab enabled:hover:-translate-y-1 enabled:hover:shadow-lifted disabled:opacity-60"
+                    {% if form.title|default(null) %}title="{{ form.title }}"{% endif %}>
+                {{ face }}
+            </button>
+        </form>
+    {% elseif buttonAttr|default(null) %}
+        <button type="button" {% for name, value in buttonAttr %}{{ name }}="{{ value }}" {% endfor %}class="block cursor-grab">
+            {{ face }}
+        </button>
+    {% else %}
+        {{ face }}
+    {% endif %}
+    {% if label|default(null) %}
+        <p class="mt-1.5 text-xs font-extrabold uppercase tracking-wide text-warmgray-400">{{ label }}</p>
+    {% endif %}
+</div>

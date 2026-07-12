@@ -6,6 +6,8 @@ namespace App\Game\Games\Ludo;
 
 use App\Game\Core\Model\GameState;
 use App\Game\Core\Model\GameStatus;
+use App\Game\Core\View\MoveMap;
+use App\Game\Core\Zone\Path;
 
 // How to use, see
 // docs/components/tokens-and-boards.md
@@ -14,9 +16,8 @@ final readonly class GameRenderer
     private const array SEAT_COLORS = ['softblue', 'sage', 'terracotta', 'sunny'];
 
     /**
-     * The 40 shared squares, in walk order starting at seat 0's start square.
-     * Index N is seat 0's progress-N square; seat S's progress-N square is
-     * RING_PATH[(10 * S + N) % 40] - see GameRules::startIndex().
+     * The 40 shared squares as [row, col], in walk order starting at seat
+     * 0's start square. Seat rotation is handled by Path::seatStride.
      *
      * @var list<array{0: int, 1: int}>
      */
@@ -28,8 +29,7 @@ final readonly class GameRenderer
     ];
 
     /**
-     * Per seat, the 4 private squares leading to the center - step 0 sits
-     * right next to the ring, step 3 sits right next to the center.
+     * Per seat, the 4 private squares [row, col] leading to the center.
      *
      * @var list<list<array{0: int, 1: int}>>
      */
@@ -62,13 +62,7 @@ final readonly class GameRenderer
     }
 
     /**
-     * @return array{
-     *     backdrops: list<array{style: string}>,
-     *     background: list<array{style: string}>,
-     *     cells: list<array{style: string, pawn: ?array{color: string, mine: bool}, clickable: bool, pawnIndex: ?int, target: bool}>,
-     *     baseSlots: list<array{style: string, pawn: ?array{color: string, mine: bool}, clickable: bool, pawnIndex: int}>,
-     *     myTurn: bool, roll: ?int, canRoll: bool
-     * }
+     * @return array<string, mixed>
      */
     public function buildView(GameState $state, ?string $viewerId): array
     {
@@ -78,32 +72,48 @@ final readonly class GameRenderer
         $pawns = $state->data['pawns'];
         $seatCount = \count($state->players);
 
+        $ring = new Path('ring', self::xy(self::RING_PATH), seatStride: 10);
+        $homes = array_map(static fn (array $lane): array => self::xy($lane), self::HOME_LANES);
+        $bases = array_map(static fn (array $slots): array => self::xy($slots), self::BASE_SLOTS);
+
         $legal = (null !== $viewerId && $myTurn && null !== $roll && GameStatus::Running === $state->status)
             ? $this->rules->legalMoves($pawns, $seats, $viewerId, $roll)
             : [];
 
-        $targets = [] !== $legal ? $this->targetKeys($pawns[$viewerId], $seats[$viewerId], $roll, $legal) : [];
+        $moves = new MoveMap();
+        if ([] !== $legal) {
+            $seat = $seats[$viewerId];
+            foreach ($legal as $pawnIndex) {
+                $moves->add(
+                    $this->keyFor($seat, $pawnIndex, $pawns[$viewerId][$pawnIndex]),
+                    $this->targetKeyFor($seat, $pawns[$viewerId][$pawnIndex], $roll),
+                );
+            }
+        }
 
         $locations = $this->pawnLocations($pawns, $seats);
         $used = [];
 
-        $backdrops = [];
+        $layers = [];
         for ($seat = 0; $seat < 4; ++$seat) {
             [$row, $col] = self::BACKDROP_ANCHORS[$seat];
             $tier = $seat < $seatCount ? '100' : '50';
-            $backdrops[] = ['style' => \sprintf(
-                'grid-row:%d / span 4;grid-column:%d / span 4;background-color:var(--color-%s-%s);',
-                $row + 1,
-                $col + 1,
-                self::SEAT_COLORS[$seat],
-                $tier,
-            )];
+            $layers[] = [
+                'style' => \sprintf(
+                    'grid-row:%d / span 4;grid-column:%d / span 4;background-color:var(--color-%s-%s);',
+                    $row + 1,
+                    $col + 1,
+                    self::SEAT_COLORS[$seat],
+                    $tier,
+                ),
+                'class' => 'rounded-2xl',
+            ];
         }
 
         $cells = [];
         for ($i = 0; $i < GameRules::RING_LENGTH; ++$i) {
-            [$row, $col] = self::RING_PATH[$i];
-            $used["$row,$col"] = true;
+            [$x, $y] = $ring->at($i);
+            $used["$x,$y"] = true;
 
             $fill = null;
             if (0 === $i % 10) {
@@ -112,98 +122,120 @@ final readonly class GameRenderer
                 $fill = \sprintf('var(--color-%s-%s)', self::SEAT_COLORS[$startSeat], $tier);
             }
 
-            $cells[] = $this->buildCell($row, $col, $locations['ring:'.$i] ?? null, $viewerId, $legal, $fill, isset($targets['ring:'.$i]));
+            $cells[] = $this->cell("ring:$i", $x, $y, $locations["ring:$i"] ?? null, $viewerId, $moves, $fill, track: true);
         }
         for ($seat = 0; $seat < 4; ++$seat) {
             $tier = $seat < $seatCount ? '300' : '100';
             $fill = \sprintf('var(--color-%s-%s)', self::SEAT_COLORS[$seat], $tier);
 
-            foreach (self::HOME_LANES[$seat] as $step => [$row, $col]) {
-                $used["$row,$col"] = true;
-                $cells[] = $this->buildCell($row, $col, $locations["home:$seat:$step"] ?? null, $viewerId, $legal, $fill, isset($targets["home:$seat:$step"]));
+            foreach ($homes[$seat] as $step => [$x, $y]) {
+                $used["$x,$y"] = true;
+                $cells[] = $this->cell("home:$seat:$step", $x, $y, $locations["home:$seat:$step"] ?? null, $viewerId, $moves, $fill, track: true);
             }
         }
-
-        $baseSlots = [];
         for ($seat = 0; $seat < 4; ++$seat) {
-            foreach (self::BASE_SLOTS[$seat] as $slot => [$row, $col]) {
-                $used["$row,$col"] = true;
-                $baseSlots[] = $this->buildCell($row, $col, $locations["base:$seat:$slot"] ?? null, $viewerId, $legal);
+            foreach ($bases[$seat] as $slot => [$x, $y]) {
+                $used["$x,$y"] = true;
+                $cells[] = $this->cell("base:$seat:$slot", $x, $y, $locations["base:$seat:$slot"] ?? null, $viewerId, $moves, null, track: false);
             }
         }
-
-        $background = [];
-        for ($row = 0; $row < self::BOARD_SIZE; ++$row) {
-            for ($col = 0; $col < self::BOARD_SIZE; ++$col) {
-                if (!isset($used["$row,$col"])) {
-                    $background[] = ['style' => \sprintf('grid-row:%d;grid-column:%d;', $row + 1, $col + 1)];
+        for ($y = 0; $y < self::BOARD_SIZE; ++$y) {
+            for ($x = 0; $x < self::BOARD_SIZE; ++$x) {
+                if (!isset($used["$x,$y"])) {
+                    $cells[] = [
+                        'style' => \sprintf('grid-row:%d;grid-column:%d;', $y + 1, $x + 1),
+                        'class' => 'grid place-items-center',
+                        'dot' => true,
+                    ];
                 }
             }
         }
 
         return [
-            'backdrops' => $backdrops,
-            'background' => $background,
-            'cells' => $cells,
-            'baseSlots' => $baseSlots,
+            'board' => [
+                'cols' => self::BOARD_SIZE,
+                'rows' => self::BOARD_SIZE,
+                'class' => 'relative grid gap-1 rounded-3xl bg-cream p-3 shadow-soft',
+                'style' => 'width: min(92vw, 34rem); aspect-ratio: 1;',
+                'layers' => $layers,
+                'cells' => $cells,
+            ],
+            'moves' => $moves->toArray(),
             'myTurn' => $myTurn,
             'roll' => $state->data['lastRoll'],
+            'rollSeq' => $state->data['rollSeq'] ?? 0,
             'canRoll' => $myTurn && null === $roll && GameStatus::Running === $state->status,
         ];
     }
 
     /**
      * @param array{playerId: string, pawnIndex: int, seat: int}|null $occupant
-     * @param list<int>                                               $legal
+     *
+     * @return array<string, mixed>
      */
-    private function buildCell(int $row, int $col, ?array $occupant, ?string $viewerId, array $legal, ?string $fill = null, bool $target = false): array
+    private function cell(string $key, int $x, int $y, ?array $occupant, ?string $viewerId, MoveMap $moves, ?string $fill, bool $track): array
     {
-        $pawn = null;
-        $clickable = false;
-        $pawnIndex = null;
-
-        if (null !== $occupant) {
-            $mine = $occupant['playerId'] === $viewerId;
-            $pawn = ['color' => self::SEAT_COLORS[$occupant['seat']], 'mine' => $mine];
-            $pawnIndex = $occupant['pawnIndex'];
-            $clickable = $mine && \in_array($occupant['pawnIndex'], $legal, true);
-        }
-
-        $style = \sprintf('grid-row:%d;grid-column:%d;', $row + 1, $col + 1);
+        $style = \sprintf('grid-row:%d;grid-column:%d;', $y + 1, $x + 1);
         if (null !== $fill) {
             $style .= "background-color:$fill;";
         }
 
+        $token = null;
+        if (null !== $occupant) {
+            $color = self::SEAT_COLORS[$occupant['seat']];
+            $movable = $occupant['playerId'] === $viewerId && $moves->has($key);
+
+            $token = [
+                'outer' => "var(--color-$color-500)",
+                'middle' => "var(--color-$color-700)",
+                'center' => "var(--color-$color-300)",
+                'middleSize' => 84,
+                'centerSize' => 60,
+                'size' => 'size-6 sm:size-8',
+                'ring' => $movable,
+                'class' => $movable ? 'cursor-grab transition hover:scale-110' : 'shadow-strong',
+                'attr' => $movable ? [
+                    'data-source' => $key,
+                    'draggable' => 'true',
+                    'data-action' => 'dragstart->dragdrop--piece-move#dragStart dragend->dragdrop--piece-move#dragEnd',
+                ] : [],
+            ];
+        }
+
         return [
+            'key' => $key,
             'style' => $style,
-            'pawn' => $pawn,
-            'clickable' => $clickable,
-            'pawnIndex' => $pawnIndex,
-            'target' => $target,
+            'class' => 'grid place-items-center'.($track ? ' rounded-full bg-white shadow-soft' : ''),
+            'token' => $token,
         ];
     }
 
-    /**
-     * @param list<int> $ownPawns
-     * @param list<int> $legal
-     *
-     * @return array<string, true>
-     */
-    private function targetKeys(array $ownPawns, int $seat, int $roll, array $legal): array
+    private function keyFor(int $seat, int $pawnIndex, int $progress): string
     {
-        $targets = [];
-        foreach ($legal as $pawnIndex) {
-            $progress = $ownPawns[$pawnIndex];
-            $targetProgress = -1 === $progress ? 0 : $progress + $roll;
+        return match (true) {
+            -1 === $progress => "base:$seat:$pawnIndex",
+            $progress <= GameRules::RING_LENGTH - 1 => 'ring:'.$this->rules->ringIndexFor($seat, $progress),
+            default => "home:$seat:".($progress - GameRules::RING_LENGTH),
+        };
+    }
 
-            $key = $targetProgress <= GameRules::RING_LENGTH - 1
-                ? 'ring:'.$this->rules->ringIndexFor($seat, $targetProgress)
-                : 'home:'.$seat.':'.($targetProgress - GameRules::RING_LENGTH);
+    private function targetKeyFor(int $seat, int $progress, int $roll): string
+    {
+        $targetProgress = -1 === $progress ? 0 : $progress + $roll;
 
-            $targets[$key] = true;
-        }
+        return $targetProgress <= GameRules::RING_LENGTH - 1
+            ? 'ring:'.$this->rules->ringIndexFor($seat, $targetProgress)
+            : "home:$seat:".($targetProgress - GameRules::RING_LENGTH);
+    }
 
-        return $targets;
+    /**
+     * @param list<array{0: int, 1: int}> $rowCols [row, col] pairs
+     *
+     * @return list<array{0: int, 1: int}> [x, y] pairs
+     */
+    private static function xy(array $rowCols): array
+    {
+        return array_map(static fn (array $cell): array => [$cell[1], $cell[0]], $rowCols);
     }
 
     /**
@@ -231,12 +263,11 @@ final readonly class GameRenderer
         foreach ($pawns as $playerId => $progresses) {
             $seat = $seats[$playerId];
             foreach ($progresses as $pawnIndex => $progress) {
-                $key = match (true) {
-                    -1 === $progress => "base:$seat:$pawnIndex",
-                    $progress <= GameRules::RING_LENGTH - 1 => 'ring:'.$this->rules->ringIndexFor($seat, $progress),
-                    default => "home:$seat:".($progress - GameRules::RING_LENGTH),
-                };
-                $map[$key] = ['playerId' => $playerId, 'pawnIndex' => $pawnIndex, 'seat' => $seat];
+                $map[$this->keyFor($seat, $pawnIndex, $progress)] = [
+                    'playerId' => $playerId,
+                    'pawnIndex' => $pawnIndex,
+                    'seat' => $seat,
+                ];
             }
         }
 

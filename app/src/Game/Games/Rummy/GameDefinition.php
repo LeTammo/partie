@@ -12,6 +12,9 @@ use App\Game\Core\Model\GameSetting;
 use App\Game\Core\Model\GameSettingType;
 use App\Game\Core\Model\GameState;
 use App\Game\Core\Service\AbstractGameDefinition;
+use App\Game\Core\Zone\Table;
+use App\Game\Core\Zone\Zone;
+use App\Game\Core\Zone\ZoneVisibility;
 
 final readonly class GameDefinition extends AbstractGameDefinition
 {
@@ -71,15 +74,18 @@ final readonly class GameDefinition extends AbstractGameDefinition
     {
         $state = new GameState($this->getId(), $players);
         $state->data['settings'] = $settings;
+        $table = $state->table = new Table();
 
         $deck = DeckFactory::deck110();
         foreach ($players as $player) {
-            $state->data['hands'][$player->id] = array_splice($deck, 0, self::HAND_SIZE);
+            $table->add(new Zone('hand:'.$player->id, $player->id, ZoneVisibility::Owner))
+                ->push(...array_splice($deck, 0, self::HAND_SIZE));
             $state->data['hasMelded'][$player->id] = false;
         }
-        $state->data['discard'] = array_splice($deck, 0, 1);
-        $state->data['stock'] = $deck;
-        $state->data['melds'] = [];
+        $table->add(new Zone('discard'))->push(...array_splice($deck, 0, 1));
+        $table->add(new Zone('stock', visibility: ZoneVisibility::Hidden))->push(...$deck);
+
+        $state->data['meldSeq'] = 0;
         $state->data['hasDrawn'] = false;
         $state->data['turnMelds'] = [];
         $state->data['turnMeldPoints'] = 0;
@@ -101,7 +107,7 @@ final readonly class GameDefinition extends AbstractGameDefinition
             'draw' => $this->draw($state),
             'takediscard' => $this->takeDiscard($state),
             'meld' => $this->meld($state, $this->intListParam($payload, 'cards')),
-            'layoff' => $this->layoff($state, $this->intListParam($payload, 'cards'), $this->intParam($payload, 'meld')),
+            'layoff' => $this->layoff($state, $this->intListParam($payload, 'cards'), $this->stringParam($payload, 'meld')),
             'discard' => $this->discard($state, $this->intListParam($payload, 'cards')),
             'takeback' => $this->takeback($state),
             default => throw new InvalidMoveException('error.unknown_action'),
@@ -123,8 +129,8 @@ final readonly class GameDefinition extends AbstractGameDefinition
         $this->assertNotDrawn($state);
 
         $drawn = Piles::draw(
-            $state->data['stock'],
-            $state->data['discard'],
+            $state->table->zone('stock')->items,
+            $state->table->zone('discard')->items,
             1,
             fn () => $state->logGameEvent('log.rummy.reshuffled'),
         );
@@ -133,7 +139,7 @@ final readonly class GameDefinition extends AbstractGameDefinition
         }
 
         $player = $state->currentPlayer();
-        $state->data['hands'][$player->id][] = $drawn[0];
+        $state->table->hand($player->id)->push($drawn[0]);
         $state->data['hasDrawn'] = true;
         $state->logGameEvent('log.rummy.drew', ['%player%' => $player->nickname]);
     }
@@ -142,13 +148,13 @@ final readonly class GameDefinition extends AbstractGameDefinition
     {
         $this->assertNotDrawn($state);
 
-        if ([] === $state->data['discard']) {
+        $discard = $state->table->zone('discard');
+        if ($discard->isEmpty()) {
             $this->invalidMove('error.rummy.discard_empty');
         }
 
         $player = $state->currentPlayer();
-        $card = array_pop($state->data['discard']);
-        $state->data['hands'][$player->id][] = $card;
+        $state->table->hand($player->id)->push($discard->pop());
         $state->data['hasDrawn'] = true;
         $state->logGameEvent('log.rummy.took_discard', ['%player%' => $player->nickname]);
     }
@@ -160,13 +166,13 @@ final readonly class GameDefinition extends AbstractGameDefinition
     {
         $this->assertDrawn($state);
         $player = $state->currentPlayer();
-        $hand = &$state->data['hands'][$player->id];
+        $hand = $state->table->hand($player->id);
 
         if (\count($indexes) < 3) {
             $this->invalidMove('error.rummy.select_meld');
         }
-        $cards = $this->pick($hand, $indexes);
-        if (\count($hand) - \count($indexes) < 1) {
+        $cards = $this->pick($hand->items, $indexes);
+        if ($hand->count() - \count($indexes) < 1) {
             $this->invalidMove('error.rummy.keep_one');
         }
 
@@ -175,12 +181,10 @@ final readonly class GameDefinition extends AbstractGameDefinition
             $this->invalidMove('error.rummy.invalid_meld');
         }
 
-        $this->remove($hand, $indexes);
-        $state->data['melds'][] = [
-            'ownerId' => $player->id,
-            'type' => $meld['type'],
-            'cards' => $cards,
-        ];
+        $this->remove($hand->items, $indexes);
+        $zone = $state->table->add(new Zone('meld:'.$state->data['meldSeq']++, $player->id));
+        $zone->meta['type'] = $meld['type'];
+        $zone->push(...$cards);
 
         $state->logGameEvent('log.rummy.melded', [
             '%player%' => $player->nickname,
@@ -188,7 +192,7 @@ final readonly class GameDefinition extends AbstractGameDefinition
         ]);
 
         if (!$state->data['hasMelded'][$player->id]) {
-            $state->data['turnMelds'][] = \count($state->data['melds']) - 1;
+            $state->data['turnMelds'][] = $zone->key;
             $state->data['turnMeldPoints'] += $meld['points'];
             $initialMeldPoints = (int) ($this->setting($state, 'initialMeldPoints') ?? GameRules::INITIAL_MELD_POINTS);
             if ($state->data['turnMeldPoints'] >= $initialMeldPoints) {
@@ -202,11 +206,11 @@ final readonly class GameDefinition extends AbstractGameDefinition
     /**
      * @param list<int> $indexes
      */
-    private function layoff(GameState $state, array $indexes, int $meldIndex): void
+    private function layoff(GameState $state, array $indexes, string $meldKey): void
     {
         $this->assertDrawn($state);
         $player = $state->currentPlayer();
-        $hand = &$state->data['hands'][$player->id];
+        $hand = $state->table->hand($player->id);
 
         if (!$state->data['hasMelded'][$player->id]) {
             $this->invalidMove('error.rummy.open_first', ['%points%' => (int) ($this->setting($state, 'initialMeldPoints') ?? GameRules::INITIAL_MELD_POINTS)]);
@@ -214,22 +218,22 @@ final readonly class GameDefinition extends AbstractGameDefinition
         if (1 !== \count($indexes)) {
             $this->invalidMove('error.rummy.select_one');
         }
-        if (!isset($state->data['melds'][$meldIndex])) {
+        if (!str_starts_with($meldKey, 'meld:') || !$state->table->has($meldKey)) {
             $this->invalidMove('error.rummy.unknown_meld');
         }
-        if (\count($hand) - 1 < 1) {
+        if ($hand->count() - 1 < 1) {
             $this->invalidMove('error.rummy.keep_one');
         }
 
-        $card = $this->pick($hand, $indexes)[0];
-        $meld = $state->data['melds'][$meldIndex];
-        $result = $this->rules->validateMeld([...$meld['cards'], $card]);
-        if (null === $result || $result['type'] !== $meld['type']) {
+        $card = $this->pick($hand->items, $indexes)[0];
+        $meld = $state->table->zone($meldKey);
+        $result = $this->rules->validateMeld([...$meld->items, $card]);
+        if (null === $result || $result['type'] !== $meld->meta['type']) {
             $this->invalidMove('error.rummy.does_not_fit');
         }
 
-        $this->remove($hand, $indexes);
-        $state->data['melds'][$meldIndex]['cards'][] = $card;
+        $this->remove($hand->items, $indexes);
+        $meld->push($card);
         $state->logGameEvent('log.rummy.laid_off', ['%player%' => $player->nickname]);
     }
 
@@ -240,7 +244,7 @@ final readonly class GameDefinition extends AbstractGameDefinition
     {
         $this->assertDrawn($state);
         $player = $state->currentPlayer();
-        $hand = &$state->data['hands'][$player->id];
+        $hand = $state->table->hand($player->id);
 
         if (1 !== \count($indexes)) {
             $this->invalidMove('error.rummy.select_one');
@@ -249,9 +253,9 @@ final readonly class GameDefinition extends AbstractGameDefinition
             $this->invalidMove('error.rummy.initial_meld', ['%points%' => (int) ($this->setting($state, 'initialMeldPoints') ?? GameRules::INITIAL_MELD_POINTS)]);
         }
 
-        $card = $this->pick($hand, $indexes)[0];
-        $this->remove($hand, $indexes);
-        $state->data['discard'][] = $card;
+        $card = $this->pick($hand->items, $indexes)[0];
+        $this->remove($hand->items, $indexes);
+        $state->table->zone('discard')->push($card);
 
         $state->logGameEvent('log.rummy.discarded', [
             '%player%' => $player->nickname,
@@ -259,7 +263,7 @@ final readonly class GameDefinition extends AbstractGameDefinition
             '%rank%' => $card->joker ? 't:card.joker' : 't:card.rank.'.$card->rank->labelKey(),
         ]);
 
-        if ([] === $hand) {
+        if ($hand->isEmpty()) {
             $state->finish($player->id);
             $state->logGameEvent('log.rummy.won', ['%player%' => $player->nickname]);
 
@@ -279,15 +283,11 @@ final readonly class GameDefinition extends AbstractGameDefinition
         }
 
         $player = $state->currentPlayer();
-        $hand = &$state->data['hands'][$player->id];
+        $hand = $state->table->hand($player->id);
 
-        rsort($state->data['turnMelds']);
-        foreach ($state->data['turnMelds'] as $meldIndex) {
-            $meld = $state->data['melds'][$meldIndex];
-            foreach ($meld['cards'] as $card) {
-                $hand[] = $card;
-            }
-            array_splice($state->data['melds'], $meldIndex, 1);
+        foreach ($state->data['turnMelds'] as $meldKey) {
+            $hand->push(...$state->table->zone($meldKey)->clear());
+            $state->table->remove($meldKey);
         }
         $state->data['turnMelds'] = [];
         $state->data['turnMeldPoints'] = 0;

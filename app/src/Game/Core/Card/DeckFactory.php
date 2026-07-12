@@ -49,6 +49,42 @@ final class DeckFactory
     }
 
     /**
+     * Build a custom deck with a range of numbers for each given color.
+     *
+     * @param list<string> $colors
+     *
+     * @return list<CustomCard>
+     */
+    public static function customRangeDeck(array $colors, int $min, int $max, bool $shuffle = true): array
+    {
+        return self::customSymbolDeck($colors, array_map('strval', range($min, $max)), $shuffle);
+    }
+
+    /**
+     * Build a custom deck with a list of values for each color.
+     *
+     * @param list<string> $colors
+     * @param list<string> $values
+     *
+     * @return list<CustomCard>
+     */
+    public static function customSymbolDeck(array $colors, array $values, bool $shuffle = true): array
+    {
+        $deck = [];
+        foreach ($colors as $color) {
+            foreach ($values as $value) {
+                $deck[] = new CustomCard($color, $value);
+            }
+        }
+
+        if ($shuffle) {
+            shuffle($deck);
+        }
+
+        return $deck;
+    }
+
+    /**
      * @return list<PlayingCard>
      */
     private static function build(Rank $minRank, int $jokers, int $copies, bool $shuffle = true): array

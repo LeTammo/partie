@@ -114,8 +114,9 @@ $state->players;             // list<Player>, seat order
 $state->currentTurnIndex;
 $state->currentPlayer();     // Player
 $state->board;               // ?Board - grid games
+$state->table;               // ?Zone\Table - card/table games (hands, piles, zones)
 $state->dice;                // list<Dice> - dice games
-$state->data;                // array<string, mixed> - everything else (hands, phases, scorecards...)
+$state->data;                // array<string, mixed> - game-specific scalars (phases, scorecards, flags...)
 $state->status;              // GameStatus::Running | Finished
 
 $state->isPlayersTurn($playerId);       // bool

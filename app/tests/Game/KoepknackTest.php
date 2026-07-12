@@ -26,9 +26,9 @@ final class KoepknackTest extends GameTestCase
     private function state(array $handP0, array $handP1, array $middle): GameState
     {
         $state = $this->game->createInitialState(self::players(2), ['roundsTotal' => 2]);
-        $state->data['hands']['p0'] = $handP0;
-        $state->data['hands']['p1'] = $handP1;
-        $state->data['middle'] = $middle;
+        $state->table->hand('p0')->items = $handP0;
+        $state->table->hand('p1')->items = $handP1;
+        $state->table->zone('middle')->items = $middle;
 
         return $state;
     }
@@ -69,8 +69,8 @@ final class KoepknackTest extends GameTestCase
 
         $this->game->applyMove($state, 'p0', ['action' => 'swap', 'hand' => 0, 'middle' => 0]);
 
-        self::assertTrue($state->data['hands']['p0'][0]->is(Suit::Diamonds, Rank::King));
-        self::assertTrue($state->data['middle'][0]->is(Suit::Hearts, Rank::Seven));
+        self::assertTrue($state->table->hand('p0')->items[0]->is(Suit::Diamonds, Rank::King));
+        self::assertTrue($state->table->zone('middle')->items[0]->is(Suit::Hearts, Rank::Seven));
         self::assertSame('p1', $state->currentPlayer()->id);
     }
 

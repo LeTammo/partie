@@ -1,0 +1,43 @@
+{# A single die that rolls on click - the whole die is the roll button.
+   Include WITHOUT `only`: it needs `lobby` for the move-form action.
+   How to use, see docs/components/dice.md
+
+   Parameters:
+   - value:      current face (default 1)
+   - symbol:     char face instead of pips (optional)
+   - face/pip:   die colors (optional)
+   - canRoll:    whether the viewer may roll now
+   - action:     move-form action value (default 'roll')
+   - class:      die size classes (default 'size-20')
+   - restartKey: overrides the anim-restart marker (default: value-symbol) -
+                 pass something that changes on every roll (e.g. a roll
+                 counter) if the same face can come up twice in a row
+#}
+{% set dieValue = value|default(1) %}
+{% set die %}
+    <span id="die-single" data-die data-anim-restart="{{ restartKey|default(dieValue ~ '-' ~ symbol|default('')) }}" class="anim-roll block">
+        {% include 'components/die.html.twig' with {
+            value: dieValue,
+            symbol: symbol|default(null),
+            face: face|default(null),
+            pip: pip|default(null),
+            class: class|default('size-20'),
+        } only %}
+    </span>
+{% endset %}
+
+{% if canRoll|default(false) %}
+    <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}"
+          data-action="submit->optimistic#pending"
+          data-optimistic-selector-param="[data-die]"
+          data-optimistic-class-param="anim-rolling">
+        <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
+        <input type="hidden" name="action" value="{{ action|default('roll') }}">
+        <button type="submit" title="{{ 'dice.roll'|trans }}"
+                class="anim-pulse block cursor-pointer rounded-2xl opacity-100 shadow-soft transition hover:shadow-lifted">
+            {{ die }}
+        </button>
+    </form>
+{% else %}
+    {{ die }}
+{% endif %}

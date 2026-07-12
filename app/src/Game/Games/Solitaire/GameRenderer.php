@@ -26,41 +26,43 @@ final readonly class GameRenderer
      */
     public function buildView(GameState $state, ?string $viewerId): array
     {
+        $table = $state->table;
         $moves = $this->computeMoves($state);
 
         $tableau = [];
-        foreach ($state->data['tableau'] as $col => $pile) {
+        foreach ($table->matching('tableau:') as $zone) {
             $cards = [];
-            foreach ($pile as $index => $slot) {
+            foreach ($zone->items as $index => $slot) {
                 $cards[] = [
                     'card' => CardPresenter::view($slot['card']),
                     'faceUp' => $slot['faceUp'],
-                    'source' => $slot['faceUp'] ? "tableau:$col:$index" : null,
+                    'source' => $slot['faceUp'] ? $zone->key.':'.$index : null,
                 ];
             }
-            $tableau[] = ['zone' => "tableau:$col", 'cards' => $cards];
+            $tableau[] = ['zone' => $zone->key, 'cards' => $cards];
         }
 
         $foundations = [];
         foreach (Suit::cases() as $suit) {
-            $pile = $state->data['foundations'][$suit->value];
+            $zone = $table->zone('foundation:'.$suit->value);
+            $top = $zone->top();
             $foundations[] = [
                 'suit' => $suit->symbol(),
                 'red' => $suit->isRed(),
-                'zone' => 'foundation:'.$suit->value,
-                'top' => [] !== $pile ? CardPresenter::view($pile[array_key_last($pile)]) : null,
+                'zone' => $zone->key,
+                'top' => null !== $top ? CardPresenter::view($top) : null,
             ];
         }
 
-        $waste = $state->data['waste'];
+        $wasteTop = $table->zone('waste')->top();
 
         return [
             'tableau' => $tableau,
             'foundations' => $foundations,
-            'waste' => [] !== $waste ? CardPresenter::view($waste[array_key_last($waste)]) : null,
-            'wasteSource' => [] !== $waste ? 'waste' : null,
-            'stockCount' => \count($state->data['stock']),
-            'canDraw' => [] !== $state->data['stock'] || [] !== $state->data['waste'],
+            'waste' => null !== $wasteTop ? CardPresenter::view($wasteTop) : null,
+            'wasteSource' => null !== $wasteTop ? 'waste' : null,
+            'stockCount' => $table->zone('stock')->count(),
+            'canDraw' => !$table->zone('stock')->isEmpty() || !$table->zone('waste')->isEmpty(),
             'myTurn' => $state->isViewersTurn($viewerId),
             'moves' => $moves,
         ];
@@ -72,24 +74,26 @@ final readonly class GameRenderer
     private function computeMoves(GameState $state): array
     {
         $moves = [];
+        $table = $state->table;
 
-        $waste = $state->data['waste'];
-        if ([] !== $waste) {
-            $dests = $this->destinationsFor($state, $waste[array_key_last($waste)], null, true);
+        $wasteTop = $table->zone('waste')->top();
+        if (null !== $wasteTop) {
+            $dests = $this->destinationsFor($state, $wasteTop, null, true);
             if ([] !== $dests) {
                 $moves['waste'] = $dests;
             }
         }
 
-        foreach ($state->data['tableau'] as $col => $pile) {
-            $lastIndex = array_key_last($pile);
-            foreach ($pile as $index => $slot) {
+        foreach ($table->matching('tableau:') as $zone) {
+            $lastIndex = array_key_last($zone->items);
+            foreach ($zone->items as $index => $slot) {
                 if (!$slot['faceUp']) {
                     continue;
                 }
+                $col = (int) explode(':', $zone->key)[1];
                 $dests = $this->destinationsFor($state, $slot['card'], $col, $index === $lastIndex);
                 if ([] !== $dests) {
-                    $moves["tableau:$col:$index"] = $dests;
+                    $moves[$zone->key.':'.$index] = $dests;
                 }
             }
         }
@@ -103,16 +107,17 @@ final readonly class GameRenderer
     private function destinationsFor(GameState $state, PlayingCard $card, ?int $excludeColumn, bool $includeFoundation): array
     {
         $dests = [];
-        foreach ($state->data['tableau'] as $col => $pile) {
+        foreach ($state->table->matching('tableau:') as $zone) {
+            $col = (int) explode(':', $zone->key)[1];
             if ($col === $excludeColumn) {
                 continue;
             }
-            if ($this->rules->canDropOnTableau($card, $pile)) {
-                $dests[] = "tableau:$col";
+            if ($this->rules->canDropOnTableau($card, $zone->items)) {
+                $dests[] = $zone->key;
             }
         }
 
-        if ($includeFoundation && $this->rules->canDropOnFoundation($card, $state->data['foundations'][$card->suit->value])) {
+        if ($includeFoundation && $this->rules->canDropOnFoundation($card, $state->table->zone('foundation:'.$card->suit->value)->items)) {
             $dests[] = 'foundation:'.$card->suit->value;
         }
 

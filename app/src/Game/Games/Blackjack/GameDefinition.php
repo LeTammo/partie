@@ -13,6 +13,9 @@ use App\Game\Core\Model\GameStatus;
 use App\Game\Core\Model\Player;
 use App\Game\Core\Service\AbstractGameDefinition;
 use App\Game\Core\Service\AutoPlayingEngineInterface;
+use App\Game\Core\Zone\Table;
+use App\Game\Core\Zone\Zone;
+use App\Game\Core\Zone\ZoneVisibility;
 
 final readonly class GameDefinition extends AbstractGameDefinition implements AutoPlayingEngineInterface
 {
@@ -81,11 +84,15 @@ final readonly class GameDefinition extends AbstractGameDefinition implements Au
     {
         $state = new GameState($this->getId(), $players);
         $state->data['settings'] = $settings;
+        $table = $state->table = new Table();
 
         $startChips = (int) ($settings['startChips'] ?? self::START_CHIPS);
         foreach ($players as $player) {
+            $table->add(new Zone('hand:'.$player->id, $player->id)); // blackjack hands are public
             $state->data['chips'][$player->id] = $startChips;
         }
+        $table->add(new Zone('dealer'));
+        $table->add(new Zone('stock', visibility: ZoneVisibility::Hidden));
         $state->data['round'] = 0;
         $state->data['roundsTotal'] = self::ROUNDS;
         $state->data['autoStep'] = 0;
@@ -150,13 +157,13 @@ final readonly class GameDefinition extends AbstractGameDefinition implements Au
     {
         $this->assertPlaying($state);
         $player = $state->currentPlayer();
-        $hand = &$state->data['hands'][$player->id];
-        $hand[] = array_pop($state->data['deck']);
+        $hand = $state->table->hand($player->id);
+        $hand->push($state->table->zone('stock')->pop());
 
-        $value = $this->rules->value($hand);
+        $value = $this->rules->value($hand->items);
         $state->logGameEvent('log.blackjack.hit', ['%player%' => $player->nickname, '%value%' => $value]);
 
-        if ($this->rules->isBust($hand)) {
+        if ($this->rules->isBust($hand->items)) {
             $state->logGameEvent('log.blackjack.bust', ['%player%' => $player->nickname]);
             $this->markDone($state);
         } elseif (21 === $value) {
@@ -169,7 +176,7 @@ final readonly class GameDefinition extends AbstractGameDefinition implements Au
         $this->assertPlaying($state);
         $state->logGameEvent('log.blackjack.stand', [
             '%player%' => $state->currentPlayer()->nickname,
-            '%value%' => $this->rules->value($state->data['hands'][$state->currentPlayer()->id]),
+            '%value%' => $this->rules->value($state->table->hand($state->currentPlayer()->id)->items),
         ]);
         $this->markDone($state);
     }
@@ -179,19 +186,19 @@ final readonly class GameDefinition extends AbstractGameDefinition implements Au
         $this->assertPlaying($state);
         $player = $state->currentPlayer();
         $bet = $state->data['bets'][$player->id];
-        $hand = &$state->data['hands'][$player->id];
+        $hand = $state->table->hand($player->id);
 
-        if (2 !== \count($hand) || $state->data['chips'][$player->id] < $bet) {
+        if (2 !== $hand->count() || $state->data['chips'][$player->id] < $bet) {
             $this->invalidMove('error.blackjack.cannot_double');
         }
 
         $state->data['chips'][$player->id] -= $bet;
         $state->data['bets'][$player->id] = $bet * 2;
-        $hand[] = array_pop($state->data['deck']);
+        $hand->push($state->table->zone('stock')->pop());
 
-        $value = $this->rules->value($hand);
+        $value = $this->rules->value($hand->items);
         $state->logGameEvent('log.blackjack.double', ['%player%' => $player->nickname, '%value%' => $value]);
-        if ($this->rules->isBust($hand)) {
+        if ($this->rules->isBust($hand->items)) {
             $state->logGameEvent('log.blackjack.bust', ['%player%' => $player->nickname]);
         }
         $this->markDone($state);
@@ -245,24 +252,24 @@ final readonly class GameDefinition extends AbstractGameDefinition implements Au
 
     private function dealerStep(GameState $state): void
     {
-        $dealer = &$state->data['dealer'];
+        $dealer = $state->table->zone('dealer');
 
         if (!$state->data['dealerRevealed']) {
             $state->data['dealerRevealed'] = true;
-            $state->logGameEvent('log.blackjack.reveal', ['%value%' => $this->rules->value($dealer)]);
+            $state->logGameEvent('log.blackjack.reveal', ['%value%' => $this->rules->value($dealer->items)]);
 
             return;
         }
 
         $dealerStandsAt = (int) ($this->setting($state, 'dealerStandsAt') ?? GameRules::DEALER_STANDS_AT);
-        if ($this->rules->value($dealer) < $dealerStandsAt) {
-            $dealer[] = array_pop($state->data['deck']);
-            $state->logGameEvent('log.blackjack.dealer_draw', ['%value%' => $this->rules->value($dealer)]);
+        if ($this->rules->value($dealer->items) < $dealerStandsAt) {
+            $dealer->push($state->table->zone('stock')->pop());
+            $state->logGameEvent('log.blackjack.dealer_draw', ['%value%' => $this->rules->value($dealer->items)]);
 
             return;
         }
 
-        $state->logGameEvent('log.blackjack.dealer', ['%value%' => $this->rules->value($dealer)]);
+        $state->logGameEvent('log.blackjack.dealer', ['%value%' => $this->rules->value($dealer->items)]);
         $state->data['phase'] = 'settle';
     }
 
@@ -309,25 +316,27 @@ final readonly class GameDefinition extends AbstractGameDefinition implements Au
             if (null === $state->data['bets'][$player->id]) {
                 continue;
             }
-            $hand = [array_pop($state->data['deck']), array_pop($state->data['deck'])];
-            $state->data['hands'][$player->id] = $hand;
+            $stock = $state->table->zone('stock');
+            $hand = [$stock->pop(), $stock->pop()];
+            $state->table->hand($player->id)->items = $hand;
             $state->data['done'][$player->id] = $this->rules->isBlackjack($hand);
         }
-        $state->data['dealer'] = [array_pop($state->data['deck']), array_pop($state->data['deck'])];
-        $state->logGameEvent('log.blackjack.dealt', ['%upcard%' => $this->rules->value([$state->data['dealer'][0]])]);
+        $stock = $state->table->zone('stock');
+        $state->table->zone('dealer')->items = [$stock->pop(), $stock->pop()];
+        $state->logGameEvent('log.blackjack.dealt', ['%upcard%' => $this->rules->value([$state->table->zone('dealer')->items[0]])]);
 
         $this->advanceOrSettle($state);
     }
 
     private function settlePlayer(GameState $state, Player $player): void
     {
-        $dealer = $state->data['dealer'];
+        $dealer = $state->table->zone('dealer')->items;
         $dealerValue = $this->rules->value($dealer);
         $dealerBust = $dealerValue > 21;
         $dealerBlackjack = $this->rules->isBlackjack($dealer);
 
         $bet = $state->data['bets'][$player->id];
-        $hand = $state->data['hands'][$player->id];
+        $hand = $state->table->hand($player->id)->items;
         $value = $this->rules->value($hand);
 
         if ($this->rules->isBust($hand)) {
@@ -360,11 +369,11 @@ final readonly class GameDefinition extends AbstractGameDefinition implements Au
         $state->data['phase'] = 'betting';
         $state->data['dealerRevealed'] = false;
         $state->data['settleIndex'] = 0;
-        $state->data['deck'] = DeckFactory::deck52();
-        $state->data['dealer'] = [];
+        $state->table->zone('stock')->items = DeckFactory::deck52();
+        $state->table->zone('dealer')->items = [];
         foreach ($state->players as $player) {
             $state->data['bets'][$player->id] = null;
-            $state->data['hands'][$player->id] = [];
+            $state->table->hand($player->id)->items = [];
             $state->data['done'][$player->id] = false;
         }
 

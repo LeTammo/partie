@@ -41,6 +41,16 @@ final class LudoTest extends GameTestCase
 
         self::assertSame([-1, -1, -1, -1], $state->data['pawns']['p0']);
         self::assertNull($state->data['roll']);
+        self::assertSame(0, $state->data['rollSeq']);
+    }
+
+    public function testRollIncrementsRollSeqEveryTime(): void
+    {
+        $state = $this->game->createInitialState(self::players(2));
+
+        $this->game->applyMove($state, 'p0', ['action' => 'roll']);
+
+        self::assertSame(1, $state->data['rollSeq']);
     }
 
     public function testRingGeometry(): void
@@ -84,7 +94,7 @@ final class LudoTest extends GameTestCase
         // p1 (seat 1) at progress 0 = ring index 10; p0 at progress 6 moving 4 lands on ring index 10
         $state = $this->state([6, -1, -1, -1], [0, -1, -1, -1], roll: 4);
 
-        $this->game->applyMove($state, 'p0', ['action' => 'move', 'pawn' => 0]);
+        $this->game->applyMove($state, 'p0', ['action' => 'move', 'from' => 'ring:6']);
 
         self::assertSame(10, $state->data['pawns']['p0'][0]);
         self::assertSame(-1, $state->data['pawns']['p1'][0]); // captured back to base
@@ -95,14 +105,14 @@ final class LudoTest extends GameTestCase
         $state = $this->state([0, -1, -1, -1], [-1, -1, -1, -1], roll: null);
 
         $this->expectException(InvalidMoveException::class);
-        $this->game->applyMove($state, 'p0', ['action' => 'move', 'pawn' => 0]);
+        $this->game->applyMove($state, 'p0', ['action' => 'move', 'from' => 'ring:0']);
     }
 
     public function testSixGrantsAnotherTurn(): void
     {
         $state = $this->state([0, -1, -1, -1], [-1, -1, -1, -1], roll: 6);
 
-        $this->game->applyMove($state, 'p0', ['action' => 'move', 'pawn' => 0]);
+        $this->game->applyMove($state, 'p0', ['action' => 'move', 'from' => 'ring:0']);
 
         self::assertSame('p0', $state->currentPlayer()->id);
         self::assertNull($state->data['roll']);
@@ -113,7 +123,7 @@ final class LudoTest extends GameTestCase
         // home slots are exclusive: three pawns parked on 43/42/41, the last one enters slot 40
         $state = $this->state([43, 42, 41, 38], [-1, -1, -1, -1], roll: 2);
 
-        $this->game->applyMove($state, 'p0', ['action' => 'move', 'pawn' => 3]);
+        $this->game->applyMove($state, 'p0', ['action' => 'move', 'from' => 'ring:38']);
 
         self::assertSame(GameStatus::Finished, $state->status);
         self::assertSame('p0', $state->winnerId);

@@ -116,3 +116,6 @@ dice.no_rolls_left: 'No rolls left – pick a category!'
 dice.held: 'held'
 dice.hold: 'Hold this die'
 dice.release: 'Release this die'
+
+# score sheet (shared component)
+sheet.score_action: 'Score %points% points on %category%'

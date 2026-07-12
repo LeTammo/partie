@@ -11,21 +11,6 @@ final class GameRules
     private const int CONNECT = 4;
     private const array DIRECTIONS = [[1, 0], [0, 1], [1, 1], [1, -1]];
 
-    public function dropRow(Board $board, int $column): ?int
-    {
-        if ($column < 0 || $column >= $board->width) {
-            return null;
-        }
-
-        for ($y = $board->height - 1; $y >= 0; --$y) {
-            if (null === $board->get($column, $y)) {
-                return $y;
-            }
-        }
-
-        return null;
-    }
-
     public function isWinningMove(Board $board, int $x, int $y, int $connect = self::CONNECT): bool
     {
         $ownerId = $board->get($x, $y)?->ownerId;

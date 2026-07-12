@@ -1,0 +1,21 @@
+{# A poker-style chip: colored disc, dashed edge markings, optional center label.
+   How to use, see docs/components/chips.md
+
+   Parameters:
+   - color: chip color (required)
+   - label: char/amount in the center (optional)
+   - size:  size classes (default 'size-8')
+   - key/flip/exit: DOM id / FLIP id / exit ghost
+   - class: extra classes
+#}
+<span {% if key|default(null) %}id="{{ key }}"{% endif %}
+      {% if flip|default(null) %}data-flip-id="{{ flip }}"{% endif %}
+      {% if exit|default(null) %}data-flip-exit="{{ exit }}"{% endif %}
+      class="relative grid shrink-0 select-none place-items-center rounded-full shadow-soft {{ size|default('size-8') }} {{ class|default('') }}"
+      style="background-color: {{ color }}">
+    <span class="absolute inset-[8%] rounded-full border-2 border-dashed border-white/70"></span>
+    <span class="absolute inset-[26%] rounded-full bg-white/90"></span>
+    {% if label|default(null) is not null %}
+        <span class="relative text-[0.6em] font-extrabold leading-none text-warmgray-700">{{ label }}</span>
+    {% endif %}
+</span>

@@ -165,8 +165,14 @@
 }
 .anim-rolling { animation: anim-rolling 0.4s ease-in-out infinite; }
 
+@keyframes anim-pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.06); }
+}
+.anim-pulse { animation: anim-pulse 1.6s ease-in-out infinite; }
+
 @media (prefers-reduced-motion: reduce) {
-    .anim-pop, .anim-deal, .anim-drop, .anim-rise, .anim-roll, .anim-rolling { animation: none; }
+    .anim-pop, .anim-deal, .anim-drop, .anim-rise, .anim-roll, .anim-rolling, .anim-pulse { animation: none; }
 }
 
 @keyframes ghost-fade {

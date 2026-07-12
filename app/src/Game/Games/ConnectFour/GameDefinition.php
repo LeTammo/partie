@@ -11,6 +11,7 @@ use App\Game\Core\Model\GameSettingType;
 use App\Game\Core\Model\GameState;
 use App\Game\Core\Model\Token;
 use App\Game\Core\Model\TokenShape;
+use App\Game\Core\Rules\Gravity;
 use App\Game\Core\Service\AbstractGameDefinition;
 
 final readonly class GameDefinition extends AbstractGameDefinition
@@ -110,7 +111,7 @@ final readonly class GameDefinition extends AbstractGameDefinition
         }
 
         $column = $this->intParam($payload, 'column');
-        $y = $this->rules->dropRow($state->board, $column);
+        $y = Gravity::dropRow($state->board, $column);
         if (null === $y) {
             $this->invalidMove('error.column_full');
         }
@@ -122,7 +123,7 @@ final readonly class GameDefinition extends AbstractGameDefinition
             ownerId: $playerId,
             shape: TokenShape::Round,
             outerColor: $outer,
-            innerColor: $inner,
+            centerColor: $inner,
         ));
 
         $state->logGameEvent('log.connectfour.dropped', ['%player%' => $player->nickname, '%column%' => $column + 1]);
