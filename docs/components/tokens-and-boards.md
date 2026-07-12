@@ -30,7 +30,7 @@ The one token component - every piece renders through it:
 ```twig
 {% include 'components/token.html.twig' with {
     outer: cell.outer,
-    center: cell.inner, centerSize: 45,     {# disc + small dot (Connect Four) #}
+    center: cell.inner, centerSize: 45,     {# disc + small dot (Four in a Row) #}
     icon: cell.king ? 'crown' : null,       {# icon center (Checkers king) #}
     overlayIcon: sacrifice ? 'x' : null,    {# hover overlay, needs 'group' in class #}
     ring: cell.selectable,                  {# highlight ring #}
@@ -97,7 +97,7 @@ renderer builds a `board` descriptor; the template stays tiny:
 ```
 
 The descriptor (see the parameter list at the top of the component, and
-TicTacToe/ConnectFour/Checkers/Ludo renderers for full examples):
+TicTacToe/RowFour/Checkers/Ludo renderers for full examples):
 
 - `cols`/`rows`, `class`, `style`, `panelClass` - grid scaffolding.
 - `cells` - in-order cell maps: `class`/`style` (fill colors, explicit
@@ -106,7 +106,7 @@ TicTacToe/ConnectFour/Checkers/Ludo renderers for full examples):
   click-to-place cell with an `optimistic#insert` template - Tic-Tac-Toe),
   `dot` (decorative), `attr`.
 - `layers` - decorative divs behind the cells (Ludo's colored backdrops).
-- `drop` - the gravity drop-row above the grid (Connect Four); cells then
+- `drop` - the gravity drop-row above the grid (Four in a Row); cells then
   carry `attr: {'data-col': x}` so the optimistic disc falls into the
   right column.
 

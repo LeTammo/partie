@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Game\Games\Yahtzee;
+namespace App\Game\Games\DicePoker;
 
 use App\Game\Core\Model\Dice;
 use App\Game\Core\Model\GameState;

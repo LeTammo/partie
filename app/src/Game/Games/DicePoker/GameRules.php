@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace App\Game\Games\Yahtzee;
+namespace App\Game\Games\DicePoker;
 
 final class GameRules
 {
     public const array UPPER_CATEGORIES = ['ones', 'twos', 'threes', 'fours', 'fives', 'sixes'];
 
     public const array LOWER_CATEGORIES = [
-        'three_of_a_kind', 'four_of_a_kind', 'full_house', 'small_straight', 'large_straight', 'yahtzee', 'chance',
+        'three_of_a_kind', 'four_of_a_kind', 'full_house', 'small_straight', 'large_straight', 'five_of_a_kind', 'chance',
     ];
 
     public const int UPPER_BONUS_THRESHOLD = 63;
@@ -39,7 +39,7 @@ final class GameRules
             'full_house' => (3 === $countValues[0] && 2 === ($countValues[1] ?? 0)) || 5 === $countValues[0] ? 25 : 0,
             'small_straight' => $this->hasStraight($values, 4) ? 30 : 0,
             'large_straight' => $this->hasStraight($values, 5) ? 40 : 0,
-            'yahtzee' => 5 === $countValues[0] ? 50 : 0,
+            'five_of_a_kind' => 5 === $countValues[0] ? 50 : 0,
             'chance' => $sum,
             default => throw new \InvalidArgumentException(sprintf('Unknown category "%s".', $category)),
         };

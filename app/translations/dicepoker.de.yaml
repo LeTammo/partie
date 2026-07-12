@@ -1,0 +1,58 @@
+# --- Tisch ---
+dicepoker.category: 'Kategorie'
+dicepoker.upper_bonus: 'Bonus oben (63 → +35)'
+dicepoker.total: 'Gesamt'
+
+# --- Einstellungen ---
+setting.dicepoker.rolls_per_turn: 'Würfe pro Zug'
+
+# --- Kategorien ---
+dicepoker.category.ones: 'Einser'
+dicepoker.category.twos: 'Zweier'
+dicepoker.category.threes: 'Dreier'
+dicepoker.category.fours: 'Vierer'
+dicepoker.category.fives: 'Fünfer'
+dicepoker.category.sixes: 'Sechser'
+dicepoker.category.three_of_a_kind: 'Dreierpasch'
+dicepoker.category.four_of_a_kind: 'Viererpasch'
+dicepoker.category.full_house: 'Full House'
+dicepoker.category.small_straight: 'Kleine Straße'
+dicepoker.category.large_straight: 'Große Straße'
+dicepoker.category.five_of_a_kind: 'Fünferpasch'
+dicepoker.category.chance: 'Chance'
+
+# --- Kategorie-Tooltips ---
+dicepoker.hint.ones: 'Summe aller Würfel mit einer 1.'
+dicepoker.hint.twos: 'Summe aller Würfel mit einer 2.'
+dicepoker.hint.threes: 'Summe aller Würfel mit einer 3.'
+dicepoker.hint.fours: 'Summe aller Würfel mit einer 4.'
+dicepoker.hint.fives: 'Summe aller Würfel mit einer 5.'
+dicepoker.hint.sixes: 'Summe aller Würfel mit einer 6.'
+dicepoker.hint.three_of_a_kind: 'Mindestens drei gleiche Würfel – zählt die Summe aller fünf Würfel.'
+dicepoker.hint.four_of_a_kind: 'Mindestens vier gleiche Würfel – zählt die Summe aller fünf Würfel.'
+dicepoker.hint.full_house: 'Drei gleiche plus ein Paar – 25 Punkte.'
+dicepoker.hint.small_straight: 'Vier aufeinanderfolgende Würfel (z. B. 2-3-4-5) – 30 Punkte.'
+dicepoker.hint.large_straight: 'Fünf aufeinanderfolgende Würfel – 40 Punkte.'
+dicepoker.hint.five_of_a_kind: 'Alle fünf Würfel gleich – 50 Punkte.'
+dicepoker.hint.chance: 'Alles zählt – Summe aller fünf Würfel.'
+
+# --- Spielverlauf ---
+log.dicepoker.rolled: '%player% würfelt %values% (noch %left% Wurf/Würfe).'
+log.dicepoker.scored: '%player% trägt %points% Punkte bei „%category%" ein.'
+log.dicepoker.final: 'Endstand – %scores%.'
+log.dicepoker.won: '%player% gewinnt mit %points% Punkten!'
+
+# --- Fehler ---
+error.dicepoker.no_rolls_left: 'Keine Würfe mehr – trage eine Kategorie ein.'
+error.dicepoker.roll_first: 'Würfle zuerst.'
+error.dicepoker.unknown_die: 'Unbekannter Würfel.'
+error.dicepoker.no_rolls_hold: 'Keine Würfe mehr – Halten bringt jetzt nichts mehr.'
+error.dicepoker.unknown_category: 'Unbekannte Kategorie.'
+error.dicepoker.category_filled: 'Diese Kategorie ist schon gefüllt.'
+
+# --- Spielanleitung ---
+rules: |-
+    Pro Zug hast du bis zu drei Würfe. Klicke nach jedem Wurf Würfel an, um sie festzuhalten.
+    Trage dein Ergebnis dann in eine freie Kategorie ein – jede Kategorie nur einmal.
+    Oben (Einser bis Sechser) gibt es ab 63 Punkten +35 Bonus.
+    Nach 13 Runden gewinnt die höchste Gesamtsumme.

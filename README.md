@@ -5,16 +5,16 @@ There is a shared core of reusable building components and adding a new game mea
 
 There are currently 11 playable games:
 - Tic-Tac-Toe
-- Connect Four
+- Four in a Row
 - Checkers
-- Mensch ärgere Dich nicht
+- Ludo
 - Mau-Mau
 - Rummy
 - Koepknack (31)
 - Blackjack
-- Yahtzee
+- DicePoker
 - Solitaire
-- Elfer Raus! (Eleven Out)
+- Eleven Rush
 
 Stack:
 - Symfony 8.1 (with PHP 8.3)

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Game\Games\ElevenOut;
+namespace App\Game\Games\ElevenRush;
 
 use App\Game\Core\Card\CustomCard;
 use App\Game\Core\Card\DeckFactory;
@@ -23,17 +23,17 @@ final readonly class GameDefinition extends AbstractGameDefinition
 
     public function getId(): string
     {
-        return 'elevenout';
+        return 'elevenrush';
     }
 
     public function getName(): string
     {
-        return 'elevenout.name';
+        return 'elevenrush.name';
     }
 
     public function getDescription(): string
     {
-        return 'elevenout.description';
+        return 'elevenrush.description';
     }
 
     public function getIcon(): string
@@ -115,7 +115,7 @@ final readonly class GameDefinition extends AbstractGameDefinition
         $state->data['cardsPlayedThisTurn'] = 0;
         $state->data['drawCountThisTurn'] = 0;
 
-        $state->logGameEvent('log.elevenout.started');
+        $state->logGameEvent('log.elevenrush.started');
 
         return $state;
     }
@@ -136,7 +136,7 @@ final readonly class GameDefinition extends AbstractGameDefinition
 
     public function getTemplate(): string
     {
-        return 'game/elevenout/table.html.twig';
+        return 'game/elevenrush/table.html.twig';
     }
 
     public function buildView(GameState $state, ?string $viewerId): array
@@ -150,7 +150,7 @@ final readonly class GameDefinition extends AbstractGameDefinition
         $hand = $state->table->hand($player->id);
 
         if (!isset($hand->items[$cardIndex])) {
-            $this->invalidMove('error.elevenout.unknown_card');
+            $this->invalidMove('error.elevenrush.unknown_card');
         }
 
         /** @var CustomCard $card */
@@ -163,7 +163,7 @@ final readonly class GameDefinition extends AbstractGameDefinition
         ) : null;
 
         if (!$this->rules->playable($card, $state->data['board'], $startingElf)) {
-            $this->invalidMove('error.elevenout.not_playable');
+            $this->invalidMove('error.elevenrush.not_playable');
         }
 
         $hand->removeAt($cardIndex);
@@ -185,15 +185,15 @@ final readonly class GameDefinition extends AbstractGameDefinition
         $state->data['startingElf'] = null;
         $state->data['cardsPlayedThisTurn']++;
 
-        $state->logGameEvent('log.elevenout.played', [
+        $state->logGameEvent('log.elevenrush.played', [
             '%player%' => $player->nickname,
-            '%color%' => 't:elevenout.color.'.$card->color,
+            '%color%' => 't:elevenrush.color.'.$card->color,
             '%value%' => $card->value,
         ]);
 
         if ($hand->isEmpty()) {
             $state->finish($player->id);
-            $state->logGameEvent('log.elevenout.won', ['%player%' => $player->nickname]);
+            $state->logGameEvent('log.elevenrush.won', ['%player%' => $player->nickname]);
         }
     }
 
@@ -203,16 +203,16 @@ final readonly class GameDefinition extends AbstractGameDefinition
         $drawCount = $state->data['drawCountThisTurn'] ?? 0;
 
         if ($cardsPlayed > 0) {
-            $this->invalidMove('error.elevenout.cannot_draw_after_play');
+            $this->invalidMove('error.elevenrush.cannot_draw_after_play');
         }
 
         if ($drawCount >= 3) {
-            $this->invalidMove('error.elevenout.draw_limit_reached');
+            $this->invalidMove('error.elevenrush.draw_limit_reached');
         }
 
         $stock = $state->table->zone('stock');
         if ($stock->isEmpty()) {
-            $this->invalidMove('error.elevenout.stock_empty');
+            $this->invalidMove('error.elevenrush.stock_empty');
         }
 
         $player = $state->currentPlayer();
@@ -227,7 +227,7 @@ final readonly class GameDefinition extends AbstractGameDefinition
 
         $state->data['drawCountThisTurn']++;
 
-        $state->logGameEvent('log.elevenout.drew', [
+        $state->logGameEvent('log.elevenrush.drew', [
             '%player%' => $player->nickname,
         ]);
     }
@@ -238,10 +238,10 @@ final readonly class GameDefinition extends AbstractGameDefinition
         $drawCount = $state->data['drawCountThisTurn'] ?? 0;
 
         if ($cardsPlayed === 0 && $drawCount === 0) {
-            $this->invalidMove('error.elevenout.must_act');
+            $this->invalidMove('error.elevenrush.must_act');
         }
 
-        $state->logGameEvent('log.elevenout.passed', [
+        $state->logGameEvent('log.elevenrush.passed', [
             '%player%' => $state->currentPlayer()->nickname,
             '%count%' => $cardsPlayed,
         ]);

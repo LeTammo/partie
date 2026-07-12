@@ -1,0 +1,30 @@
+elevenrush.name: "11er-Rennen"
+elevenrush.description: "Lege deine Zahlenkarten clever in Viererreihen ab. Wer zuerst alle Karten abgelegt hat, gewinnt!"
+elevenrush.your_hand: "Deine Hand"
+elevenrush.draw: "Karte nachziehen"
+elevenrush.pass: "Zug beenden"
+elevenrush.stock: "Nachziehstapel (%count%)"
+elevenrush.status_turn: "Gezogen: %drawCount%/3 | Gelegt: %cardsPlayed% Karte(n)"
+
+log.elevenrush.started: "Das Spiel '11er-Rennen' wurde gestartet."
+log.elevenrush.starting_card: "Die Startkarte auf der Hand ist %color% %value%."
+log.elevenrush.played: "%player% hat %color% %value% angelegt."
+log.elevenrush.drew: "%player% hat eine Karte nachgezogen."
+log.elevenrush.passed: "%player% hat den Zug beendet (Karten gelegt: %count%)."
+log.elevenrush.won: "%player% hat alle Karten abgelegt und das Spiel gewonnen!"
+
+error.elevenrush.unknown_card: "Ungültige Karte gewählt."
+error.elevenrush.not_playable: "Diese Karte kann zurzeit nicht angelegt werden."
+error.elevenrush.must_act: "Du musst mindestens eine Karte legen oder nachziehen, bevor du deinen Zug beenden kannst."
+error.elevenrush.cannot_draw_after_play: "Du darfst keine Karten mehr ziehen, nachdem du in diesem Zug bereits Karten angelegt hast."
+error.elevenrush.draw_limit_reached: "Du darfst höchstens 3 Karten pro Zug nachziehen."
+error.elevenrush.stock_empty: "Der Nachziehstapel ist leer."
+
+# --- Spielanleitung ---
+rules: |-
+    Ziel des Spiels ist es, als erster Spieler alle Handkarten abzulegen.
+    Das Spiel wird immer mit der roten Elf eröffnet; fehlt diese, gilt die Reihenfolge Gelb/Orange, Grün, Blau für die erste Elf.
+    In deinem Zug darfst du beliebig viele passende Karten anlegen (jeweils um eins höher oder niedriger in derselben Farbe).
+    Du musst mindestens eine Karte ausspielen, wenn du regelkonform anlegen kannst.
+    Kannst du keine Karte ablegen, musst du bis zu drei Karten nacheinander vom verdeckten Stapel ziehen.
+    Du darfst passende Karten taktisch zurückhalten, um Mitspieler zu blockieren, solange du dennoch mindestens eine andere Karte ausspielst.

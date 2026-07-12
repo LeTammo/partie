@@ -1,4 +1,4 @@
-{% trans_default_domain 'elevenout' %}
+{% trans_default_domain 'elevenrush' %}
 <div class="space-y-6" data-controller="optimistic">
     {# ---------- players ---------- #}
     <div class="flex flex-wrap justify-center gap-3">
@@ -52,10 +52,10 @@
             back: true,
             key: 'eo-pile-back',
             count: view.stockCount,
-            label: 'elevenout.stock'|trans({'%count%': view.stockCount}),
+            label: 'elevenrush.stock'|trans({'%count%': view.stockCount}),
             form: {
                 action: 'draw',
-                title: 'elevenout.draw'|trans,
+                title: 'elevenrush.draw'|trans,
                 disabled: not view.canDraw,
                 ghostFrom: '#eo-pile-back',
                 ghostTo: '#eo-handzone',
@@ -67,7 +67,7 @@
     {% if view.hand is not empty %}
         <div>
             <p class="mb-3 text-center text-sm font-extrabold uppercase tracking-wide text-warmgray-400">
-                {{ 'elevenout.your_hand'|trans }}
+                {{ 'elevenrush.your_hand'|trans }}
             </p>
             <div id="eo-handzone" class="flex flex-wrap justify-center gap-3 rounded-2xl p-4 transition">
                 {% for card in view.hand %}
@@ -99,7 +99,7 @@
     {% if view.myTurn %}
         <div class="space-y-3 text-center">
             <p class="text-xs font-semibold text-warmgray-500">
-                {{ 'elevenout.status_turn'|trans({
+                {{ 'elevenrush.status_turn'|trans({
                     '%drawCount%': view.drawCount,
                     '%cardsPlayed%': view.cardsPlayed
                 }) }}
@@ -109,7 +109,7 @@
                     <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
                     <input type="hidden" name="action" value="pass">
                     <button type="submit" class="btn btn-primary shadow-lifted cursor-pointer">
-                        {{ 'elevenout.pass'|trans }}
+                        {{ 'elevenrush.pass'|trans }}
                     </button>
                 </form>
             {% endif %}

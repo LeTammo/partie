@@ -61,7 +61,7 @@ Stimulus runs actions in attribute order.
 Default `into` is the form's own button, default `where` is `append` - the
 template's content gets appended into the button that was just clicked.
 
-With an explicit `into` (Connect Four - the column, not the button, and the
+With an explicit `into` (Four in a Row - the column, not the button, and the
 disc falls to the lowest *empty* cell):
 
 ```twig
@@ -70,7 +70,7 @@ disc falls to the lowest *empty* cell):
       data-optimistic-where-param="last-empty">
 ```
 
-### `replace` - an "already happened" state (Yahtzee scoring)
+### `replace` - an "already happened" state (DicePoker scoring)
 
 ```twig
 <form data-action="submit->optimistic#replace">
@@ -105,7 +105,7 @@ The actual drawn card is server-side and unknown - a clone of the face-down
 pile card travels toward the hand, then the morph deals the real card in
 with its own entry animation.
 
-### `toggle` / `pending` - dice (Yahtzee)
+### `toggle` / `pending` - dice (DicePoker)
 
 ```twig
 <button data-die data-locked="{{ die.locked ? 'true' : 'false' }}"

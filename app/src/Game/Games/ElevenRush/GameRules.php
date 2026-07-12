@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Game\Games\ElevenOut;
+namespace App\Game\Games\ElevenRush;
 
 use App\Game\Core\Card\CustomCard;
 

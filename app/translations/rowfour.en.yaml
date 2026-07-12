@@ -1,0 +1,20 @@
+# --- Board ---
+rowfour.drop: 'Drop into column %column%'
+
+# --- Settings ---
+setting.rowfour.connect_count: 'Discs in a row to win'
+setting.rowfour.board_width: 'Board width'
+setting.rowfour.board_height: 'Board height'
+
+# --- Game log ---
+log.rowfour.dropped: '%player% dropped a disc into column %column%.'
+log.rowfour.won: '%player% connected four!'
+
+# --- Errors ---
+error.column_full: 'This column is full.'
+
+# --- How to play ---
+rules: |-
+    Take turns dropping a disc into a column – it falls as far down as it can.
+    The first player to get four of their discs in a row – horizontally, vertically or diagonally – wins.
+    If the board fills up, the game is a draw.

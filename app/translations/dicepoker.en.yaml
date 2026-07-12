@@ -1,0 +1,58 @@
+# --- Table ---
+dicepoker.category: 'Category'
+dicepoker.upper_bonus: 'Upper bonus (63 → +35)'
+dicepoker.total: 'Total'
+
+# --- Settings ---
+setting.dicepoker.rolls_per_turn: 'Rolls per turn'
+
+# --- Categories ---
+dicepoker.category.ones: 'Ones'
+dicepoker.category.twos: 'Twos'
+dicepoker.category.threes: 'Threes'
+dicepoker.category.fours: 'Fours'
+dicepoker.category.fives: 'Fives'
+dicepoker.category.sixes: 'Sixes'
+dicepoker.category.three_of_a_kind: 'Three of a Kind'
+dicepoker.category.four_of_a_kind: 'Four of a Kind'
+dicepoker.category.full_house: 'Full House'
+dicepoker.category.small_straight: 'Small Straight'
+dicepoker.category.large_straight: 'Large Straight'
+dicepoker.category.five_of_a_kind: 'Five of a Kind'
+dicepoker.category.chance: 'Chance'
+
+# --- Category tooltips ---
+dicepoker.hint.ones: 'Sum of all dice showing 1.'
+dicepoker.hint.twos: 'Sum of all dice showing 2.'
+dicepoker.hint.threes: 'Sum of all dice showing 3.'
+dicepoker.hint.fours: 'Sum of all dice showing 4.'
+dicepoker.hint.fives: 'Sum of all dice showing 5.'
+dicepoker.hint.sixes: 'Sum of all dice showing 6.'
+dicepoker.hint.three_of_a_kind: 'At least three equal dice – scores the sum of all five dice.'
+dicepoker.hint.four_of_a_kind: 'At least four equal dice – scores the sum of all five dice.'
+dicepoker.hint.full_house: 'Three of a kind plus a pair – 25 points.'
+dicepoker.hint.small_straight: 'Four consecutive dice (e.g. 2-3-4-5) – 30 points.'
+dicepoker.hint.large_straight: 'Five consecutive dice – 40 points.'
+dicepoker.hint.five_of_a_kind: 'All five dice equal – 50 points.'
+dicepoker.hint.chance: 'Anything goes – sum of all five dice.'
+
+# --- Game log ---
+log.dicepoker.rolled: '%player% rolled %values% (%left% roll(s) left).'
+log.dicepoker.scored: '%player% scored %points% points on "%category%".'
+log.dicepoker.final: 'Final scores – %scores%.'
+log.dicepoker.won: '%player% wins with %points% points!'
+
+# --- Errors ---
+error.dicepoker.no_rolls_left: 'No rolls left – pick a category to score.'
+error.dicepoker.roll_first: 'Roll the dice first.'
+error.dicepoker.unknown_die: 'Unknown die.'
+error.dicepoker.no_rolls_hold: 'No rolls left – holding dice has no effect now.'
+error.dicepoker.unknown_category: 'Unknown category.'
+error.dicepoker.category_filled: 'That category is already filled.'
+
+# --- How to play ---
+rules: |-
+    On your turn you have up to three rolls. After each roll, click dice to hold them.
+    Then score your dice in a free category – each category can only be used once.
+    The upper section (Ones to Sixes) pays a +35 bonus once you reach 63 points there.
+    After 13 rounds, the highest total score wins.

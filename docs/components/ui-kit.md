@@ -8,7 +8,7 @@ with.
 `assets/styles/app.css` defines the shape once and four color variants:
 
 ```twig
-<button class="btn btn-primary">{{ 'yahtzee.roll'|trans }}</button>
+<button class="btn btn-primary">{{ 'dicepoker.roll'|trans }}</button>
 <button class="btn btn-neutral">{{ 'maumau.pass'|trans }}</button>
 <button class="btn btn-confirm">{{ 'koepknack.new_round'|trans }}</button>
 <button class="btn btn-info">{{ 'rummy.takeback'|trans }}</button>

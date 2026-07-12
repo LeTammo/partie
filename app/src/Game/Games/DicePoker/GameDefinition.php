@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Game\Games\Yahtzee;
+namespace App\Game\Games\DicePoker;
 
 use App\Game\Core\Exception\InvalidMoveException;
 use App\Game\Core\Model\Dice;
@@ -24,17 +24,17 @@ final readonly class GameDefinition extends AbstractGameDefinition
 
     public function getId(): string
     {
-        return 'yahtzee';
+        return 'dicepoker';
     }
 
     public function getName(): string
     {
-        return 'game.yahtzee.name';
+        return 'game.dicepoker.name';
     }
 
     public function getDescription(): string
     {
-        return 'game.yahtzee.description';
+        return 'game.dicepoker.description';
     }
 
     public function getIcon(): string
@@ -57,7 +57,7 @@ final readonly class GameDefinition extends AbstractGameDefinition
         return [
             new GameSetting(
                 key: 'rollsPerTurn',
-                labelKey: 'setting.yahtzee.rolls_per_turn',
+                labelKey: 'setting.dicepoker.rolls_per_turn',
                 type: GameSettingType::Int,
                 default: self::ROLLS_PER_TURN,
                 min: 1,
@@ -102,7 +102,7 @@ final readonly class GameDefinition extends AbstractGameDefinition
 
     public function getTemplate(): string
     {
-        return 'game/yahtzee/table.html.twig';
+        return 'game/dicepoker/table.html.twig';
     }
 
     public function buildView(GameState $state, ?string $viewerId): array
@@ -113,7 +113,7 @@ final readonly class GameDefinition extends AbstractGameDefinition
     private function roll(GameState $state): void
     {
         if ($state->data['rollsLeft'] <= 0) {
-            $this->invalidMove('error.yahtzee.no_rolls_left');
+            $this->invalidMove('error.dicepoker.no_rolls_left');
         }
 
         foreach ($state->dice as $die) {
@@ -123,7 +123,7 @@ final readonly class GameDefinition extends AbstractGameDefinition
         $state->data['hasRolled'] = true;
 
         $values = implode(' ', array_map(static fn (Dice $d): int => $d->value, $state->dice));
-        $state->logGameEvent('log.yahtzee.rolled', [
+        $state->logGameEvent('log.dicepoker.rolled', [
             '%player%' => $state->currentPlayer()->nickname,
             '%values%' => $values,
             '%left%' => $state->data['rollsLeft'],
@@ -133,13 +133,13 @@ final readonly class GameDefinition extends AbstractGameDefinition
     private function toggleLock(GameState $state, int $index): void
     {
         if (!$state->data['hasRolled']) {
-            $this->invalidMove('error.yahtzee.roll_first');
+            $this->invalidMove('error.dicepoker.roll_first');
         }
         if (!isset($state->dice[$index])) {
-            $this->invalidMove('error.yahtzee.unknown_die');
+            $this->invalidMove('error.dicepoker.unknown_die');
         }
         if ($state->data['rollsLeft'] <= 0) {
-            $this->invalidMove('error.yahtzee.no_rolls_hold');
+            $this->invalidMove('error.dicepoker.no_rolls_hold');
         }
 
         $state->dice[$index]->toggleLock();
@@ -148,15 +148,15 @@ final readonly class GameDefinition extends AbstractGameDefinition
     private function scoreCategory(GameState $state, string $playerId, string $category): void
     {
         if (!$state->data['hasRolled']) {
-            $this->invalidMove('error.yahtzee.roll_first');
+            $this->invalidMove('error.dicepoker.roll_first');
         }
 
         $scorecard = &$state->data['scorecards'][$playerId];
         if (!\array_key_exists($category, $scorecard)) {
-            $this->invalidMove('error.yahtzee.unknown_category');
+            $this->invalidMove('error.dicepoker.unknown_category');
         }
         if (null !== $scorecard[$category]) {
-            $this->invalidMove('error.yahtzee.category_filled');
+            $this->invalidMove('error.dicepoker.category_filled');
         }
 
         $values = array_map(static fn (Dice $d): int => $d->value, $state->dice);
@@ -164,10 +164,10 @@ final readonly class GameDefinition extends AbstractGameDefinition
         $scorecard[$category] = $points;
 
         $player = $state->currentPlayer();
-        $state->logGameEvent('log.yahtzee.scored', [
+        $state->logGameEvent('log.dicepoker.scored', [
             '%player%' => $player->nickname,
             '%points%' => $points,
-            '%category%' => 't:yahtzee:yahtzee.category.'.$category,
+            '%category%' => 't:dicepoker:dicepoker.category.'.$category,
         ]);
 
         foreach ($state->dice as $die) {
@@ -213,9 +213,9 @@ final readonly class GameDefinition extends AbstractGameDefinition
         }
 
         $state->finish($best?->id);
-        $state->logGameEvent('log.yahtzee.final', ['%scores%' => implode(', ', $totals)]);
+        $state->logGameEvent('log.dicepoker.final', ['%scores%' => implode(', ', $totals)]);
         if (null !== $best) {
-            $state->logGameEvent('log.yahtzee.won', ['%player%' => $best->nickname, '%points%' => $bestScore]);
+            $state->logGameEvent('log.dicepoker.won', ['%player%' => $best->nickname, '%points%' => $bestScore]);
         }
     }
 }

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Game\Games\ConnectFour;
+namespace App\Game\Games\RowFour;
 
 use App\Game\Core\Exception\InvalidMoveException;
 use App\Game\Core\Model\Board;
@@ -29,22 +29,22 @@ final readonly class GameDefinition extends AbstractGameDefinition
 
     public function getId(): string
     {
-        return 'connectfour';
+        return 'rowfour';
     }
 
     public function getName(): string
     {
-        return 'game.connectfour.name';
+        return 'game.rowfour.name';
     }
 
     public function getDescription(): string
     {
-        return 'game.connectfour.description';
+        return 'game.rowfour.description';
     }
 
     public function getIcon(): string
     {
-        return 'connectfour';
+        return 'rowfour';
     }
 
     public function getMinPlayers(): int
@@ -62,7 +62,7 @@ final readonly class GameDefinition extends AbstractGameDefinition
         return [
             new GameSetting(
                 key: 'boardWidth',
-                labelKey: 'setting.connectfour.board_width',
+                labelKey: 'setting.rowfour.board_width',
                 type: GameSettingType::Int,
                 default: 7,
                 min: 4,
@@ -70,7 +70,7 @@ final readonly class GameDefinition extends AbstractGameDefinition
             ),
             new GameSetting(
                 key: 'boardHeight',
-                labelKey: 'setting.connectfour.board_height',
+                labelKey: 'setting.rowfour.board_height',
                 type: GameSettingType::Int,
                 default: 6,
                 min: 4,
@@ -78,7 +78,7 @@ final readonly class GameDefinition extends AbstractGameDefinition
             ),
             new GameSetting(
                 key: 'connectCount',
-                labelKey: 'setting.connectfour.connect_count',
+                labelKey: 'setting.rowfour.connect_count',
                 type: GameSettingType::Int,
                 default: 4,
                 min: 3,
@@ -126,12 +126,12 @@ final readonly class GameDefinition extends AbstractGameDefinition
             centerColor: $inner,
         ));
 
-        $state->logGameEvent('log.connectfour.dropped', ['%player%' => $player->nickname, '%column%' => $column + 1]);
+        $state->logGameEvent('log.rowfour.dropped', ['%player%' => $player->nickname, '%column%' => $column + 1]);
 
         $connectCount = (int) ($this->setting($state, 'connectCount') ?? 4);
         if ($this->rules->isWinningMove($state->board, $column, $y, $connectCount)) {
             $state->finish($playerId);
-            $state->logGameEvent('log.connectfour.won', ['%player%' => $player->nickname]);
+            $state->logGameEvent('log.rowfour.won', ['%player%' => $player->nickname]);
         } elseif ($this->rules->isBoardFull($state->board)) {
             $state->finish(null);
             $state->logEvent('log.draw_full');
@@ -142,7 +142,7 @@ final readonly class GameDefinition extends AbstractGameDefinition
 
     public function getTemplate(): string
     {
-        return 'game/connectfour/board.html.twig';
+        return 'game/rowfour/board.html.twig';
     }
 
     public function buildView(GameState $state, ?string $viewerId): array

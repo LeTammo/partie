@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Game\Games\ConnectFour;
+namespace App\Game\Games\RowFour;
 
 use App\Game\Core\Model\Board;
 

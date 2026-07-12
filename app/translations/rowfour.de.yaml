@@ -1,14 +1,14 @@
 # --- Brett ---
-connectfour.drop: 'In Spalte %column% einwerfen'
+rowfour.drop: 'In Spalte %column% einwerfen'
 
 # --- Einstellungen ---
-setting.connectfour.connect_count: 'Steine in einer Reihe zum Gewinnen'
-setting.connectfour.board_width: 'Spielfeldbreite'
-setting.connectfour.board_height: 'Spielfeldhöhe'
+setting.rowfour.connect_count: 'Steine in einer Reihe zum Gewinnen'
+setting.rowfour.board_width: 'Spielfeldbreite'
+setting.rowfour.board_height: 'Spielfeldhöhe'
 
 # --- Spielverlauf ---
-log.connectfour.dropped: '%player% wirft einen Stein in Spalte %column%.'
-log.connectfour.won: '%player% hat vier verbunden!'
+log.rowfour.dropped: '%player% wirft einen Stein in Spalte %column%.'
+log.rowfour.won: '%player% hat vier verbunden!'
 
 # --- Fehler ---
 error.column_full: 'Diese Spalte ist voll.'

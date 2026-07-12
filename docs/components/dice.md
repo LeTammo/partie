@@ -1,6 +1,6 @@
 # Dice
 
-For Yahtzee, Ludo, and any future dice game.
+For DicePoker, Ludo, and any future dice game.
 
 ## `Dice` (`src/Game/Core/Model/Dice.php`)
 
@@ -27,7 +27,7 @@ An SVG die face - pips for numbers, a char for custom faces:
 {% include 'components/die.html.twig' with {value: die.value, symbol: die.face, class: 'size-20'} only %}
 ```
 
-`face`/`pip` are just colors - Yahtzee uses the current player's color for
+`face`/`pip` are just colors - DicePoker uses the current player's color for
 `face`, but there's no rule tying them to anything.
 
 ## `components/die_roller.html.twig`

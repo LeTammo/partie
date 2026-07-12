@@ -1,6 +1,6 @@
 {# A choice/score sheet: category rows × player columns, where a cell is a
    filled score, a clickable potential score (submits action+category), or
-   an empty dot. For Yahtzee-style "roll then pick a category" games.
+   an empty dot. For DicePoker-style "roll then pick a category" games.
    Include WITHOUT `only` - the score forms need `lobby`.
    How to use, see docs/components/score-sheet.md
 
@@ -9,13 +9,13 @@
                   (cells in player seat order)
    - players:     list of {nickname, color} in seat order
    - domain:      translation domain for category labels/hints
-   - labelPrefix: category label key prefix, e.g. 'yahtzee.category.'
-   - hintPrefix:  optional tooltip key prefix, e.g. 'yahtzee.hint.'
+   - labelPrefix: category label key prefix, e.g. 'dicepoker.category.'
+   - hintPrefix:  optional tooltip key prefix, e.g. 'dicepoker.hint.'
    - canScore:    whether potential cells are clickable for the viewer
    - action:      move action value (default 'score')
    - inserts:     optional map category => {title, values: list<string>} -
                   an extra summary tile rendered after that category's tile
-                  (Yahtzee's upper bonus)
+                  (DicePoker's upper bonus)
    - totals:      optional {title, values: list<string|int>} footer bar
 #}
 {% set multiplayer = players|length > 1 %}

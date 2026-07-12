@@ -1,4 +1,4 @@
-{% trans_default_domain 'yahtzee' %}
+{% trans_default_domain 'dicepoker' %}
 <div class="space-y-6" data-controller="optimistic">
     {# ---------- dice tray ---------- #}
     {% include 'components/dice_tray.html.twig' with {
@@ -15,13 +15,13 @@
     {% include 'components/score_sheet.html.twig' with {
         rows: view.rows,
         players: view.players,
-        domain: 'yahtzee',
-        labelPrefix: 'yahtzee.category.',
-        hintPrefix: 'yahtzee.hint.',
+        domain: 'dicepoker',
+        labelPrefix: 'dicepoker.category.',
+        hintPrefix: 'dicepoker.hint.',
         canScore: view.canScore,
         inserts: {
-            sixes: {title: 'yahtzee.upper_bonus'|trans, values: view.upperBonusValues},
+            sixes: {title: 'dicepoker.upper_bonus'|trans, values: view.upperBonusValues},
         },
-        totals: {title: 'yahtzee.total'|trans, values: view.totals},
+        totals: {title: 'dicepoker.total'|trans, values: view.totals},
     } %}
 </div>

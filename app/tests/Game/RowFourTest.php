@@ -6,11 +6,11 @@ namespace App\Tests\Game;
 
 use App\Game\Core\Exception\InvalidMoveException;
 use App\Game\Core\Model\GameStatus;
-use App\Game\Games\ConnectFour\GameDefinition;
-use App\Game\Games\ConnectFour\GameRenderer;
-use App\Game\Games\ConnectFour\GameRules;
+use App\Game\Games\RowFour\GameDefinition;
+use App\Game\Games\RowFour\GameRenderer;
+use App\Game\Games\RowFour\GameRules;
 
-final class ConnectFourTest extends GameTestCase
+final class RowFourTest extends GameTestCase
 {
     private GameDefinition $game;
 

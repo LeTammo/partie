@@ -6,7 +6,7 @@ namespace App\Game\Core\Rules;
 
 use App\Game\Core\Model\Board;
 
-// Gravity drop for rack games (Connect Four): a piece dropped into a
+// Gravity drop for rack games: a piece dropped into a
 // column lands on the lowest empty cell.
 // How to use, see
 // docs/components/tokens-and-boards.md

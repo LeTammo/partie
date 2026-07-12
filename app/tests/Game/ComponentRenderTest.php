@@ -40,7 +40,7 @@ final class ComponentRenderTest extends KernelTestCase
         self::assertStringContainsString('data-flip-id="piece-x"', $html);
         self::assertStringContainsString('ring-2', $html);
 
-        // center dot only (ConnectFour/Checkers look)
+        // center dot only (RowFour/Checkers look)
         $html = $this->twig->render('components/token.html.twig', [
             'outer' => '#aaa', 'center' => '#bbb', 'centerSize' => 45,
         ]);

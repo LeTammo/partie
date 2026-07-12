@@ -7,11 +7,11 @@ namespace App\Tests\Game;
 use App\Game\Core\Exception\InvalidMoveException;
 use App\Game\Core\Model\GameState;
 use App\Game\Core\Model\GameStatus;
-use App\Game\Games\Yahtzee\GameDefinition;
-use App\Game\Games\Yahtzee\GameRenderer;
-use App\Game\Games\Yahtzee\GameRules;
+use App\Game\Games\DicePoker\GameDefinition;
+use App\Game\Games\DicePoker\GameRenderer;
+use App\Game\Games\DicePoker\GameRules;
 
-final class YahtzeeTest extends GameTestCase
+final class DicePokerTest extends GameTestCase
 {
     private GameRules $rules;
     private GameDefinition $game;
@@ -33,7 +33,7 @@ final class YahtzeeTest extends GameTestCase
         self::assertSame(30, $this->rules->score('small_straight', [1, 2, 3, 4, 6]));
         self::assertSame(0, $this->rules->score('small_straight', [1, 2, 3, 5, 6]));
         self::assertSame(40, $this->rules->score('large_straight', [2, 3, 4, 5, 6]));
-        self::assertSame(50, $this->rules->score('yahtzee', [4, 4, 4, 4, 4]));
+        self::assertSame(50, $this->rules->score('dicepoker', [4, 4, 4, 4, 4]));
         self::assertSame(18, $this->rules->score('chance', [1, 2, 3, 6, 6]));
     }
 

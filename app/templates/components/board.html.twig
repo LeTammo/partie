@@ -1,6 +1,6 @@
 {# The one grid-board component: renders a CSS grid of cells with optional
    tokens, piece-move zone wiring, click-to-place form cells, decorative
-   layers, and an optional gravity drop-row (Connect Four).
+   layers, and an optional gravity drop-row.
    Include WITHOUT `only` - form cells and the drop row need `lobby`.
    The surrounding game root carries the dragdrop--piece-move controller +
    moves map when zones are used.
@@ -24,7 +24,7 @@
                  buttonClass, buttonAria, template: token params for the
                  optimistic insert}
    - board.panelClass: wraps the grid (not the drop row) in a panel div
-   - board.drop: gravity drop-row above the grid (Connect Four):
+   - board.drop: gravity drop-row above the grid:
        {columns: list of {column, playable, aria}, buttonClass,
         template: token params for the optimistic insert}
        Cells must carry attr {'data-col': x} for the insert target.

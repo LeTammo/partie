@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Game\Games\ConnectFour;
+namespace App\Game\Games\RowFour;
 
 use App\Game\Core\Model\GameState;
 use App\Game\Core\Model\GameStatus;
@@ -48,7 +48,7 @@ final readonly class GameRenderer
                 'playable' => $myTurn
                     && GameStatus::Running === $state->status
                     && null !== Gravity::dropRow($board, $x),
-                'aria' => $this->translator->trans('connectfour.drop', ['%column%' => $x + 1], 'connectfour'),
+                'aria' => $this->translator->trans('rowfour.drop', ['%column%' => $x + 1], 'rowfour'),
             ];
         }
 

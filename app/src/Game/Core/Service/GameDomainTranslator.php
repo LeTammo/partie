@@ -15,7 +15,7 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 // embeds would fall back to the 'messages' domain and show up raw. This
 // decorator retries a key that is missing in 'messages' against the domain
 // named inside the key itself ('setting.solitaire.draw_one' -> 'solitaire',
-// 'log.elevenout.won' -> 'elevenout'), so templates never need to pass a
+// 'log.elevenrush.won' -> 'elevenrush'), so templates never need to pass a
 // domain explicitly.
 #[AsDecorator('translator')]
 final class GameDomainTranslator implements TranslatorInterface, TranslatorBagInterface, LocaleAwareInterface

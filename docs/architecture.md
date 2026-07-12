@@ -18,12 +18,12 @@ src/Game/
 │   │                         GameSettingsResolver, GameRegistry, LobbyManager, GameBroadcaster, PlayerSession
 │   └── Exception/            GameException, InvalidMoveException, LobbyNotFoundException
 └── Games/
-    ├── TicTacToe/, ConnectFour/, Checkers/   grid games
+    ├── TicTacToe/, RowFour/, Checkers/   grid games
     ├── Ludo/                                 track/race game (Path over an 11x11 board)
     ├── MauMau/, Rummy/, Koepknack/           card games
     ├── Solitaire/, ElevenOut/                card games on zones
     ├── Blackjack/                            card game, dealer auto-plays
-    └── Yahtzee/                              dice game with a score sheet
+    └── DicePoker/                              dice game with a score sheet
     (each: GameDefinition + GameRules + GameRenderer)
 ```
 
