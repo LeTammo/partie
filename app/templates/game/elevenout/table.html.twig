@@ -1,0 +1,118 @@
+{% trans_default_domain 'elevenout' %}
+<div class="space-y-6" data-controller="optimistic">
+    {# ---------- players ---------- #}
+    <div class="flex flex-wrap justify-center gap-3">
+        {% for p in view.players %}
+            {% embed 'components/player_banner.html.twig' with {p: p} %}
+                {% block extra %}
+                    <span class="inline-flex items-center gap-1 text-sm font-extrabold text-warmgray-400">
+                        {% include 'icons/card-fan.svg.twig' with {class: 'size-4'} only %}
+                        {{ p.cardCount }}
+                    </span>
+                {% endblock %}
+            {% endembed %}
+        {% endfor %}
+    </div>
+
+    {# ---------- board: one growing sequence per color ---------- #}
+    {% embed 'components/table_area.html.twig' %}
+        {% block body %}
+            <div class="mx-auto max-w-xl space-y-4">
+                {% for color, range in view.board %}
+                    {% set rowTheme = {
+                        red: 'bg-terracotta-50/60 border-terracotta-100',
+                        yellow: 'bg-sunny-50/60 border-sunny-100',
+                        green: 'bg-sage-50/60 border-sage-100',
+                        blue: 'bg-softblue-50/60 border-softblue-100',
+                    }[color] %}
+                    <div class="flex items-center gap-4 rounded-2xl border p-3 shadow-inner {{ rowTheme }}">
+                        <div id="eo-row-{{ color }}" class="flex min-h-16 flex-1 items-center gap-2 overflow-x-auto">
+                            {% if range.min is not null %}
+                                {% for val in range.min..range.max %}
+                                    {% include 'components/card.html.twig' with {
+                                        value: val,
+                                        color: color,
+                                        size: 'sm',
+                                        key: 'eo-board-' ~ color ~ '-' ~ val,
+                                        flip: 'eo-' ~ color ~ '-' ~ val,
+                                        exit: 'none',
+                                    } only %}
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endblock %}
+    {% endembed %}
+
+    {# ---------- stock ---------- #}
+    <div class="flex justify-center gap-6">
+        {% include 'components/pile.html.twig' with {
+            back: true,
+            key: 'eo-pile-back',
+            count: view.stockCount,
+            label: 'elevenout.stock'|trans({'%count%': view.stockCount}),
+            form: {
+                action: 'draw',
+                title: 'elevenout.draw'|trans,
+                disabled: not view.canDraw,
+                ghostFrom: '#eo-pile-back',
+                ghostTo: '#eo-handzone',
+            },
+        } %}
+    </div>
+
+    {# ---------- own hand ---------- #}
+    {% if view.hand is not empty %}
+        <div>
+            <p class="mb-3 text-center text-sm font-extrabold uppercase tracking-wide text-warmgray-400">
+                {{ 'elevenout.your_hand'|trans }}
+            </p>
+            <div id="eo-handzone" class="flex flex-wrap justify-center gap-3 rounded-2xl p-4 transition">
+                {% for card in view.hand %}
+                    <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}" class="text-center"
+                          data-action="submit->optimistic#move"
+                          data-optimistic-to-param="#eo-row-{{ card.color }}"
+                          data-optimistic-mode-param="append"
+                          data-optimistic-id-param="eo-board-{{ card.identity }}">
+                        <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
+                        <input type="hidden" name="action" value="play">
+                        <input type="hidden" name="card" value="{{ card.index }}">
+                        <button type="submit"
+                                {% if not card.playable %}disabled{% endif %}
+                                class="block rounded-xl transition enabled:cursor-pointer enabled:hover:-translate-y-1.5 enabled:hover:shadow-lifted
+                                       {{ not card.playable and view.myTurn ? 'opacity-40' }}">
+                            {% include 'components/card.html.twig' with card|merge({
+                                key: 'eo-hand-' ~ card.identity,
+                                flip: 'eo-' ~ card.identity,
+                                exit: 'none',
+                            }) only %}
+                        </button>
+                    </form>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
+    {# ---------- actions ---------- #}
+    {% if view.myTurn %}
+        <div class="space-y-3 text-center">
+            <p class="text-xs font-semibold text-warmgray-500">
+                {{ 'elevenout.status_turn'|trans({
+                    '%drawCount%': view.drawCount,
+                    '%cardsPlayed%': view.cardsPlayed
+                }) }}
+            </p>
+            {% if view.canPass %}
+                <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}">
+                    <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
+                    <input type="hidden" name="action" value="pass">
+                    <button type="submit" class="btn btn-primary shadow-lifted cursor-pointer">
+                        {{ 'elevenout.pass'|trans }}
+                    </button>
+                </form>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>

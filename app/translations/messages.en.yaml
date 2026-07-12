@@ -38,6 +38,8 @@ game.ludo.name: 'Ludo'
 game.ludo.description: 'Roll a six to start, race your pawns home, and send opponents back to base.'
 game.solitaire.name: 'Solitaire'
 game.solitaire.description: 'Classic Klondike - build up the foundations, alone against the deck.'
+elevenout.name: 'Eleven Out!'
+elevenout.description: 'Strategically play number cards, block your opponents, and then suddenly bring the game to an end.'
 
 # --- Lobby ---
 lobby.status.waiting: 'waiting for players'

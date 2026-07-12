@@ -38,6 +38,8 @@ game.ludo.name: 'Mensch ärgere Dich nicht'
 game.ludo.description: 'Wirf eine Sechs zum Start, bring deine Figuren ins Ziel und schick Gegner zurück ins Haus.'
 game.solitaire.name: 'Solitaire'
 game.solitaire.description: 'Klassisches Klondike - baue die Ablagestapel auf, ganz allein gegen die Karten.'
+elevenout.name: 'Elver Raus!'
+elevenout.description: 'Zahlenkarten clever anlegen, die anderen Mitspielenden blockieren und dann plötzlich Schluss machen.'
 
 # --- Lobby ---
 lobby.status.waiting: 'wartet auf Spieler'
