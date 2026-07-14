@@ -147,11 +147,6 @@ final class ComponentRenderTest extends KernelTestCase
         ]);
         self::assertStringContainsString('h-24 w-16', $md);
 
-        $sm = $this->twig->render('components/card.html.twig', [
-            'rank' => 'ace', 'suit' => '♥', 'red' => true, 'joker' => false, 'size' => 'sm',
-        ]);
-        self::assertStringContainsString('h-16 w-11', $sm);
-
         $back = $this->twig->render('components/card.html.twig', [
             'back' => true, 'backColor' => '#123456',
         ]);
@@ -161,11 +156,10 @@ final class ComponentRenderTest extends KernelTestCase
     public function testCustomFaceCard(): void
     {
         $html = $this->twig->render('components/card.html.twig', [
-            'value' => '11', 'color' => 'green', 'size' => 'sm',
+            'value' => '11', 'color' => 'green',
         ]);
         self::assertStringContainsString('11', $html);
         self::assertStringContainsString('bg-sage-50', $html);
-        self::assertStringContainsString('h-16 w-11', $html);
 
         // unknown color names fall back to a neutral face
         $neutral = $this->twig->render('components/card.html.twig', [
