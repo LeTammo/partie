@@ -74,10 +74,16 @@ public function settings(): array
 | `GameSettingType::Int` | `min`, `max` | Blackjack's `startChips` (20-1000) |
 | `GameSettingType::Enum` | `options` (`array<string, string>`, value-as-string => translation key) | Mau-Mau's `skipRank` (one card rank per option) |
 
+Any `GameSetting` can also carry `previewCells` (a `list<[x, y]>`) to render
+a small shape silhouette next to its label, via
+`components/shape_preview.html.twig` - see Battleships's per-shape ship
+count settings for an example. It's purely cosmetic and optional.
+
 The lobby's waiting room renders a settings form **generically** from
 whatever `settings()` returns - `templates/lobby/_settings.html.twig` loops
-over it and picks the right input type, so a new game's settings show up
-with zero template work. Only the host sees the form, and it saves itself:
+over it and picks the right input type (an `Int` setting gets a +/- stepper,
+not a bare number field), so a new game's settings show up with zero
+template work. Only the host sees the form, and it saves itself:
 the `autosave` Stimulus controller (`data-action="change->autosave#save"`)
 fires a background `POST /lobby/{code}/settings`
 (→ `LobbyManager::updateSettings()`) the moment any field changes - no
