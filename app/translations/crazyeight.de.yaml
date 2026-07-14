@@ -6,6 +6,7 @@ crazyeight.draw: 'Karte ziehen'
 crazyeight.pass: 'Aussetzen'
 crazyeight.wished: 'Gewünschte Farbe:'
 crazyeight.pending_draw: 'Zieh %count% oder staple eine passende Karte!'
+crazyeight.pending_draw_locked: 'Zieh noch %count%.'
 crazyeight.color.red: 'Rot'
 crazyeight.color.yellow: 'Gelb'
 crazyeight.color.green: 'Grün'
@@ -20,7 +21,7 @@ log.crazyeight.started: 'Crazy Eights startet – Farbe oder Zahl bedienen.'
 log.crazyeight.played: '%player% spielt %color% %value%.'
 log.crazyeight.wished: '%player% wünscht sich %color%.'
 log.crazyeight.skipped: '%player% wird ausgesetzt.'
-log.crazyeight.penalty_drew: '%player% zieht %count% Strafkarten.'
+log.crazyeight.penalty_drew: '%player% zieht eine Strafkarte (noch %left%).'
 log.crazyeight.drew: '%player% zieht eine Karte.'
 log.crazyeight.passed: '%player% setzt aus.'
 log.crazyeight.reshuffled: 'Der Ablagestapel wurde zum neuen Nachziehstapel gemischt.'
@@ -39,5 +40,6 @@ rules: |-
     Aussetzen-Karten setzen den nächsten Spieler aus, Richtungswechsel dreht die Zugreihenfolge um (bei zwei Spielern wie Aussetzen), eine +2 lässt den nächsten Spieler zwei Karten ziehen.
     Sonderkarten lassen dich eine Farbe wünschen; eine Sonderkarte +4 lässt den nächsten Spieler zusätzlich vier Karten ziehen.
     Eine passende Zieh-Karte kann auf eine offene Strafe gestapelt werden, statt selbst zu ziehen – falls der Host das erlaubt.
+    Fängst du an, eine Strafe abzuziehen, musst du sie komplett ziehen – eine passende Karte zum Weitergeben geht dann nicht mehr.
     Kannst du nicht spielen, zieh eine Karte – passt sie immer noch nicht, setz aus.
     Wer zuerst seine Hand leert, gewinnt.

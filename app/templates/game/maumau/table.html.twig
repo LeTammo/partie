@@ -95,7 +95,7 @@
                  data-action="dragover->dragdrop--zone-drop#dragOver drop->dragdrop--zone-drop#drop dragleave->dragdrop--zone-drop#dragLeave">
                 {% for card in view.hand %}
                     <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}" class="text-center"
-                          data-action="{{ card.isJack ? 'submit->choice-dialog#require ' }}submit->optimistic#move"
+                          data-action="submit->optimistic#move {{ card.isJack ? 'submit->choice-dialog#require' }}"
                           data-optimistic-to-param="#mm-dropzone" data-optimistic-id-param="mm-top-{{ card.identity }}"
                           {% if card.isJack %}
                               data-choice-dialog-dialog-param="#mm-wish-dialog" data-choice-dialog-name-param="wish"

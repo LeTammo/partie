@@ -56,18 +56,26 @@ final class CrazyEightTest extends GameTestCase
     {
         $top = new CustomCard('red', '5');
 
-        self::assertTrue($this->rules->playable(new CustomCard('red', '9'), $top, null, 0, null, true));
-        self::assertTrue($this->rules->playable(new CustomCard('blue', '5'), $top, null, 0, null, true));
-        self::assertFalse($this->rules->playable(new CustomCard('blue', '9'), $top, null, 0, null, true));
-        self::assertTrue($this->rules->playable(new CustomCard('wild', GameRules::WILD), $top, null, 0, null, true));
+        self::assertTrue($this->rules->playable(new CustomCard('red', '9'), $top, null, 0, null, false, true));
+        self::assertTrue($this->rules->playable(new CustomCard('blue', '5'), $top, null, 0, null, false, true));
+        self::assertFalse($this->rules->playable(new CustomCard('blue', '9'), $top, null, 0, null, false, true));
+        self::assertTrue($this->rules->playable(new CustomCard('wild', GameRules::WILD), $top, null, 0, null, false, true));
     }
 
     public function testWishedColorRestrictsPlays(): void
     {
         $top = new CustomCard('wild', GameRules::WILD);
 
-        self::assertTrue($this->rules->playable(new CustomCard('blue', '3'), $top, 'blue', 0, null, true));
-        self::assertFalse($this->rules->playable(new CustomCard('red', '3'), $top, 'blue', 0, null, true));
+        self::assertTrue($this->rules->playable(new CustomCard('blue', '3'), $top, 'blue', 0, null, false, true));
+        self::assertFalse($this->rules->playable(new CustomCard('red', '3'), $top, 'blue', 0, null, false, true));
+    }
+
+    public function testPenaltyLockedPreventsStackingAfterDrawingHasStarted(): void
+    {
+        $top = new CustomCard('red', GameRules::DRAW_TWO);
+
+        self::assertTrue($this->rules->playable(new CustomCard('red', GameRules::DRAW_TWO), $top, null, 2, GameRules::DRAW_TWO, false, true));
+        self::assertFalse($this->rules->playable(new CustomCard('red', GameRules::DRAW_TWO), $top, null, 2, GameRules::DRAW_TWO, true, true));
     }
 
     public function testDrawTwoAddsPendingDraw(): void
@@ -83,7 +91,7 @@ final class CrazyEightTest extends GameTestCase
         self::assertSame('p1', $state->currentPlayer()->id);
     }
 
-    public function testPendingDrawIsTakenAllAtOnce(): void
+    public function testPendingDrawIsTakenOneCardAtATime(): void
     {
         $state = $this->state(2, [
             [new CustomCard('blue', '1')],
@@ -95,7 +103,15 @@ final class CrazyEightTest extends GameTestCase
 
         $this->game->applyMove($state, 'p1', ['action' => 'draw']);
 
+        self::assertSame(1, $state->data['pendingDraw']);
+        self::assertTrue($state->data['penaltyLocked']);
+        self::assertCount(2, $state->table->hand('p1')->items);
+        self::assertSame('p1', $state->currentPlayer()->id, 'still p1\'s turn - one card of the penalty remains');
+
+        $this->game->applyMove($state, 'p1', ['action' => 'draw']);
+
         self::assertSame(0, $state->data['pendingDraw']);
+        self::assertFalse($state->data['penaltyLocked']);
         self::assertCount(3, $state->table->hand('p1')->items);
         self::assertSame('p0', $state->currentPlayer()->id);
     }

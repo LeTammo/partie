@@ -72,7 +72,7 @@
                 {% endif %}
                 {% if view.pendingDraw > 0 %}
                     <span id="pending-draw-{{ view.pendingDraw }}" class="anim-pop rounded-xl bg-terracotta-100 px-3 py-1.5 text-terracotta-700 shadow-soft">
-                        {{ 'crazyeight.pending_draw'|trans({'%count%': view.pendingDraw}) }}
+                        {{ (view.penaltyLocked ? 'crazyeight.pending_draw_locked' : 'crazyeight.pending_draw')|trans({'%count%': view.pendingDraw}) }}
                     </span>
                 {% endif %}
             </div>
@@ -88,7 +88,7 @@
                  data-action="dragover->dragdrop--zone-drop#dragOver drop->dragdrop--zone-drop#drop dragleave->dragdrop--zone-drop#dragLeave">
                 {% for card in view.hand %}
                     <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}" class="text-center"
-                          data-action="{{ card.isWild ? 'submit->choice-dialog#require ' }}submit->optimistic#move"
+                          data-action="submit->optimistic#move {{ card.isWild ? 'submit->choice-dialog#require' }}"
                           data-optimistic-to-param="#ce-dropzone" data-optimistic-id-param="ce-top-{{ card.identity }}"
                           {% if card.isWild %}
                               data-choice-dialog-dialog-param="#ce-wish-dialog" data-choice-dialog-name-param="wish"

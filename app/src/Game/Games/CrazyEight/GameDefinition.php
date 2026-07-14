@@ -102,6 +102,7 @@ final readonly class GameDefinition extends AbstractGameDefinition
         $state->data['pendingDraw'] = 0;
         $state->data['pendingDrawValue'] = null;
         $state->data['hasDrawn'] = false;
+        $state->data['penaltyLocked'] = false;
 
         $state->logGameEvent('log.crazyeight.started');
 
@@ -179,6 +180,7 @@ final readonly class GameDefinition extends AbstractGameDefinition
             $state->data['wishedColor'],
             $state->data['pendingDraw'],
             $state->data['pendingDrawValue'],
+            $state->data['penaltyLocked'],
             $options->stackDraw2,
         )) {
             $this->invalidMove('error.crazyeight.not_playable');
@@ -263,12 +265,18 @@ final readonly class GameDefinition extends AbstractGameDefinition
         $player = $state->currentPlayer();
 
         if ($state->data['pendingDraw'] > 0) {
-            $this->drawCards($state, $player->id, $state->data['pendingDraw']);
+            $state->data['penaltyLocked'] = true;
+            $this->drawCards($state, $player->id, 1);
+            --$state->data['pendingDraw'];
             $state->logGameEvent('log.crazyeight.penalty_drew', [
                 '%player%' => $player->nickname,
-                '%count%' => $state->data['pendingDraw'],
+                '%left%' => $state->data['pendingDraw'],
             ]);
-            $state->data['pendingDraw'] = 0;
+
+            if ($state->data['pendingDraw'] > 0) {
+                return;
+            }
+
             $state->data['pendingDrawValue'] = null;
             $this->endTurn($state);
 
@@ -297,6 +305,7 @@ final readonly class GameDefinition extends AbstractGameDefinition
     private function endTurn(GameState $state): void
     {
         $state->data['hasDrawn'] = false;
+        $state->data['penaltyLocked'] = false;
         $count = \count($state->players);
         $state->currentTurnIndex = (($state->currentTurnIndex + $state->data['direction']) % $count + $count) % $count;
     }

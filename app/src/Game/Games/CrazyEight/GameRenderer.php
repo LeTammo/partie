@@ -37,6 +37,7 @@ final readonly class GameRenderer
         $top = $table->zone('discard')->top();
         $pendingDraw = $state->data['pendingDraw'];
         $wishedColor = $state->data['wishedColor'];
+        $penaltyLocked = $state->data['penaltyLocked'] ?? false;
         $options = Options::fromState($state);
 
         $players = PlayerViews::build($state, static fn (Player $player): array => [
@@ -55,6 +56,7 @@ final readonly class GameRenderer
                         $wishedColor,
                         $pendingDraw,
                         $state->data['pendingDrawValue'],
+                        $penaltyLocked,
                         $options->stackDraw2,
                     ),
                     'isWild' => $this->rules->isWild($card),
@@ -73,6 +75,7 @@ final readonly class GameRenderer
             'top' => CustomCardPresenter::view($top),
             'wishedColor' => $wishedColor,
             'pendingDraw' => $pendingDraw,
+            'penaltyLocked' => $penaltyLocked,
             'drawCount' => $table->zone('stock')->count(),
             'hand' => $hand,
             'hasDrawn' => $state->data['hasDrawn'],

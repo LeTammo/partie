@@ -1,4 +1,5 @@
 import { Controller } from '@hotwired/stimulus';
+import * as Turbo from '@hotwired/turbo';
 
 // How to use, see
 // docs/components/optimism.md
@@ -22,6 +23,8 @@ export default class extends Controller {
         if (!popout) {
             return;
         }
+
+        this.hidePopout(); // in case a different wild card's popout was already open
 
         this.stashedForm = form;
         this.stashedName = event.params.name;
@@ -59,6 +62,11 @@ export default class extends Controller {
             input.value = '';
         }
         this.hidePopout();
+
+        // require() already moved the card onto the discard pile optimistically
+        // (so it's visible while picking); undo that guess with a real morph
+        // since no request was ever sent to confirm it.
+        Turbo.session.refresh(document.baseURI);
     }
 
     hidePopout() {

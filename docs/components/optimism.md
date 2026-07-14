@@ -129,7 +129,7 @@ viewport-centered modal:
 
 ```twig
 <div class="relative">
-    <form data-action="submit->choice-dialog#require submit->optimistic#move"
+    <form data-action="submit->optimistic#move submit->choice-dialog#require"
           data-choice-dialog-dialog-param="#wish-dialog" data-choice-dialog-name-param="wish"
           data-optimistic-to-param="#mm-dropzone" data-optimistic-id-param="mm-top-{{ card.identity }}">
         <input type="hidden" name="wish" value="">
@@ -142,14 +142,19 @@ viewport-centered modal:
 </div>
 ```
 
-`require` must come *before* `optimistic#move` in `data-action` - if the
-named input is empty, it `preventDefault()`s the submission, un-hides the
-popout, and wires up an outside-click/Escape listener; `optimistic#move`
-then no-ops because the event was already prevented. Picking a value fills
-the input, hides the popout, and calls `form.requestSubmit()` - a fresh
-submit event, this time with `require` passing through and `move` running.
+`optimistic#move` comes *before* `require` in `data-action` - on the first
+click it always runs, moving the card onto the discard pile right away
+(the played card should already be sitting there while the player picks a
+wish, not only after). `require` then finds the named input empty,
+`preventDefault()`s the network submission, un-hides the popout, and wires
+up an outside-click/Escape listener. Picking a value fills the input,
+hides the popout, and calls `form.requestSubmit()` - a fresh submit event.
+`optimistic#move` runs again but no-ops (the card already left the form),
+and `require` now finds the input filled and lets the submission through.
 Dismissing the popout any other way (outside click, Escape) resets the
-input to empty, so a cancelled choice can be retried cleanly.
+input to empty, so a cancelled choice can be retried cleanly - the card
+stays put either way since the DOM move already reflects what
+`form.requestSubmit()` will confirm.
 
 This works identically whether the form was submitted by click or by a
 `zone_drop` drag - a drop just calls `requestSubmit()` too.

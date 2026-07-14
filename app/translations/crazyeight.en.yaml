@@ -6,6 +6,7 @@ crazyeight.draw: 'Draw a card'
 crazyeight.pass: 'Pass'
 crazyeight.wished: 'Wished color:'
 crazyeight.pending_draw: 'Draw %count% or stack a matching card!'
+crazyeight.pending_draw_locked: 'Draw %count% more.'
 crazyeight.color.red: 'Red'
 crazyeight.color.yellow: 'Yellow'
 crazyeight.color.green: 'Green'
@@ -20,7 +21,7 @@ log.crazyeight.started: 'Crazy Eights starts – match color or number.'
 log.crazyeight.played: '%player% plays a %color% %value%.'
 log.crazyeight.wished: '%player% wishes %color%.'
 log.crazyeight.skipped: '%player% is skipped.'
-log.crazyeight.penalty_drew: '%player% draws %count% penalty cards.'
+log.crazyeight.penalty_drew: '%player% draws a penalty card (%left% left).'
 log.crazyeight.drew: '%player% draws a card.'
 log.crazyeight.passed: '%player% passes.'
 log.crazyeight.reshuffled: 'The discard pile was shuffled into a new draw pile.'
@@ -39,5 +40,6 @@ rules: |-
     Skip cards skip the next player, reverse cards flip the turn order (a skip with two players), a +2 makes the next player draw two.
     Wild cards let you wish a color; a wild +4 also makes the next player draw four.
     A matching draw card can be stacked onto a pending penalty instead of drawing, if the host allows it.
+    Once you start drawing off a penalty, you must draw all of it – you can no longer stack a card to pass it on.
     If you cannot play, draw a card – if it still does not fit, pass.
     The first player to empty their hand wins.

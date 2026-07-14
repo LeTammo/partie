@@ -31,10 +31,11 @@ final class GameRules
         ?string $wishedColor,
         int $pendingDraw,
         ?string $pendingDrawValue,
+        bool $penaltyLocked,
         bool $stackDraw2,
     ): bool {
         if ($pendingDraw > 0) {
-            return $stackDraw2 && $card->value === $pendingDrawValue;
+            return !$penaltyLocked && $stackDraw2 && $card->value === $pendingDrawValue;
         }
 
         if ($this->isWild($card)) {
