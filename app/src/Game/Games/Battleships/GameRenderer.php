@@ -109,7 +109,7 @@ final readonly class GameRenderer
             foreach ($row as ['x' => $x, 'y' => $y, 'token' => $token]) {
                 if (null === $token && $interactive) {
                     $cells[] = [
-                        'class' => 'cursor-pointer grid size-6 place-items-center rounded-sm bg-softblue-50 transition touch-none sm:size-8',
+                        'class' => 'cursor-pointer grid size-8 place-items-center rounded-sm bg-softblue-50 transition touch-none sm:size-12',
                         'attr' => [
                             'data-battleships--placement-target' => 'cell',
                             'data-x' => $x,
@@ -122,12 +122,12 @@ final readonly class GameRenderer
 
                 $hit = null !== $token && \in_array("$x:$y", $hits, true);
                 $cells[] = [
-                    'class' => 'grid size-6 place-items-center rounded-sm sm:size-8 '.(null !== $token ? 'bg-white shadow-soft' : 'bg-softblue-50/60'),
+                    'class' => 'grid size-8 place-items-center rounded-sm sm:size-12 '.(null !== $token ? 'bg-white shadow-soft' : 'bg-softblue-50/60'),
                     'token' => null !== $token ? [
                         'outer' => $token->outerColor,
                         'center' => $token->centerColor,
                         'centerSize' => 45,
-                        'size' => 'size-5 sm:size-7',
+                        'size' => 'size-7 sm:size-9',
                         'icon' => $hit ? 'x' : null,
                         'symbolColor' => '#ffffff',
                         'ring' => $hit,
@@ -137,7 +137,7 @@ final readonly class GameRenderer
             }
         }
 
-        return ['cols' => $fleet->width, 'rows' => $fleet->height, 'class' => 'grid gap-0.5 rounded-2xl bg-cream p-2', 'cells' => $cells];
+        return ['cols' => $fleet->width, 'rows' => $fleet->height, 'class' => 'grid gap-0.5 rounded-2xl bg-warmgray-500/50 p-2', 'cells' => $cells];
     }
 
     /**
@@ -187,7 +187,7 @@ final readonly class GameRenderer
             }
         }
 
-        return ['cols' => $shots->width, 'rows' => $shots->height, 'class' => 'grid gap-0.5 rounded-2xl bg-cream p-2', 'cells' => $cells];
+        return ['cols' => $shots->width, 'rows' => $shots->height, 'class' => 'grid gap-0.5 rounded-2xl bg-warmgray-500/50 p-2', 'cells' => $cells];
     }
 
     private function opponent(GameState $state, string $playerId): Player
