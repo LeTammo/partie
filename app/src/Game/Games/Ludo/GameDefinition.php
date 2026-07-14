@@ -91,8 +91,11 @@ final readonly class GameDefinition extends AbstractGameDefinition
 
     public function createInitialState(array $players, array $settings = []): GameState
     {
+        [$players, $ringSeats] = $this->seatPlayers($players);
+
         $state = new GameState($this->getId(), $players);
         $state->data['settings'] = $settings;
+        $state->data['ringSeats'] = $ringSeats;
         $state->data['roll'] = null;
         $state->data['lastRoll'] = null;
         $state->data['rollAttempts'] = 0;
@@ -110,6 +113,35 @@ final readonly class GameDefinition extends AbstractGameDefinition
         }
 
         return $state;
+    }
+
+    /**
+     * @param list<Player> $players
+     *
+     * @return array{0: list<Player>, 1: array<string, int>}
+     */
+    private function seatPlayers(array $players): array
+    {
+        $slots = match (\count($players)) {
+            2 => [0, 2],
+            3 => [0, 1, 2],
+            default => range(0, \count($players) - 1),
+        };
+
+        $ringSeats = [];
+        foreach ($players as $i => $player) {
+            $ringSeats[$player->id] = $slots[$i];
+        }
+
+        if (3 === \count($players)) {
+            $bySeat = [];
+            foreach ($players as $player) {
+                $bySeat[$ringSeats[$player->id]] = $player;
+            }
+            $players = [$bySeat[2], $bySeat[1], $bySeat[0]];
+        }
+
+        return [$players, $ringSeats];
     }
 
     public function applyMove(GameState $state, string $playerId, array $payload): void
@@ -345,11 +377,6 @@ final readonly class GameDefinition extends AbstractGameDefinition
      */
     private function seats(GameState $state): array
     {
-        $seats = [];
-        foreach ($state->players as $p) {
-            $seats[$p->id] = $p->seat;
-        }
-
-        return $seats;
+        return $state->data['ringSeats'];
     }
 }

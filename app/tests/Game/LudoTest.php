@@ -97,6 +97,72 @@ final class LudoTest extends GameTestCase
         self::assertSame([-1, -1, -1, -1], $state->data['pawns']['p0']);
     }
 
+    public function testTwoPlayersAreSeatedOppositeEachOther(): void
+    {
+        $state = $this->game->createInitialState(self::players(2));
+
+        self::assertSame(0, $state->data['ringSeats']['p0']);
+        self::assertSame(2, $state->data['ringSeats']['p1']);
+        self::assertSame('p0', $state->currentPlayer()->id, 'turn order is unaffected for 2 players');
+    }
+
+    public function testThreePlayersUseConsecutiveSeatsWithTheSafeOneGoingFirst(): void
+    {
+        $state = $this->game->createInitialState(self::players(3));
+
+        // seats 0, 1, 2 are used (seat 3 stays empty); seat 2's forward neighbor is that empty
+        // seat, so its owner (p2, the third joiner) goes first - their first six-then-four combo
+        // can never land on anyone.
+        self::assertSame(0, $state->data['ringSeats']['p0']);
+        self::assertSame(1, $state->data['ringSeats']['p1']);
+        self::assertSame(2, $state->data['ringSeats']['p2']);
+        self::assertSame('p2', $state->currentPlayer()->id);
+
+        // finish p2's turn with a non-six roll and confirm the cycle continues 2 -> 1 -> 0:
+        // each mover's own six-then-four combo threatens seat+1, so turn order must run
+        // opposite that (descending) for the threatened seat to have already moved by then.
+        self::queueRolls([3]);
+        $this->game->applyMove($state, 'p2', ['action' => 'roll']);
+        $this->game->applyMove($state, 'p2', ['action' => 'move', 'from' => 'ring:20']); // p2's start (seat 2)
+
+        self::assertSame('p1', $state->currentPlayer()->id);
+
+        self::queueRolls([3]);
+        $this->game->applyMove($state, 'p1', ['action' => 'roll']);
+        $this->game->applyMove($state, 'p1', ['action' => 'move', 'from' => 'ring:10']); // p1's start (seat 1)
+
+        self::assertSame('p0', $state->currentPlayer()->id);
+    }
+
+    public function testFourPlayersKeepStandardSeatingAndOrder(): void
+    {
+        $state = $this->game->createInitialState(self::players(4));
+
+        self::assertSame(['p0' => 0, 'p1' => 1, 'p2' => 2, 'p3' => 3], $state->data['ringSeats']);
+        self::assertSame('p0', $state->currentPlayer()->id);
+    }
+
+    public function testTwoPlayersOnOppositeSeatsCannotBeCapturedByAFirstTurnSixThenFour(): void
+    {
+        // Both start with one pawn released onto their own start square (progress 0, seats 0 and 2).
+        // p0 rolls a six (the only legal move is that already-released pawn, since enforced start
+        // clearing blocks releasing a new one), then a bonus four: 0 -> 6 -> 10. Ring index 10 is
+        // seat 1's start, which is empty (seats 0 and 2 are the ones in play) - nobody can be hit
+        // here, unlike the old adjacent-seat arrangement where index 10 would have been p1's own start.
+        $state = $this->game->createInitialState(self::players(2));
+
+        self::queueRolls([6]);
+        $this->game->applyMove($state, 'p0', ['action' => 'roll']);
+        $this->game->applyMove($state, 'p0', ['action' => 'move', 'from' => 'ring:0']);
+
+        self::queueRolls([4]);
+        $this->game->applyMove($state, 'p0', ['action' => 'roll']);
+        $this->game->applyMove($state, 'p0', ['action' => 'move', 'from' => 'ring:6']);
+
+        self::assertSame(10, $state->data['pawns']['p0'][0]);
+        self::assertSame(0, $state->data['pawns']['p1'][0], 'p1 was never at ring index 10 - nothing to capture');
+    }
+
     public function testNoLegalMoveRuleForcesAGoalStretchMoveWhenOneExists(): void
     {
         // 3 pawns still in base, 1 pawn in the goal stretch at progress 41 (needs +1 or +2 to finish).
@@ -311,12 +377,13 @@ final class LudoTest extends GameTestCase
 
     public function testMoveCapturesOpponent(): void
     {
-        // p1 (seat 1) at progress 0 = ring index 10; p0 at progress 6 moving 4 lands on ring index 10
-        $state = $this->state([6, -1, -1, -1], [0, -1, -1, -1], roll: 4);
+        // 2 players sit opposite each other (ring seats 0 and 2): p1 at progress 0 = ring index 20;
+        // p0 at progress 16 moving 4 lands on ring index 20
+        $state = $this->state([16, -1, -1, -1], [0, -1, -1, -1], roll: 4);
 
-        $this->game->applyMove($state, 'p0', ['action' => 'move', 'from' => 'ring:6']);
+        $this->game->applyMove($state, 'p0', ['action' => 'move', 'from' => 'ring:16']);
 
-        self::assertSame(10, $state->data['pawns']['p0'][0]);
+        self::assertSame(20, $state->data['pawns']['p0'][0]);
         self::assertSame(-1, $state->data['pawns']['p1'][0]); // captured back to base
     }
 

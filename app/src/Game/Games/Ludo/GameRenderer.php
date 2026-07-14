@@ -70,7 +70,7 @@ final readonly class GameRenderer
         $roll = $state->data['roll'];
         $seats = $this->seats($state);
         $pawns = $state->data['pawns'];
-        $seatCount = \count($state->players);
+        $occupiedSeats = array_values($seats);
         $options = Options::fromState($state);
         $awaitingBanish = $myTurn && ($state->data['awaitingBanish'] ?? false);
 
@@ -109,7 +109,7 @@ final readonly class GameRenderer
         $layers = [];
         for ($seat = 0; $seat < 4; ++$seat) {
             [$row, $col] = self::BACKDROP_ANCHORS[$seat];
-            $tier = $seat < $seatCount ? '100' : '50';
+            $tier = \in_array($seat, $occupiedSeats, true) ? '100' : '50';
             $layers[] = [
                 'style' => \sprintf(
                     'grid-row:%d / span 4;grid-column:%d / span 4;background-color:var(--color-%s-%s);',
@@ -130,14 +130,14 @@ final readonly class GameRenderer
             $fill = null;
             if (0 === $i % 10) {
                 $startSeat = \intdiv($i, 10);
-                $tier = $startSeat < $seatCount ? '500' : '100';
+                $tier = \in_array($startSeat, $occupiedSeats, true) ? '500' : '100';
                 $fill = \sprintf('var(--color-%s-%s)', self::SEAT_COLORS[$startSeat], $tier);
             }
 
             $cells[] = $this->cell("ring:$i", $x, $y, $locations["ring:$i"] ?? null, $viewerId, $moves, $fill, track: true, banishable: \in_array("ring:$i", $banishCells, true));
         }
         for ($seat = 0; $seat < 4; ++$seat) {
-            $tier = $seat < $seatCount ? '300' : '100';
+            $tier = \in_array($seat, $occupiedSeats, true) ? '300' : '100';
             $fill = \sprintf('var(--color-%s-%s)', self::SEAT_COLORS[$seat], $tier);
 
             foreach ($goalLanes[$seat] as $step => [$x, $y]) {
@@ -260,12 +260,7 @@ final readonly class GameRenderer
      */
     private function seats(GameState $state): array
     {
-        $seats = [];
-        foreach ($state->players as $player) {
-            $seats[$player->id] = $player->seat;
-        }
-
-        return $seats;
+        return $state->data['ringSeats'];
     }
 
     /**
