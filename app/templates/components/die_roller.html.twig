@@ -26,18 +26,16 @@
     </span>
 {% endset %}
 
-{% if canRoll|default(false) %}
-    <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}"
-          data-action="submit->optimistic#pending"
-          data-optimistic-selector-param="[data-die]"
-          data-optimistic-class-param="anim-rolling">
-        <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
-        <input type="hidden" name="action" value="{{ action|default('roll') }}">
-        <button type="submit" title="{{ 'dice.roll'|trans }}"
-                class="anim-pulse block cursor-pointer rounded-2xl opacity-100 shadow-soft transition hover:shadow-lifted">
-            {{ die }}
-        </button>
-    </form>
-{% else %}
-    {{ die }}
-{% endif %}
+<form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}"
+      data-action="submit->optimistic#pending"
+      data-optimistic-selector-param="[data-die]"
+      data-optimistic-class-param="anim-rolling">
+    <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
+    <input type="hidden" name="action" value="{{ action|default('roll') }}">
+    <button type="submit" title="{{ 'dice.roll'|trans }}" {{ canRoll|default(false) ? '' : 'disabled' }}
+            class="block rounded-2xl transition {{ canRoll|default(false)
+                ? 'anim-pulse cursor-pointer shadow-soft hover:shadow-lifted'
+                : 'cursor-default' }}">
+        {{ die }}
+    </button>
+</form>
