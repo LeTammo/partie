@@ -121,29 +121,35 @@ with its own entry animation.
 ## `choice-dialog` - a form that needs a value first
 
 For "this form can't submit until the user picks something" (Mau-Mau's
-jack needs a wish suit before it can be played):
+jack needs a wish suit before it can be played). The picker is a plain
+`hidden`-toggled `<div>` positioned `absolute` inside a `relative`
+ancestor - anchored to whatever it's a choice *about* (Mau-Mau/Crazy
+Eight's wish popout hangs off the discard pile) rather than a
+viewport-centered modal:
 
 ```twig
-<form data-action="submit->choice-dialog#require submit->optimistic#move"
-      data-choice-dialog-dialog-param="#wish-dialog" data-choice-dialog-name-param="wish"
-      data-optimistic-to-param="#mm-dropzone" data-optimistic-id-param="mm-top-{{ card.identity }}">
-    <input type="hidden" name="wish" value="">
-    <button type="submit">...</button>
-</form>
+<div class="relative">
+    <form data-action="submit->choice-dialog#require submit->optimistic#move"
+          data-choice-dialog-dialog-param="#wish-dialog" data-choice-dialog-name-param="wish"
+          data-optimistic-to-param="#mm-dropzone" data-optimistic-id-param="mm-top-{{ card.identity }}">
+        <input type="hidden" name="wish" value="">
+        <button type="submit">...</button>
+    </form>
 
-<dialog id="wish-dialog" data-action="close->choice-dialog#closed">
-    <button type="button" data-action="choice-dialog#pick" data-choice-dialog-value-param="hearts">♥</button>
-</dialog>
+    <div id="wish-dialog" class="hidden absolute left-1/2 top-full -translate-x-1/2">
+        <button type="button" data-action="choice-dialog#pick" data-choice-dialog-value-param="hearts">♥</button>
+    </div>
+</div>
 ```
 
 `require` must come *before* `optimistic#move` in `data-action` - if the
-named input is empty, it `preventDefault()`s the submission and opens the
-dialog; `optimistic#move` then no-ops because the event was already
-prevented. Picking a value fills the input, closes the dialog, and calls
-`form.requestSubmit()` - a fresh submit event, this time with `require`
-passing through and `move` running. Closing the dialog any other way
-(cancel, backdrop click) resets the input to empty, so a cancelled choice
-can be retried cleanly.
+named input is empty, it `preventDefault()`s the submission, un-hides the
+popout, and wires up an outside-click/Escape listener; `optimistic#move`
+then no-ops because the event was already prevented. Picking a value fills
+the input, hides the popout, and calls `form.requestSubmit()` - a fresh
+submit event, this time with `require` passing through and `move` running.
+Dismissing the popout any other way (outside click, Escape) resets the
+input to empty, so a cancelled choice can be retried cleanly.
 
 This works identically whether the form was submitted by click or by a
 `zone_drop` drag - a drop just calls `requestSubmit()` too.

@@ -14,6 +14,14 @@ final readonly class GameRenderer
 {
     private const array COLORS = ['red', 'yellow', 'green', 'blue'];
 
+    /** @var array<string, string> */
+    private const array SWATCH_CLASSES = [
+        'red' => 'bg-terracotta-500',
+        'yellow' => 'bg-sunny-500',
+        'green' => 'bg-sage-500',
+        'blue' => 'bg-softblue-500',
+    ];
+
     public function __construct(private GameRules $rules)
     {
     }
@@ -56,7 +64,7 @@ final readonly class GameRenderer
 
         $colors = [];
         foreach (self::COLORS as $color) {
-            $colors[] = ['value' => $color, 'labelKey' => 'crazyeight.color.'.$color];
+            $colors[] = ['value' => $color, 'labelKey' => 'crazyeight.color.'.$color, 'swatchClass' => self::SWATCH_CLASSES[$color]];
         }
 
         return [

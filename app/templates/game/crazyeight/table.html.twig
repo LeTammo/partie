@@ -37,7 +37,7 @@
                         'data-action': 'dragstart->dragdrop--zone-drop#dragStart dragend->dragdrop--zone-drop#dragEnd',
                     } : {},
                 } %}
-                <div id="ce-dropzone" class="text-center"
+                <div id="ce-dropzone" class="relative text-center"
                      data-dragdrop--zone-drop-target="zone" data-pair="play"
                      data-action="dragover->dragdrop--zone-drop#dragOver drop->dragdrop--zone-drop#drop dragleave->dragdrop--zone-drop#dragLeave">
                     {% include 'components/card.html.twig' with view.top|merge({
@@ -46,6 +46,21 @@
                         exit: 'none',
                     }) only %}
                     <p class="mt-1.5 text-xs font-extrabold uppercase tracking-wide text-warmgray-400">{{ 'crazyeight.discard'|trans }}</p>
+
+                    {# ---------- wish color popout ---------- #}
+                    <div id="ce-wish-dialog" class="hidden absolute left-1/2 top-full z-30 mt-3 w-max -translate-x-1/2">
+                        <div class="relative rounded-3xl bg-white p-4 shadow-lifted">
+                            <span class="absolute -top-1.5 left-1/2 size-3 -translate-x-1/2 rotate-45 rounded-sm bg-white"></span>
+                            <div class="flex justify-center gap-2">
+                                {% for color in view.colors %}
+                                    <button type="button" data-action="choice-dialog#pick" data-choice-dialog-value-param="{{ color.value }}"
+                                            title="{{ color.labelKey|trans }}"
+                                            class="grid size-12 place-items-center rounded-2xl shadow-soft transition hover:shadow-lifted {{ color.swatchClass }} cursor-pointer">
+                                    </button>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -114,19 +129,4 @@
             </button>
         </form>
     {% endif %}
-
-    {# ---------- wish color dialog ---------- #}
-    <dialog id="ce-wish-dialog" data-action="close->choice-dialog#closed"
-            class="m-auto rounded-3xl bg-white p-6 text-center shadow-lifted backdrop:bg-warmgray-800/40">
-        <p class="text-lg font-extrabold text-warmgray-700">{{ 'crazyeight.wish_prompt'|trans }}</p>
-        <div class="mt-4 flex justify-center gap-3">
-            {% for color in view.colors %}
-                <button type="button" data-action="choice-dialog#pick" data-choice-dialog-value-param="{{ color.value }}"
-                        title="{{ color.labelKey|trans }}"
-                        class="grid size-14 place-items-center rounded-2xl shadow-soft transition hover:shadow-lifted
-                               {{ {red: 'bg-terracotta-400', yellow: 'bg-sunny-400', green: 'bg-sage-400', blue: 'bg-softblue-400'}[color.value] }}">
-                </button>
-            {% endfor %}
-        </div>
-    </dialog>
 </div>
