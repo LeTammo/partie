@@ -3,13 +3,13 @@
 {% block title %}Partie · {{ 'home.title'|trans }}{% endblock %}
 
 {% block body %}
-    <div class="mt-16 grid gap-8 lg:grid-cols-[3fr_2fr]"
+    <div class="grid gap-8 lg:grid-cols-[3fr_2fr]"
          data-controller="nickname"
          data-nickname-url-value="{{ path('app_nickname_update') }}"
          data-nickname-token-value="{{ csrf_token('nickname') }}"
          data-nickname-name-value="{{ nickname }}"
          data-nickname-live-value="true">
-        {# ---------- Create lobby ---------- #}
+        {# ---------- Create lobby: click a game to create it immediately ---------- #}
         <form method="post" action="{{ path('app_lobby_create') }}" class="flex flex-col rounded-3xl bg-white p-6 shadow-soft">
             <input type="hidden" name="_token" value="{{ csrf_token('lobby') }}">
             <input type="hidden" name="nickname" data-nickname-target="mirror" value="{{ nickname }}">
@@ -17,30 +17,21 @@
 
             <div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
                 {% for game in games %}
-                    <label class="group cursor-pointer">
-                        <input type="radio" name="game" value="{{ game.id }}" class="peer sr-only" {{ loop.first ? 'checked' }} required>
-                        <div class="flex h-full items-center gap-4 rounded-2xl bg-cream p-4 ring-2 ring-transparent transition
-                                    peer-checked:bg-softblue-50 peer-checked:ring-softblue-300 peer-checked:shadow-soft group-hover:ring-softblue-200">
-                            <span class="grid size-14 shrink-0 place-items-center rounded-2xl bg-white text-warmgray-500 shadow-soft">
-                                {% include 'icons/' ~ game.icon ~ '.svg.twig' with {class: 'size-8'} only %}
+                    <button type="submit" name="game" value="{{ game.id }}"
+                            class="flex h-full cursor-pointer items-center gap-4 rounded-2xl bg-cream p-4 text-left ring-2 ring-transparent transition hover:bg-softblue-50 hover:ring-softblue-300 hover:shadow-soft">
+                        <span class="grid size-14 shrink-0 place-items-center rounded-2xl bg-white text-warmgray-500 shadow-soft">
+                            {% include 'icons/' ~ game.icon ~ '.svg.twig' with {class: 'size-8'} only %}
+                        </span>
+                        <span class="min-w-0">
+                            <span class="block truncate text-lg font-extrabold leading-tight">{{ game.name|trans }}</span>
+                            <span class="mt-1 block text-xs font-bold uppercase tracking-wide text-softblue-500">
+                                {{ game.minPlayers == game.maxPlayers
+                                    ? 'home.players_exact'|trans({'%min%': game.minPlayers})
+                                    : 'home.players_range'|trans({'%min%': game.minPlayers, '%max%': game.maxPlayers}) }}
                             </span>
-                            <span class="min-w-0">
-                                <span class="block truncate text-lg font-extrabold leading-tight">{{ game.name|trans }}</span>
-                                <span class="mt-1 block text-xs font-bold uppercase tracking-wide text-softblue-500">
-                                    {{ game.minPlayers == game.maxPlayers
-                                        ? 'home.players_exact'|trans({'%min%': game.minPlayers})
-                                        : 'home.players_range'|trans({'%min%': game.minPlayers, '%max%': game.maxPlayers}) }}
-                                </span>
-                            </span>
-                        </div>
-                    </label>
+                        </span>
+                    </button>
                 {% endfor %}
-            </div>
-
-            <div class="mt-auto pt-5">
-                <button type="submit" class="btn btn-confirm w-full cursor-pointer">
-                    {{ 'home.create.button'|trans }}
-                </button>
             </div>
         </form>
 
