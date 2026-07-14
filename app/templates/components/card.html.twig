@@ -13,8 +13,7 @@
    - class: extra classes
    - block front: override the face design (use {% embed %} for one-off fronts)
 #}
-{% set sizeClass = {md: 'h-24 w-16', sm: 'h-16 w-11'}[size|default('md')] %}
-{% set base = 'anim-deal relative flex shrink-0 select-none flex-col rounded-xl shadow-soft ' ~ sizeClass ~ ' ' ~ class|default('') %}
+{% set base = 'anim-deal relative flex shrink-0 select-none flex-col rounded-xl shadow-soft h-24 w-16 ' ~ class|default('') %}
 {% set id = key|default(null) %}
 {% set attrs %}{% if id %} id="{{ id }}"{% endif %}{% if flip|default(null) %} data-flip-id="{{ flip }}"{% endif %}{% if exit|default(null) %} data-flip-exit="{{ exit }}"{% endif %}{% endset %}
 {% if back|default(false) %}

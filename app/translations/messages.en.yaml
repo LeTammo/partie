@@ -44,6 +44,8 @@ game.crazyeight.name: 'Crazy Eights'
 game.crazyeight.description: 'Match color or number, stack draw cards, skip and reverse – empty your hand first.'
 game.backgammon.name: 'Backgammon'
 game.backgammon.description: 'Race your checkers home, hit blots to the bar, and bear off first to win.'
+game.poker.name: 'Poker'
+game.poker.description: "Texas Hold'em – two hole cards, five shared, best hand takes the pot."
 
 # --- Lobby ---
 lobby.status.waiting: 'waiting for players'

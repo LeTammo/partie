@@ -1,0 +1,46 @@
+# --- Table ---
+poker.pot: 'Pot: %amount%'
+poker.no_community: 'Cards land here on the flop.'
+poker.won_pot: '%player% wins %amount%'
+poker.busted: 'busted'
+poker.folded: 'folded'
+poker.waiting: 'waiting'
+poker.dealer_badge: 'Dealer'
+poker.all_in: 'All in'
+poker.bet_label: 'Bet %amount%'
+poker.fold: 'Fold'
+poker.check: 'Check'
+poker.call: 'Call %amount%'
+poker.raise: 'Raise'
+poker.raise_to: 'Raise to'
+poker.raise_to_amount: 'Raise to %amount%'
+poker.next_round: 'Next round'
+
+# --- Settings ---
+setting.poker.start_chips: 'Starting chips'
+setting.poker.small_blind: 'Small blind'
+
+# --- Game log ---
+log.poker.hand_started: 'Hand %hand% starts – %sb% posts small blind, %bb% posts big blind.'
+log.poker.folded: '%player% folds.'
+log.poker.checked: '%player% checks.'
+log.poker.called: '%player% calls %amount%.'
+log.poker.raised: '%player% raises to %amount%.'
+log.poker.flop: 'The flop is dealt (%cards% community cards).'
+log.poker.turn: 'The turn is dealt (%cards% community cards).'
+log.poker.river: 'The river is dealt (%cards% community cards).'
+log.poker.uncontested: '%player% wins %amount% uncontested – everyone else folded.'
+log.poker.showdown: 'Showdown!'
+log.poker.busted: '%player% is out of chips.'
+
+# --- Errors ---
+error.poker.invalid_raise: 'That raise is not allowed.'
+error.poker.not_hand_end: 'The next round cannot start yet.'
+
+# --- How to play ---
+rules: |-
+    Texas Hold'em - each player gets two private hole cards, five community cards are shared.
+    Betting happens before the flop, and again after the flop, turn and river; fold, check/call, or raise on your turn.
+    Once the river is dealt, the best five-card hand made from your hole cards and the community cards wins the pot (side pots split correctly if someone is short-stacked and all-in).
+    A hand ends immediately, uncontested, if everyone else folds.
+    Play continues hand after hand until only one player still has chips.

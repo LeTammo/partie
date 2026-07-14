@@ -1,0 +1,46 @@
+# --- Tisch ---
+poker.pot: 'Pot: %amount%'
+poker.no_community: 'Hier liegen die Karten ab dem Flop.'
+poker.won_pot: '%player% gewinnt %amount%'
+poker.busted: 'raus'
+poker.folded: 'folded'
+poker.waiting: 'wartet'
+poker.dealer_badge: 'Dealer'
+poker.all_in: 'All-in'
+poker.bet_label: 'Bet %amount%'
+poker.fold: 'Fold'
+poker.check: 'Check'
+poker.call: 'Call %amount%'
+poker.raise: 'Raise'
+poker.raise_to: 'Raise um'
+poker.raise_to_amount: 'Raise um %amount%'
+poker.next_round: 'Nächste Runde'
+
+# --- Einstellungen ---
+setting.poker.start_chips: 'Startchips'
+setting.poker.small_blind: 'Small Blind'
+
+# --- Spielverlauf ---
+log.poker.hand_started: 'Hand %hand% beginnt – %sb% setzt Small Blind, %bb% setzt Big Blind.'
+log.poker.folded: '%player% steigt aus.'
+log.poker.checked: '%player% checkt.'
+log.poker.called: '%player% geht mit %amount% mit.'
+log.poker.raised: '%player% erhöht auf %amount%.'
+log.poker.flop: 'Der Flop wird aufgedeckt (%cards% Gemeinschaftskarten).'
+log.poker.turn: 'Der Turn wird aufgedeckt (%cards% Gemeinschaftskarten).'
+log.poker.river: 'Der River wird aufgedeckt (%cards% Gemeinschaftskarten).'
+log.poker.uncontested: '%player% gewinnt %amount% – alle anderen sind ausgestiegen.'
+log.poker.showdown: 'Showdown!'
+log.poker.busted: '%player% hat keine Chips mehr.'
+
+# --- Fehler ---
+error.poker.invalid_raise: 'Dieser Raise ist nicht erlaubt.'
+error.poker.not_hand_end: 'Die nächste Runde kann noch nicht gestartet werden.'
+
+# --- Spielanleitung ---
+rules: |-
+    Texas Hold'em - jeder Spieler bekommt zwei verdeckte Karten, dazu kommen fünf gemeinsame Karten.
+    Es wird vor dem Flop gesetzt, und erneut nach Flop, Turn und River; passe (Check), gehe mit (Call), oder erhöhe (Raise), wenn du am Zug bist.
+    Nach dem River gewinnt die beste Fünf-Karten-Hand aus deinen Karten und den Gemeinschaftskarten den Pot (Side-Pots werden korrekt aufgeteilt, wenn jemand mit weniger Chips all-in geht).
+    Eine Hand endet sofort, wenn alle anderen aussteigen.
+    Es wird Hand für Hand weitergespielt, bis nur noch ein Spieler Chips hat.

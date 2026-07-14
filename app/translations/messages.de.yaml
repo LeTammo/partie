@@ -44,6 +44,8 @@ game.crazyeight.name: 'Crazy Eights'
 game.crazyeight.description: 'Farbe oder Zahl bedienen, Zieh-Karten stapeln, Aussetzen und Richtungswechsel – wer zuerst fertig ist, gewinnt.'
 game.backgammon.name: 'Backgammon'
 game.backgammon.description: 'Bring deine Steine ins Ziel, schlage einzelne Steine an die Bar und trag als Erster alle aus.'
+game.poker.name: 'Poker'
+game.poker.description: 'Texas Hold''em – zwei eigene Karten, fünf gemeinsame, die beste Hand gewinnt den Pot.'
 
 # --- Lobby ---
 lobby.status.waiting: 'wartet auf Spieler'

@@ -41,6 +41,13 @@
     --color-sunny-500: #c99f3d;
     --color-sunny-700: #96762c;
 
+    --color-rose-50: #fbeef0;
+    --color-rose-100: #f6dbdd;
+    --color-rose-200: #eab9bd;
+    --color-rose-300: #d98f95;
+    --color-rose-500: #b8555d;
+    --color-rose-700: #8a3940;
+
     --shadow-soft: 0 2px 10px rgb(68 61 52 / 0.07);
     --shadow-lifted: 0 6px 24px rgb(68 61 52 / 0.12);
     --shadow-strong: 0 1px 7px rgb(67 67 67 / 63%);
@@ -52,7 +59,7 @@
         @apply rounded-2xl px-7 py-3 text-lg font-extrabold shadow-soft transition;
     }
     .btn-primary {
-        @apply bg-terracotta-300 text-white hover:bg-terracotta-200 hover:text-terracotta-700 hover:shadow-lifted;
+        @apply bg-terracotta-300 text-terracotta-700 hover:bg-terracotta-200 hover:text-terracotta-700 hover:shadow-lifted;
     }
     .btn-neutral {
         @apply bg-white text-warmgray-700 hover:shadow-lifted;
@@ -62,6 +69,12 @@
     }
     .btn-info {
         @apply bg-white text-softblue-500 hover:shadow-lifted;
+    }
+    .btn-muted {
+        @apply bg-warmgray-200 text-warmgray-700 hover:bg-warmgray-300 hover:shadow-lifted;
+    }
+    .btn-danger {
+        @apply bg-rose-300 text-rose-700 hover:bg-rose-200 hover:shadow-lifted;
     }
 }
 
