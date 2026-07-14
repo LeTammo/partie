@@ -5,6 +5,7 @@
    - rank/suit/red/joker: from CardPresenter::view()
    - value/color: from CustomCardPresenter::view() - a custom-face number/
      symbol card; color names red/yellow/green/blue map to the app palette,
+     color 'wild' renders a rotated four-color quadrant face (wish cards),
      anything else renders neutral
    - back: true renders a face-down card
    - backColor: back design color (default softblue)
@@ -13,11 +14,18 @@
    - class: extra classes
    - block front: override the face design (use {% embed %} for one-off fronts)
 #}
-{% set base = 'anim-deal relative flex shrink-0 select-none flex-col rounded-xl shadow-soft h-24 w-16 ' ~ class|default('') %}
+{% set base =
+    'anim-deal relative flex shrink-0 select-none flex-col rounded-xl shadow-md h-24 w-16 border-1'
+    ~ class|default('')
+%}
 {% set id = key|default(null) %}
-{% set attrs %}{% if id %} id="{{ id }}"{% endif %}{% if flip|default(null) %} data-flip-id="{{ flip }}"{% endif %}{% if exit|default(null) %} data-flip-exit="{{ exit }}"{% endif %}{% endset %}
+{% set attrs %}
+    {% if id %} id="{{ id }}"{% endif %}
+    {% if flip|default(null) %} data-flip-id="{{ flip }}"{% endif %}
+    {% if exit|default(null) %} data-flip-exit="{{ exit }}"{% endif %}
+{% endset %}
 {% if back|default(false) %}
-    <span{{ attrs }} class="{{ base }} overflow-hidden" style="background-color: {{ backColor|default('var(--color-softblue-500)') }}" aria-hidden="true">
+    <span{{ attrs }} class="{{ base }} !border-0 overflow-hidden" style="background-color: {{ backColor|default('var(--color-softblue-500)') }}" aria-hidden="true">
         <span class="absolute inset-1.5 rounded-lg border-2 border-white/50"></span>
         <span class="absolute inset-2.5 rounded-md"
               style="background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.55) 0 3px, transparent 3px 9px), repeating-linear-gradient(-45deg, rgba(255,255,255,0.55) 0 3px, transparent 3px 9px);"></span>
@@ -30,20 +38,34 @@
         {% include 'icons/star.svg.twig' with { class: 'size-8' } only %}
         <span class="mt-0.5 text-xs font-extrabold uppercase tracking-wide text-warmgray-400">{{ 'card.joker'|trans }}</span>
     </span>
+{% elseif value|default(null) is not null and 'wild' == color|default('') %}
+    <span{{ attrs }} class="{{ base }} !border-0 overflow-hidden bg-white text-warmgray-800 shadow-warmgray-500/70" role="img" aria-label="{{ value }}">
+        <span class="absolute left-1/2 top-1/2 grid size-40 -translate-x-1/2 -translate-y-1/2 rotate-30 grid-cols-2 grid-rows-2">
+            <span class="bg-terracotta-300"></span>
+            <span class="bg-sunny-300"></span>
+            <span class="bg-sage-300"></span>
+            <span class="bg-softblue-300"></span>
+        </span>
+        <span role="img" aria-label="{{ value }}">
+            <span class="absolute left-1.5 top-1 text-xs font-extrabold leading-none">{{ value }}</span>
+            <span class="absolute inset-0 flex items-center justify-center text-3xl font-black leading-none">{{ value }}</span>
+            <span class="absolute bottom-1 right-1.5 rotate-180 text-xs font-extrabold leading-none">{{ value }}</span>
+        </span>
+    </span>
 {% elseif value|default(null) is not null %}
     {% set theme = {
-        red: 'border border-terracotta-200 bg-terracotta-50 text-terracotta-700',
-        yellow: 'border border-sunny-200 bg-sunny-50 text-sunny-700',
-        green: 'border border-sage-200 bg-sage-50 text-sage-700',
-        blue: 'border border-softblue-200 bg-softblue-50 text-softblue-700',
-    }[color|default('')]|default('border border-warmgray-200 bg-white text-warmgray-700') %}
+        red: 'border-terracotta-500/30 shadow-terracotta-500/50 bg-terracotta-300 text-terracotta-700',
+        yellow: 'border-sunny-500/30 shadow-sunny-500/50 bg-sunny-300 text-sunny-700',
+        green: 'border-sage-500/30 shadow-sage-500/50 bg-sage-300 text-sage-700',
+        blue: 'border-softblue-500/30 shadow-softblue-500/50 bg-softblue-300 text-softblue-700',
+    }[color|default('')]|default('border-warmgray-500/30 shadow-warmgray-500/50 bg-white text-warmgray-700') %}
     <span{{ attrs }} class="{{ base }} {{ theme }}" role="img" aria-label="{{ value }}">
         <span class="absolute left-1.5 top-1 text-xs font-extrabold leading-none">{{ value }}</span>
         <span class="absolute inset-0 flex items-center justify-center text-3xl font-black leading-none">{{ value }}</span>
         <span class="absolute bottom-1 right-1.5 rotate-180 text-xs font-extrabold leading-none">{{ value }}</span>
     </span>
 {% else %}
-    {% set color = red ? 'text-terracotta-500' : 'text-warmgray-800' %}
+    {% set color = red ? 'text-terracotta-500 border-terracotta-300/30 shadow-terracotta-300/50' : 'text-warmgray-800 border-warmgray-300/30 shadow-warmgray-500/50' %}
     {% set label = ('card.rank.' ~ rank)|trans %}
     <span{{ attrs }} class="{{ base }} bg-white {{ color }}" role="img" aria-label="{{ label }}{{ suit }}">
         {% block front %}

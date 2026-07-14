@@ -105,8 +105,7 @@
                                     data-action="dragstart->dragdrop--zone-drop#dragStart dragend->dragdrop--zone-drop#dragEnd"
                                 {% endif %}
                                 class="block rounded-xl transition enabled:cursor-grab enabled:hover:-translate-y-1.5 enabled:hover:shadow-lifted
-                                       {{ not card.playable and view.myTurn ? 'opacity-40' }}
-                                       {{ card.playable and card.isWild ? 'ring-2 ring-sunny-300' }}">
+                                       {{ not card.playable and view.myTurn ? 'opacity-60' }}">
                             {% include 'components/card.html.twig' with card|merge({
                                 key: 'ce-hand-' ~ card.identity,
                                 flip: 'ce-' ~ card.identity,
