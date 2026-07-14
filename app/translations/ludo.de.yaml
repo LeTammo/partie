@@ -32,7 +32,7 @@ error.ludo.illegal_pawn: 'Mit dieser Figur ist dieser Zug nicht möglich.'
 rules: |-
   Bringe deine vier Figuren als Erster einmal ums Brett und ins Ziel.
   Standardmäßig startest du mit einer Figur bereits im Spiel, drei stehen noch in deinem Haus (das und die folgenden Regeln lassen sich in den Spieleinstellungen ändern).
-  Wirf eine Sechs, um eine weitere Figur aus deinem Haus ins Spiel zu bringen - es sei denn, eine eigene Figur steht schon auf dem Startfeld, dann geht das erst, wenn sie weitergezogen ist.
+  Wirf eine Sechs, um eine weitere Figur aus deinem Haus ins Spiel zu bringen. Solange noch eine Figur in deinem Haus steht, muss standardmäßig eine eigene Figur auf dem Startfeld zuerst ziehen, wenn sie kann - das ist dann dein einziger möglicher Zug, bis das Feld frei ist, und erst danach kannst du eine weitere Figur einsetzen.
   Eine Sechs gibt dir außerdem einen weiteren Wurf, egal ob du sie nutzen konntest. Bei drei Sechsen in Folge verfällt dieser Wurf - du musst stattdessen eine eigene Figur zurück ins Haus schicken, und dein Zug endet.
   Könnte standardmäßig keine deiner Figuren, die schon im Spiel sind, mit irgendeiner Augenzahl ziehen, darfst du bis zu drei Mal würfeln - du hörst früher auf, sobald ein Wurf nutzbar ist.
   Landest du genau auf einer gegnerischen Figur, muss diese zurück ins Haus.

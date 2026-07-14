@@ -32,7 +32,7 @@ error.ludo.illegal_pawn: 'That pawn cannot make this move.'
 rules: |-
   Race your four pawns around the board and into the goal before anyone else.
   By default you start with one pawn already out of the base and three still in it (this and the rules below can be changed in the game settings).
-  Roll a six to bring another pawn out of the base and onto the board - unless one of your own pawns already sits on the start square, which blocks it until that pawn moves on.
+  Roll a six to bring another pawn out of the base and onto the board. By default, while a pawn still sits in your base, a pawn of yours already on the start square must move first if it can - it's your only legal move until it clears the square, and no further pawn can be released until then.
   Rolling a six also grants an extra roll, whether or not you could use it. Three sixes in a row forfeits that roll - you must send one of your own pawns back to base instead, and your turn ends.
   By default, if none of your pawns already on the board could possibly move with any roll of the die, you get up to three rolls per turn, stopping early the moment you get a usable one.
   Landing exactly on an opponent's pawn sends it back to their base.

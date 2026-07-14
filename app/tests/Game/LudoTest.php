@@ -245,6 +245,40 @@ final class LudoTest extends GameTestCase
         self::assertSame([0, 1, 2, 3], $legal, 'the pawn already on the start square and every base pawn can all move');
     }
 
+    public function testStartSquarePawnIsForcedToMoveWhileAPawnIsStillInBase(): void
+    {
+        $seats = ['p0' => 0, 'p1' => 1];
+        // pawn 0 on the start square, pawn 1 already out on the ring, two pawns still in base
+        $pawns = ['p0' => [0, 5, -1, -1], 'p1' => [-1, -1, -1, -1]];
+
+        // pawn 1 (5 -> 8) would normally be a perfectly legal move too, but must be excluded:
+        // the start-square pawn takes priority since it can also move with this roll (0 -> 3)
+        $legal = $this->rules->legalMoves($pawns, $seats, 'p0', 3, $this->options());
+
+        self::assertSame([0], $legal);
+    }
+
+    public function testOtherPawnsRemainFreeWhenTheStartSquarePawnCannotMoveThisRoll(): void
+    {
+        $seats = ['p0' => 0, 'p1' => 1];
+        // pawn 0 on the start square is blocked from moving 3 by pawn 1 sitting right there
+        $pawns = ['p0' => [0, 3, -1, -1], 'p1' => [-1, -1, -1, -1]];
+
+        $legal = $this->rules->legalMoves($pawns, $seats, 'p0', 3, $this->options());
+
+        self::assertSame([1], $legal, 'the start pawn cannot use this roll, so pawn 1 is free to move instead');
+    }
+
+    public function testStartSquarePriorityDoesNotApplyOnceAllPawnsAreOutOfBase(): void
+    {
+        $seats = ['p0' => 0, 'p1' => 1];
+        $pawns = ['p0' => [0, 5, 10, 15], 'p1' => [-1, -1, -1, -1]];
+
+        $legal = $this->rules->legalMoves($pawns, $seats, 'p0', 3, $this->options());
+
+        self::assertSame([0, 1, 2, 3], $legal, 'no pawn left in base - no priority forced');
+    }
+
     public function testReleaseAllowedOnceOwnPawnHasMovedOffStartSquare(): void
     {
         $seats = ['p0' => 0, 'p1' => 1];

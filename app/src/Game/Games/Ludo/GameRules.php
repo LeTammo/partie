@@ -133,6 +133,18 @@ final class GameRules
             $legal[] = $index;
         }
 
+        // Enforced start clearing: while a pawn still sits in base and this player's own pawn
+        // occupies the start square, that pawn takes priority - if it can move with this roll,
+        // it's the ONLY legal move, forcing the player to clear the square before doing anything
+        // else. If it can't move this roll (blocked or already excluded above), other pawns remain
+        // free to move as usual.
+        if ($options->enforceStartClearingWhilePawnInBase) {
+            $startPawnIndex = array_search(0, $own, true);
+            if (false !== $startPawnIndex && \in_array(-1, $own, true) && \in_array($startPawnIndex, $legal, true)) {
+                return [$startPawnIndex];
+            }
+        }
+
         return $legal;
     }
 
