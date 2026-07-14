@@ -40,6 +40,8 @@ game.solitaire.name: 'Solitaire'
 game.solitaire.description: 'Classic Klondike - build up the foundations, alone against the deck.'
 elevenrush.name: 'Eleven Rush'
 elevenrush.description: 'Strategically play number cards, block your opponents, and then suddenly bring the game to an end.'
+game.backgammon.name: 'Backgammon'
+game.backgammon.description: 'Race your checkers home, hit blots to the bar, and bear off first to win.'
 
 # --- Lobby ---
 lobby.status.waiting: 'waiting for players'

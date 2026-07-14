@@ -1,0 +1,24 @@
+# --- Brett ---
+backgammon.roll: 'Würfeln'
+backgammon.moves_left: 'noch %count% Zug/Züge'
+backgammon.off_count: '%count% draußen'
+backgammon.bar_count: '%count% auf der Bar'
+
+# --- Spielverlauf ---
+log.backgammon.rolled: '%player% würfelt %a% und %b%.'
+log.backgammon.moved: '%player% zieht einen Stein.'
+log.backgammon.hit: '%player% schlägt einen einzelnen Stein – er geht auf die Bar.'
+log.backgammon.no_moves: '%player% hat keinen legalen Zug und muss aussetzen.'
+
+# --- Fehler ---
+error.backgammon.already_rolled: 'Du hast in diesem Zug schon gewürfelt.'
+error.backgammon.roll_first: 'Würfle zuerst.'
+
+# --- Spielanleitung ---
+rules: |-
+    Würfle mit zwei Würfeln und bewege deine Steine in deine Richtung über das Brett, um sie am anderen Ende auszutragen.
+    Ein Pasch gibt dir vier Züge in dieser Augenzahl statt zwei.
+    Ein Punkt mit zwei oder mehr deiner Steine ist sicher; ein einzelner Stein kann geschlagen werden und geht auf die Bar.
+    Ein Stein auf der Bar muss zuerst wieder ins gegnerische Heimfeld einziehen, bevor du etwas anderes ziehen darfst.
+    Sobald alle 15 Steine in deinem Heimfeld sind, darfst du sie austragen – ein zu hoher Wurf zählt nur, wenn kein Stein weiter hinten steht.
+    Wer zuerst alle 15 Steine austrägt, gewinnt. Diese Version spielt ohne Verdopplungswürfel.

@@ -1,0 +1,57 @@
+{% trans_default_domain 'backgammon' %}
+<div class="mx-auto w-fit space-y-4" data-controller="optimistic dragdrop--piece-move"
+     data-dragdrop--piece-move-moves-value="{{ view.moves|json_encode|e('html_attr') }}">
+
+    <div class="flex flex-wrap items-center justify-center gap-4">
+        {% for p in view.players %}
+            {% embed 'components/player_banner.html.twig' with {p: p} %}
+                {% block extra %}
+                    <span class="text-sm font-extrabold text-warmgray-400">
+                        {{ 'backgammon.off_count'|trans({'%count%': p.off}) }}
+                        {% if p.bar > 0 %} · {{ 'backgammon.bar_count'|trans({'%count%': p.bar}) }}{% endif %}
+                    </span>
+                {% endblock %}
+            {% endembed %}
+        {% endfor %}
+    </div>
+
+    <div class="flex min-h-14 items-center justify-center gap-4">
+        {% for value in view.dice %}
+            {% include 'components/die.html.twig' with {value: value, class: 'size-10'} only %}
+        {% endfor %}
+        {% if view.remainingCount > 0 %}
+            <span class="text-sm font-extrabold text-warmgray-400">{{ 'backgammon.moves_left'|trans({'%count%': view.remainingCount}) }}</span>
+        {% endif %}
+        {% if view.canRoll %}
+            <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}">
+                <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
+                <input type="hidden" name="action" value="roll">
+                <button type="submit" class="btn btn-primary">{{ 'backgammon.roll'|trans }}</button>
+            </form>
+        {% endif %}
+    </div>
+
+    <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}" data-dragdrop--piece-move-target="form" class="hidden">
+        <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
+        <input type="hidden" name="action" value="move">
+        <input type="hidden" name="from" data-dragdrop--piece-move-target="from">
+        <input type="hidden" name="to" data-dragdrop--piece-move-target="to">
+    </form>
+
+    <div class="flex items-start justify-center gap-3">
+        {% include 'components/board.html.twig' with {board: view.board} %}
+
+        <div class="flex flex-col gap-2">
+            {% for tray in view.offTrays %}
+                <div data-dragdrop--piece-move-target="zone" data-zone="off:{{ tray.playerId }}"
+                     data-action="dragover->dragdrop--piece-move#dragOver drop->dragdrop--piece-move#drop"
+                     class="flex h-16 w-14 flex-col items-center justify-center gap-0.5 rounded-xl bg-white/70 shadow-soft sm:h-20 sm:w-16
+                            {{ tray.dropTarget ? 'ring-2 ring-sage-300' }}"
+                     title="{{ tray.nickname }}">
+                    {% include 'components/token.html.twig' with {outer: tray.outer, center: tray.center, centerSize: 45, size: 'size-5'} only %}
+                    <span class="text-xs font-extrabold text-warmgray-500">{{ tray.count }}</span>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>

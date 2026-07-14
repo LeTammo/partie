@@ -102,9 +102,12 @@ TicTacToe/RowFour/Checkers/Ludo renderers for full examples):
 - `cols`/`rows`, `class`, `style`, `panelClass` - grid scaffolding.
 - `cells` - in-order cell maps: `class`/`style` (fill colors, explicit
   `grid-row/column` for sparse boards), `key` (wires the cell as a
-  piece-move zone), `token` (token component params), `form` (a
-  click-to-place cell with an `optimistic#insert` template - Tic-Tac-Toe),
-  `dot` (decorative), `attr`.
+  piece-move zone), `token` (token component params), `tokens` (list of
+  token params for a cell that holds more than one piece - renders a capped
+  overlapping stack with a "+N" badge, e.g. Backgammon's points; `tokensMax`
+  caps how many stack visibly, default 5), `form` (a click-to-place cell
+  with an `optimistic#insert` template - Tic-Tac-Toe), `dot` (decorative),
+  `attr`.
 - `layers` - decorative divs behind the cells (Ludo's colored backdrops).
 - `drop` - the gravity drop-row above the grid (Four in a Row); cells then
   carry `attr: {'data-col': x}` so the optimistic disc falls into the

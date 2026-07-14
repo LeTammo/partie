@@ -1,0 +1,24 @@
+# --- Board ---
+backgammon.roll: 'Roll'
+backgammon.moves_left: '%count% move(s) left'
+backgammon.off_count: '%count% off'
+backgammon.bar_count: '%count% on the bar'
+
+# --- Game log ---
+log.backgammon.rolled: '%player% rolls %a% and %b%.'
+log.backgammon.moved: '%player% moves a checker.'
+log.backgammon.hit: '%player% hits a blot, sending it to the bar.'
+log.backgammon.no_moves: '%player% has no legal move and forfeits the roll.'
+
+# --- Errors ---
+error.backgammon.already_rolled: 'You already rolled this turn.'
+error.backgammon.roll_first: 'Roll the dice first.'
+
+# --- How to play ---
+rules: |-
+    Roll two dice and move your checkers around the board in your own direction, bearing off past the far end.
+    Doubles give you four moves of that value instead of two.
+    A point held by two or more of your checkers is safe; a single checker (a blot) can be hit and sent to the bar.
+    A checker on the bar must re-enter through the opponent's home board before you may move anything else.
+    Once all fifteen of your checkers are in your home board, start bearing them off - overshooting with a die is only allowed once no checker sits further back.
+    First to bear off all fifteen checkers wins. No doubling cube in this version.

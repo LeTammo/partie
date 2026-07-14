@@ -20,6 +20,11 @@
        - attr:   map of extra attributes
        - dot:    true renders a small decorative dot
        - token:  token component params (the piece sitting on this cell)
+       - tokens: list of token component params, rendered as a capped
+                 overlapping stack with a "+N" overflow badge (Backgammon's
+                 points) - use instead of `token` when a cell can hold more
+                 than one piece; `tokensMax` caps how many stack visibly
+                 (default 5)
        - form:   a click-to-place cell (TicTacToe): {fields: map, attr: map,
                  buttonClass, buttonAria, template: token params for the
                  optimistic insert}
@@ -91,7 +96,21 @@
                 {% if cell.style|default(null) %}style="{{ cell.style }}"{% endif %}
                 class="{{ cell.class|default('') }}">
                 {%- if cell.dot|default(false) %}<span class="size-1.5 rounded-full bg-white"></span>{% endif -%}
-                {%- if cell.token|default(null) %}{% include 'components/token.html.twig' with cell.token only %}{% endif -%}
+                {%- if cell.tokens|default(null) %}
+                    {% set stackMax = cell.tokensMax|default(5) %}
+                    {% set visible = cell.tokens|slice(0, stackMax) %}
+                    {% set hidden = cell.tokens|length - visible|length %}
+                    <span class="relative flex flex-col-reverse items-center">
+                        {% for t in visible %}
+                            <span style="margin-top: -12%; position: relative; z-index: {{ loop.index }};">
+                                {% include 'components/token.html.twig' with t only %}
+                            </span>
+                        {% endfor %}
+                        {% if hidden > 0 %}
+                            <span class="absolute -top-1 -right-1 grid size-4 place-items-center rounded-full bg-warmgray-700 text-[0.6rem] font-extrabold text-white shadow-soft">+{{ hidden }}</span>
+                        {% endif %}
+                    </span>
+                {%- elseif cell.token|default(null) %}{% include 'components/token.html.twig' with cell.token only %}{% endif -%}
             </{{ tag }}>
         {% endif %}
     {% endfor %}
