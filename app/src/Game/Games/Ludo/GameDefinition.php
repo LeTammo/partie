@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Game\Games\Ludo;
 
 use App\Game\Core\Exception\InvalidMoveException;
+use App\Game\Core\Model\GameSetting;
+use App\Game\Core\Model\GameSettingType;
 use App\Game\Core\Model\GameState;
 use App\Game\Core\Model\Player;
 use App\Game\Core\Service\AbstractGameDefinition;
@@ -47,6 +49,46 @@ final readonly class GameDefinition extends AbstractGameDefinition
         return 4;
     }
 
+    public function settings(): array
+    {
+        return [
+            new GameSetting(
+                key: 'startOneReleased',
+                labelKey: 'setting.ludo.start_one_released',
+                type: GameSettingType::Bool,
+                default: true,
+            ),
+            new GameSetting(
+                key: 'enforceStartClearingWhilePawnInBase',
+                labelKey: 'setting.ludo.enforce_start_clearing_while_pawn_in_base',
+                type: GameSettingType::Bool,
+                default: true,
+            ),
+            new GameSetting(
+                key: 'allowGoalStretchOvertaking',
+                labelKey: 'setting.ludo.allow_goal_stretch_overtaking',
+                type: GameSettingType::Bool,
+                default: false,
+            ),
+            new GameSetting(
+                key: 'threeSixesPenalty',
+                labelKey: 'setting.ludo.three_sixes_penalty',
+                type: GameSettingType::Bool,
+                default: true,
+            ),
+            new GameSetting(
+                key: 'rerollRule',
+                labelKey: 'setting.ludo.reroll_rule',
+                type: GameSettingType::Enum,
+                default: Options::REROLL_NO_LEGAL_MOVE,
+                options: [
+                    Options::REROLL_NO_LEGAL_MOVE => 'setting.ludo.reroll_rule.no_legal_move',
+                    Options::REROLL_NO_OPEN_FIELD => 'setting.ludo.reroll_rule.no_open_field',
+                ],
+            ),
+        ];
+    }
+
     public function createInitialState(array $players, array $settings = []): GameState
     {
         $state = new GameState($this->getId(), $players);
@@ -55,9 +97,16 @@ final readonly class GameDefinition extends AbstractGameDefinition
         $state->data['lastRoll'] = null;
         $state->data['rollAttempts'] = 0;
         $state->data['rollSeq'] = 0;
+        $state->data['sixStreak'] = 0;
+        $state->data['awaitingBanish'] = false;
 
+        $options = Options::fromState($state);
         foreach ($players as $player) {
-            $state->data['pawns'][$player->id] = array_fill(0, GameRules::PAWNS_PER_PLAYER, -1);
+            $pawns = array_fill(0, GameRules::PAWNS_PER_PLAYER, -1);
+            if ($options->startOneReleased) {
+                $pawns[0] = 0; // one pawn starts already released, on the start square
+            }
+            $state->data['pawns'][$player->id] = $pawns;
         }
 
         return $state;
@@ -67,6 +116,12 @@ final readonly class GameDefinition extends AbstractGameDefinition
     {
         if (!$state->isPlayersTurn($playerId)) {
             throw new InvalidMoveException('error.not_your_turn');
+        }
+
+        if ($state->data['awaitingBanish']) {
+            $this->banish($state, $this->stringParam($payload, 'banish'));
+
+            return;
         }
 
         match ($payload['action'] ?? '') {
@@ -92,35 +147,93 @@ final readonly class GameDefinition extends AbstractGameDefinition
             $this->invalidMove('error.ludo.already_rolled');
         }
 
+        $options = Options::fromState($state);
         $player = $state->currentPlayer();
         $value = random_int(1, 6);
-        $state->data['roll'] = $value;
         $state->data['lastRoll'] = $value;
         ++$state->data['rollSeq'];
         $state->logGameEvent('log.ludo.rolled', ['%player%' => $player->nickname, '%value%' => $value]);
 
-        if ($this->rules->hasAnyLegalMove($state->data['pawns'], $this->seats($state), $player->id, $value)) {
+        $state->data['sixStreak'] = 6 === $value ? $state->data['sixStreak'] + 1 : 0;
+
+        if ($options->threeSixesPenalty && 3 === $state->data['sixStreak']) {
+            $state->data['sixStreak'] = 0;
+            $this->startBanish($state, $player);
+
+            return;
+        }
+
+        $seats = $this->seats($state);
+
+        // Whether THIS specific roll gives any pawn (base, ring, or goal stretch) a move is
+        // always checked the same way, regardless of the reroll rule - if it does, it must be
+        // used, full stop.
+        if ($this->rules->hasAnyLegalMove($state->data['pawns'], $seats, $player->id, $value, $options)) {
+            $state->data['roll'] = $value;
             $state->data['rollAttempts'] = 0;
 
             return;
         }
 
         $state->logGameEvent('log.ludo.no_move', ['%player%' => $player->nickname]);
-        $state->data['roll'] = null;
 
         if (6 === $value) {
             return;
         }
 
-        $allInBase = array_all($state->data['pawns'][$player->id], static fn (int $progress): bool => -1 === $progress);
-        if (
-            ++$state->data['rollAttempts'] < 3
-            && ($allInBase || !$this->rules->hasAnyLegalMove($state->data['pawns'], $this->seats($state), $player->id, $value))
-        ) {
+        // How many attempts the player gets is decided purely by board state, independent of
+        // what was actually rolled - the reroll rule only controls this ceiling.
+        $maxAttempts = Options::REROLL_NO_OPEN_FIELD === $options->rerollRule
+            ? ($this->rules->hasAnyOpenFieldPawn($state->data['pawns'][$player->id]) ? 1 : 3)
+            : ($this->rules->hasAnyOnBoardTheoreticalMove($state->data['pawns'], $seats, $player->id, $options) ? 1 : 3);
+
+        if (++$state->data['rollAttempts'] < $maxAttempts) {
             return;
         }
 
         $state->data['rollAttempts'] = 0;
+        $state->advanceTurn();
+    }
+
+    /**
+     * Rolling a third six in a row (when enabled) forfeits the move that six
+     * would have granted - the player must send one of their own pawns back
+     * to base instead, then their turn ends.
+     */
+    private function startBanish(GameState $state, Player $player): void
+    {
+        $state->data['roll'] = null;
+
+        $eligible = array_filter(
+            $state->data['pawns'][$player->id],
+            static fn (int $progress): bool => $progress > -1 && GameRules::FINISH_PROGRESS !== $progress,
+        );
+
+        if ([] === $eligible) {
+            $state->logGameEvent('log.ludo.three_sixes_no_pawn', ['%player%' => $player->nickname]);
+            $state->advanceTurn();
+
+            return;
+        }
+
+        $state->data['awaitingBanish'] = true;
+        $state->logGameEvent('log.ludo.three_sixes', ['%player%' => $player->nickname]);
+    }
+
+    private function banish(GameState $state, string $key): void
+    {
+        $player = $state->currentPlayer();
+        $seat = $this->seats($state)[$player->id];
+        $ownPawns = $state->data['pawns'][$player->id];
+
+        $pawnIndex = $this->pawnIndexAtKey($ownPawns, $seat, $key);
+        if (null === $pawnIndex || -1 === $ownPawns[$pawnIndex] || GameRules::FINISH_PROGRESS === $ownPawns[$pawnIndex]) {
+            $this->invalidMove('error.ludo.illegal_pawn');
+        }
+
+        $state->data['pawns'][$player->id][$pawnIndex] = -1;
+        $state->data['awaitingBanish'] = false;
+        $state->logGameEvent('log.ludo.banished', ['%player%' => $player->nickname]);
         $state->advanceTurn();
     }
 
@@ -137,7 +250,7 @@ final readonly class GameDefinition extends AbstractGameDefinition
 
         $pawnIndex = $this->pawnIndexAtKey($state->data['pawns'][$player->id], $seat, $fromKey);
 
-        $legal = $this->rules->legalMoves($state->data['pawns'], $seats, $player->id, $roll);
+        $legal = $this->rules->legalMoves($state->data['pawns'], $seats, $player->id, $roll, Options::fromState($state));
         if (null === $pawnIndex || !\in_array($pawnIndex, $legal, true)) {
             $this->invalidMove('error.ludo.illegal_pawn');
         }
@@ -194,7 +307,7 @@ final readonly class GameDefinition extends AbstractGameDefinition
             return null;
         }
 
-        if (preg_match('/^home:(\d+):(\d+)$/', $key, $m)) {
+        if (preg_match('/^goal:(\d+):(\d+)$/', $key, $m)) {
             if ((int) $m[1] !== $seat) {
                 return null;
             }

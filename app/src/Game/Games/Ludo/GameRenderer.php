@@ -29,11 +29,11 @@ final readonly class GameRenderer
     ];
 
     /**
-     * Per seat, the 4 private squares [row, col] leading to the center.
+     * Per seat, the 4 private squares [row, col] leading to the center (the goal stretch).
      *
      * @var list<list<array{0: int, 1: int}>>
      */
-    private const array HOME_LANES = [
+    private const array GOAL_LANES = [
         [[5, 1], [5, 2], [5, 3], [5, 4]],
         [[1, 5], [2, 5], [3, 5], [4, 5]],
         [[5, 9], [5, 8], [5, 7], [5, 6]],
@@ -71,14 +71,26 @@ final readonly class GameRenderer
         $seats = $this->seats($state);
         $pawns = $state->data['pawns'];
         $seatCount = \count($state->players);
+        $options = Options::fromState($state);
+        $awaitingBanish = $myTurn && ($state->data['awaitingBanish'] ?? false);
 
         $ring = new Path('ring', self::xy(self::RING_PATH), seatStride: 10);
-        $homes = array_map(static fn (array $lane): array => self::xy($lane), self::HOME_LANES);
+        $goalLanes = array_map(static fn (array $lane): array => self::xy($lane), self::GOAL_LANES);
         $bases = array_map(static fn (array $slots): array => self::xy($slots), self::BASE_SLOTS);
 
         $legal = (null !== $viewerId && $myTurn && null !== $roll && GameStatus::Running === $state->status)
-            ? $this->rules->legalMoves($pawns, $seats, $viewerId, $roll)
+            ? $this->rules->legalMoves($pawns, $seats, $viewerId, $roll, $options)
             : [];
+
+        $banishCells = [];
+        if (null !== $viewerId && $awaitingBanish) {
+            $seat = $seats[$viewerId];
+            foreach ($pawns[$viewerId] as $pawnIndex => $progress) {
+                if ($progress > -1 && GameRules::FINISH_PROGRESS !== $progress) {
+                    $banishCells[] = $this->keyFor($seat, $pawnIndex, $progress);
+                }
+            }
+        }
 
         $moves = new MoveMap();
         if ([] !== $legal) {
@@ -122,15 +134,16 @@ final readonly class GameRenderer
                 $fill = \sprintf('var(--color-%s-%s)', self::SEAT_COLORS[$startSeat], $tier);
             }
 
-            $cells[] = $this->cell("ring:$i", $x, $y, $locations["ring:$i"] ?? null, $viewerId, $moves, $fill, track: true);
+            $cells[] = $this->cell("ring:$i", $x, $y, $locations["ring:$i"] ?? null, $viewerId, $moves, $fill, track: true, banishable: \in_array("ring:$i", $banishCells, true));
         }
         for ($seat = 0; $seat < 4; ++$seat) {
             $tier = $seat < $seatCount ? '300' : '100';
             $fill = \sprintf('var(--color-%s-%s)', self::SEAT_COLORS[$seat], $tier);
 
-            foreach ($homes[$seat] as $step => [$x, $y]) {
+            foreach ($goalLanes[$seat] as $step => [$x, $y]) {
                 $used["$x,$y"] = true;
-                $cells[] = $this->cell("home:$seat:$step", $x, $y, $locations["home:$seat:$step"] ?? null, $viewerId, $moves, $fill, track: true);
+                $key = "goal:$seat:$step";
+                $cells[] = $this->cell($key, $x, $y, $locations[$key] ?? null, $viewerId, $moves, $fill, track: true, banishable: \in_array($key, $banishCells, true));
             }
         }
         for ($seat = 0; $seat < 4; ++$seat) {
@@ -164,7 +177,9 @@ final readonly class GameRenderer
             'myTurn' => $myTurn,
             'roll' => $state->data['lastRoll'],
             'rollSeq' => $state->data['rollSeq'] ?? 0,
-            'canRoll' => $myTurn && null === $roll && GameStatus::Running === $state->status,
+            'canRoll' => $myTurn && null === $roll && !$awaitingBanish && GameStatus::Running === $state->status,
+            'awaitingBanish' => $awaitingBanish,
+            'banishCells' => $banishCells,
         ];
     }
 
@@ -173,7 +188,7 @@ final readonly class GameRenderer
      *
      * @return array<string, mixed>
      */
-    private function cell(string $key, int $x, int $y, ?array $occupant, ?string $viewerId, MoveMap $moves, ?string $fill, bool $track): array
+    private function cell(string $key, int $x, int $y, ?array $occupant, ?string $viewerId, MoveMap $moves, ?string $fill, bool $track, bool $banishable = false): array
     {
         $style = \sprintf('grid-row:%d;grid-column:%d;', $y + 1, $x + 1);
         if (null !== $fill) {
@@ -193,7 +208,9 @@ final readonly class GameRenderer
                 'centerSize' => 60,
                 'size' => 'size-6 sm:size-8',
                 'ring' => $movable,
-                'class' => $movable ? 'cursor-grab transition hover:scale-110' : 'shadow-strong',
+                'class' => 'group'
+                    .($banishable ? ' ring-2 ring-terracotta-500 cursor-pointer' : ($movable ? ' cursor-grab transition hover:scale-110' : ' shadow-strong')),
+                'overlayIcon' => $banishable ? 'x' : null,
                 'attr' => $movable ? [
                     'data-source' => $key,
                     'draggable' => 'true',
@@ -215,7 +232,7 @@ final readonly class GameRenderer
         return match (true) {
             -1 === $progress => "base:$seat:$pawnIndex",
             $progress <= GameRules::RING_LENGTH - 1 => 'ring:'.$this->rules->ringIndexFor($seat, $progress),
-            default => "home:$seat:".($progress - GameRules::RING_LENGTH),
+            default => "goal:$seat:".($progress - GameRules::RING_LENGTH),
         };
     }
 
@@ -225,7 +242,7 @@ final readonly class GameRenderer
 
         return $targetProgress <= GameRules::RING_LENGTH - 1
             ? 'ring:'.$this->rules->ringIndexFor($seat, $targetProgress)
-            : "home:$seat:".($targetProgress - GameRules::RING_LENGTH);
+            : "goal:$seat:".($targetProgress - GameRules::RING_LENGTH);
     }
 
     /**

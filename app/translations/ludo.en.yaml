@@ -2,6 +2,16 @@
 ludo.roll: 'Roll the die'
 ludo.no_move: 'No legal move - your turn passes.'
 ludo.move_pawn: 'Move this pawn'
+ludo.three_sixes_choose: 'Three sixes in a row! Pick a pawn to send back to base.'
+
+# --- Settings ---
+setting.ludo.start_one_released: 'One pawn starts already out of the base'
+setting.ludo.enforce_start_clearing_while_pawn_in_base: 'Must clear the start square when at least one pawn is in the base'
+setting.ludo.allow_goal_stretch_overtaking: 'Pawns may jump over each other in the goal stretch'
+setting.ludo.three_sixes_penalty: 'Three sixes in a row sends a pawn back to base'
+setting.ludo.reroll_rule: 'Reroll up to three times when'
+setting.ludo.reroll_rule.no_legal_move: 'none of your pawns can move at all'
+setting.ludo.reroll_rule.no_open_field: 'none of your pawns are in the open field'
 
 # --- Game log ---
 log.ludo.rolled: '%player% rolled a %value%.'
@@ -9,6 +19,9 @@ log.ludo.no_move: '%player% has no legal move.'
 log.ludo.released: '%player% brought a pawn into play.'
 log.ludo.moved: '%player% moved a pawn.'
 log.ludo.captured: '%player% sent %opponent%''s pawn back to base!'
+log.ludo.three_sixes: '%player% rolled three sixes in a row and must send a pawn back to base.'
+log.ludo.three_sixes_no_pawn: '%player% rolled three sixes in a row, but has no pawn to send back.'
+log.ludo.banished: '%player% sends a pawn back to base.'
 
 # --- Errors ---
 error.ludo.already_rolled: 'You already rolled - move a pawn first.'
@@ -17,10 +30,11 @@ error.ludo.illegal_pawn: 'That pawn cannot make this move.'
 
 # --- How to play ---
 rules: |-
-  Race your four pawns around the board and home before anyone else.
-  Roll a six to bring a pawn out of your base and onto the board.
-  Rolling a six also grants an extra roll, whether or not you could use it.
-  While all four of your pawns are still in your base, you get up to three rolls per turn, stopping early the moment you roll a six.
+  Race your four pawns around the board and into the goal before anyone else.
+  By default you start with one pawn already out of the base and three still in it (this and the rules below can be changed in the game settings).
+  Roll a six to bring another pawn out of the base and onto the board - unless one of your own pawns already sits on the start square, which blocks it until that pawn moves on.
+  Rolling a six also grants an extra roll, whether or not you could use it. Three sixes in a row forfeits that roll - you must send one of your own pawns back to base instead, and your turn ends.
+  By default, if none of your pawns already on the board could possibly move with any roll of the die, you get up to three rolls per turn, stopping early the moment you get a usable one.
   Landing exactly on an opponent's pawn sends it back to their base.
-  Once you've gone all the way around, turn into your own home stretch - you need an exact roll to reach the final square.
-  First player to get all four pawns home wins.
+  Once you've gone all the way around, turn into your own goal stretch - you need an exact roll to reach the final square.
+  First player to get all four pawns into the goal wins.

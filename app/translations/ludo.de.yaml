@@ -2,6 +2,16 @@
 ludo.roll: 'Würfeln'
 ludo.no_move: 'Kein möglicher Zug - du setzt aus.'
 ludo.move_pawn: 'Diese Figur ziehen'
+ludo.three_sixes_choose: 'Drei Sechsen in Folge! Wähle eine Figur, die zurück ins Haus muss.'
+
+# --- Einstellungen ---
+setting.ludo.start_one_released: 'Eine Figur startet bereits außerhalb des Hauses'
+setting.ludo.enforce_start_clearing_while_pawn_in_base: 'Startfeld muss frei sein, solange noch eine Figur im Haus steht'
+setting.ludo.allow_goal_stretch_overtaking: 'Figuren dürfen sich in der Zielgeraden überspringen'
+setting.ludo.three_sixes_penalty: 'Drei Sechsen in Folge schicken eine Figur zurück ins Haus'
+setting.ludo.reroll_rule: 'Bis zu drei Mal würfeln, wenn'
+setting.ludo.reroll_rule.no_legal_move: 'keine deiner Figuren ziehen kann'
+setting.ludo.reroll_rule.no_open_field: 'keine deiner Figuren im offenen Feld steht'
 
 # --- Spielverlauf ---
 log.ludo.rolled: '%player% würfelt eine %value%.'
@@ -9,6 +19,9 @@ log.ludo.no_move: '%player% hat keinen möglichen Zug.'
 log.ludo.released: '%player% bringt eine Figur ins Spiel.'
 log.ludo.moved: '%player% zieht eine Figur.'
 log.ludo.captured: '%player% schickt %opponent%s Figur zurück ins Haus!'
+log.ludo.three_sixes: '%player% würfelt drei Sechsen in Folge und muss eine Figur zurück ins Haus schicken.'
+log.ludo.three_sixes_no_pawn: '%player% würfelt drei Sechsen in Folge, hat aber keine Figur, die zurück kann.'
+log.ludo.banished: '%player% schickt eine Figur zurück ins Haus.'
 
 # --- Fehler ---
 error.ludo.already_rolled: 'Du hast schon gewürfelt - ziehe zuerst eine Figur.'
@@ -18,9 +31,10 @@ error.ludo.illegal_pawn: 'Mit dieser Figur ist dieser Zug nicht möglich.'
 # --- Spielanleitung ---
 rules: |-
   Bringe deine vier Figuren als Erster einmal ums Brett und ins Ziel.
-  Wirf eine Sechs, um eine Figur aus deinem Haus ins Spiel zu bringen.
-  Eine Sechs gibt dir außerdem einen weiteren Wurf, egal ob du sie nutzen konntest.
-  Solange noch alle vier Figuren in deinem Haus stehen, darfst du bis zu drei Mal würfeln - du hörst früher auf, sobald eine Sechs fällt.
+  Standardmäßig startest du mit einer Figur bereits im Spiel, drei stehen noch in deinem Haus (das und die folgenden Regeln lassen sich in den Spieleinstellungen ändern).
+  Wirf eine Sechs, um eine weitere Figur aus deinem Haus ins Spiel zu bringen - es sei denn, eine eigene Figur steht schon auf dem Startfeld, dann geht das erst, wenn sie weitergezogen ist.
+  Eine Sechs gibt dir außerdem einen weiteren Wurf, egal ob du sie nutzen konntest. Bei drei Sechsen in Folge verfällt dieser Wurf - du musst stattdessen eine eigene Figur zurück ins Haus schicken, und dein Zug endet.
+  Könnte standardmäßig keine deiner Figuren, die schon im Spiel sind, mit irgendeiner Augenzahl ziehen, darfst du bis zu drei Mal würfeln - du hörst früher auf, sobald ein Wurf nutzbar ist.
   Landest du genau auf einer gegnerischen Figur, muss diese zurück ins Haus.
   Bist du einmal ganz herum, biegst du in deine eigene Zielgerade ein - dafür brauchst du die passende Augenzahl.
   Wer zuerst alle vier Figuren im Ziel hat, gewinnt.

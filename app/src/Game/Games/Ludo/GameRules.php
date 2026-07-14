@@ -8,8 +8,8 @@ final class GameRules
 {
     public const int PAWNS_PER_PLAYER = 4;
     public const int RING_LENGTH = 40;
-    public const int HOME_STEPS = 4;
-    public const int FINISH_PROGRESS = self::RING_LENGTH + self::HOME_STEPS - 1;
+    public const int GOAL_STEPS = 4;
+    public const int FINISH_PROGRESS = self::RING_LENGTH + self::GOAL_STEPS - 1;
 
     public function startIndex(int $seat): int
     {
@@ -57,10 +57,28 @@ final class GameRules
     /**
      * @param list<int> $ownPawns
      */
-    private function homeSlotTaken(array $ownPawns, int $progress, int $excludePawnIndex): bool
+    private function goalSlotTaken(array $ownPawns, int $progress, int $excludePawnIndex): bool
     {
         return array_any($ownPawns, fn($p, $pawnIndex) => $pawnIndex !== $excludePawnIndex && $p === $progress);
 
+    }
+
+    /**
+     * Whether any own pawn sits in a goal-stretch slot strictly between $fromProgress and $target
+     * (inclusive of $target) - used when overtaking within the goal stretch is disallowed.
+     *
+     * @param list<int> $ownPawns
+     */
+    private function goalStretchBlocked(array $ownPawns, int $fromProgress, int $target, int $excludePawnIndex): bool
+    {
+        $start = max(self::RING_LENGTH, $fromProgress + 1);
+        for ($slot = $start; $slot <= $target; ++$slot) {
+            if ($this->goalSlotTaken($ownPawns, $slot, $excludePawnIndex)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -69,7 +87,7 @@ final class GameRules
      *
      * @return list<int>
      */
-    public function legalMoves(array $pawns, array $seats, string $playerId, int $roll): array
+    public function legalMoves(array $pawns, array $seats, string $playerId, int $roll, Options $options): array
     {
         $seat = $seats[$playerId];
         $own = $pawns[$playerId];
@@ -84,9 +102,11 @@ final class GameRules
                 if (6 !== $roll) {
                     continue;
                 }
-                $occupant = $this->pawnAtRingIndex($pawns, $seats, $this->startIndex($seat));
-                if (null !== $occupant && $occupant['playerId'] === $playerId) {
-                    continue;
+                if ($options->enforceStartClearingWhilePawnInBase) {
+                    $occupant = $this->pawnAtRingIndex($pawns, $seats, $this->startIndex($seat));
+                    if (null !== $occupant && $occupant['playerId'] === $playerId) {
+                        continue;
+                    }
                 }
                 $legal[] = $index;
 
@@ -103,7 +123,10 @@ final class GameRules
                 if (null !== $occupant && $occupant['playerId'] === $playerId) {
                     continue;
                 }
-            } elseif ($this->homeSlotTaken($own, $target, $index)) {
+            } elseif ($options->allowGoalStretchOvertaking
+                ? $this->goalSlotTaken($own, $target, $index)
+                : $this->goalStretchBlocked($own, $progress, $target, $index)
+            ) {
                 continue;
             }
 
@@ -117,9 +140,47 @@ final class GameRules
      * @param array<string, list<int>> $pawns
      * @param array<string, int>       $seats
      */
-    public function hasAnyLegalMove(array $pawns, array $seats, string $playerId, int $roll): bool
+    public function hasAnyLegalMove(array $pawns, array $seats, string $playerId, int $roll, Options $options): bool
     {
-        return [] !== $this->legalMoves($pawns, $seats, $playerId, $roll);
+        return [] !== $this->legalMoves($pawns, $seats, $playerId, $roll, $options);
+    }
+
+    /**
+     * Whether any pawn already on the board (ring or goal stretch - not base) would have a legal
+     * move for AT LEAST ONE possible die value (1-6), independent of what was actually rolled.
+     * Base-pawn releases never count here, even though rolling a six would free one - the retry
+     * mechanic exists specifically to give the player more chances at that six.
+     *
+     * Used by the "no_legal_move" reroll rule to decide the number of allowed roll attempts.
+     *
+     * @param array<string, list<int>> $pawns
+     * @param array<string, int>       $seats
+     */
+    public function hasAnyOnBoardTheoreticalMove(array $pawns, array $seats, string $playerId, Options $options): bool
+    {
+        $own = $pawns[$playerId];
+
+        for ($roll = 1; $roll <= 6; ++$roll) {
+            foreach ($this->legalMoves($pawns, $seats, $playerId, $roll, $options) as $pawnIndex) {
+                if (-1 !== $own[$pawnIndex]) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Whether the player has any pawn currently on the open ring track (not in base, not yet in
+     * the goal stretch). Used by the "no_open_field" reroll rule - a pure presence check, no die
+     * value involved.
+     *
+     * @param list<int> $ownPawns
+     */
+    public function hasAnyOpenFieldPawn(array $ownPawns): bool
+    {
+        return array_any($ownPawns, static fn (int $progress): bool => $progress >= 0 && $progress < self::RING_LENGTH);
     }
 
     /**
