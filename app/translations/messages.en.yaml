@@ -40,6 +40,8 @@ game.solitaire.name: 'Solitaire'
 game.solitaire.description: 'Classic Klondike - build up the foundations, alone against the deck.'
 elevenrush.name: 'Eleven Rush'
 elevenrush.description: 'Strategically play number cards, block your opponents, and then suddenly bring the game to an end.'
+game.crazyeight.name: 'Crazy Eights'
+game.crazyeight.description: 'Match color or number, stack draw cards, skip and reverse – empty your hand first.'
 game.backgammon.name: 'Backgammon'
 game.backgammon.description: 'Race your checkers home, hit blots to the bar, and bear off first to win.'
 

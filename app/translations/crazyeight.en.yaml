@@ -1,0 +1,44 @@
+# --- Table ---
+crazyeight.your_hand: 'Your hand'
+crazyeight.pile: 'Draw pile (%count%)'
+crazyeight.discard: 'Discard'
+crazyeight.draw: 'Draw a card'
+crazyeight.pass: 'Pass'
+crazyeight.wish_prompt: 'Pick a wish color for your wild card'
+crazyeight.wished: 'Wished color:'
+crazyeight.pending_draw: 'Draw %count% or stack a matching card!'
+crazyeight.color.red: 'Red'
+crazyeight.color.yellow: 'Yellow'
+crazyeight.color.green: 'Green'
+crazyeight.color.blue: 'Blue'
+
+# --- Settings ---
+setting.crazyeight.stack_draw2: 'Draw-two is stackable'
+setting.crazyeight.start_hand_size: 'Starting hand size'
+
+# --- Game log ---
+log.crazyeight.started: 'Crazy Eights starts – match color or number.'
+log.crazyeight.played: '%player% plays a %color% %value%.'
+log.crazyeight.wished: '%player% wishes %color%.'
+log.crazyeight.skipped: '%player% is skipped.'
+log.crazyeight.penalty_drew: '%player% draws %count% penalty cards.'
+log.crazyeight.drew: '%player% draws a card.'
+log.crazyeight.passed: '%player% passes.'
+log.crazyeight.reshuffled: 'The discard pile was shuffled into a new draw pile.'
+log.crazyeight.won: '%player% played the last card and wins!'
+
+# --- Errors ---
+error.crazyeight.unknown_card: 'Unknown card.'
+error.crazyeight.not_playable: 'This card cannot be played right now.'
+error.crazyeight.wish_required: 'Pick a color for your wild card.'
+error.crazyeight.already_drawn: 'You already drew – play a card or pass.'
+error.crazyeight.draw_first: 'Draw a card first.'
+
+# --- How to play ---
+rules: |-
+    Match the top card of the discard pile by color or number.
+    Skip cards skip the next player, reverse cards flip the turn order (a skip with two players), a +2 makes the next player draw two.
+    Wild cards let you wish a color; a wild +4 also makes the next player draw four.
+    A matching draw card can be stacked onto a pending penalty instead of drawing, if the host allows it.
+    If you cannot play, draw a card – if it still does not fit, pass.
+    The first player to empty their hand wins.

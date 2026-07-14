@@ -1,0 +1,44 @@
+# --- Tisch ---
+crazyeight.your_hand: 'Deine Hand'
+crazyeight.pile: 'Nachziehstapel (%count%)'
+crazyeight.discard: 'Ablage'
+crazyeight.draw: 'Karte ziehen'
+crazyeight.pass: 'Aussetzen'
+crazyeight.wish_prompt: 'Wünsch dir eine Farbe für deine Sonderkarte'
+crazyeight.wished: 'Gewünschte Farbe:'
+crazyeight.pending_draw: 'Zieh %count% oder staple eine passende Karte!'
+crazyeight.color.red: 'Rot'
+crazyeight.color.yellow: 'Gelb'
+crazyeight.color.green: 'Grün'
+crazyeight.color.blue: 'Blau'
+
+# --- Einstellungen ---
+setting.crazyeight.stack_draw2: 'Zieh-Zwei ist stapelbar'
+setting.crazyeight.start_hand_size: 'Starthandgröße'
+
+# --- Spielverlauf ---
+log.crazyeight.started: 'Crazy Eights startet – Farbe oder Zahl bedienen.'
+log.crazyeight.played: '%player% spielt %color% %value%.'
+log.crazyeight.wished: '%player% wünscht sich %color%.'
+log.crazyeight.skipped: '%player% wird ausgesetzt.'
+log.crazyeight.penalty_drew: '%player% zieht %count% Strafkarten.'
+log.crazyeight.drew: '%player% zieht eine Karte.'
+log.crazyeight.passed: '%player% setzt aus.'
+log.crazyeight.reshuffled: 'Der Ablagestapel wurde zum neuen Nachziehstapel gemischt.'
+log.crazyeight.won: '%player% spielt die letzte Karte und gewinnt!'
+
+# --- Fehler ---
+error.crazyeight.unknown_card: 'Unbekannte Karte.'
+error.crazyeight.not_playable: 'Diese Karte kann gerade nicht gespielt werden.'
+error.crazyeight.wish_required: 'Wähle eine Farbe für deine Sonderkarte.'
+error.crazyeight.already_drawn: 'Du hast schon gezogen – spiele eine Karte oder setze aus.'
+error.crazyeight.draw_first: 'Zieh zuerst eine Karte.'
+
+# --- Spielanleitung ---
+rules: |-
+    Bediene die oberste Karte der Ablage mit gleicher Farbe oder Zahl.
+    Aussetzen-Karten setzen den nächsten Spieler aus, Richtungswechsel dreht die Zugreihenfolge um (bei zwei Spielern wie Aussetzen), eine +2 lässt den nächsten Spieler zwei Karten ziehen.
+    Sonderkarten lassen dich eine Farbe wünschen; eine Sonderkarte +4 lässt den nächsten Spieler zusätzlich vier Karten ziehen.
+    Eine passende Zieh-Karte kann auf eine offene Strafe gestapelt werden, statt selbst zu ziehen – falls der Host das erlaubt.
+    Kannst du nicht spielen, zieh eine Karte – passt sie immer noch nicht, setz aus.
+    Wer zuerst seine Hand leert, gewinnt.

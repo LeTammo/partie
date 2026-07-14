@@ -1,0 +1,132 @@
+{% trans_default_domain 'crazyeight' %}
+<div class="space-y-6" data-controller="optimistic dragdrop--zone-drop choice-dialog">
+    {# ---------- players ---------- #}
+    <div class="flex flex-wrap justify-center gap-3">
+        {% for p in view.players %}
+            {% embed 'components/player_banner.html.twig' with {p: p} %}
+                {% block extra %}
+                    <span class="inline-flex items-center gap-1 text-sm font-extrabold text-warmgray-400">
+                        {% include 'icons/card-fan.svg.twig' with {class: 'size-4'} only %}
+                        {{ p.cardCount }}
+                    </span>
+                {% endblock %}
+            {% endembed %}
+        {% endfor %}
+    </div>
+
+    {# ---------- table: draw pile + discard ---------- #}
+    {% embed 'components/table_area.html.twig' with {view: view, lobby: lobby} %}
+        {% block body %}
+            <div class="flex items-center justify-center gap-6">
+                {% include 'components/pile.html.twig' with {
+                    back: true,
+                    key: 'ce-pile-back',
+                    count: view.drawCount,
+                    label: 'crazyeight.pile'|trans({'%count%': view.drawCount}),
+                    form: {
+                        action: 'draw',
+                        title: 'crazyeight.draw'|trans,
+                        disabled: not view.canDraw,
+                        ghostFrom: '#ce-pile-back',
+                        ghostTo: '#ce-handzone',
+                    },
+                    buttonAttr: view.canDraw ? {
+                        draggable: 'true',
+                        'data-pair': 'draw',
+                        'data-dragdrop--zone-drop-target': 'source',
+                        'data-action': 'dragstart->dragdrop--zone-drop#dragStart dragend->dragdrop--zone-drop#dragEnd',
+                    } : {},
+                } %}
+                <div id="ce-dropzone" class="text-center"
+                     data-dragdrop--zone-drop-target="zone" data-pair="play"
+                     data-action="dragover->dragdrop--zone-drop#dragOver drop->dragdrop--zone-drop#drop dragleave->dragdrop--zone-drop#dragLeave">
+                    {% include 'components/card.html.twig' with view.top|merge({
+                        key: 'ce-top-' ~ view.top.identity,
+                        flip: 'ce-' ~ view.top.identity,
+                        exit: 'none',
+                    }) only %}
+                    <p class="mt-1.5 text-xs font-extrabold uppercase tracking-wide text-warmgray-400">{{ 'crazyeight.discard'|trans }}</p>
+                </div>
+            </div>
+
+            <div class="mt-3 flex flex-wrap items-center justify-center gap-3 text-base font-extrabold">
+                {% if view.wishedColor is not null %}
+                    <span class="anim-pop rounded-xl bg-white px-3 py-1.5 text-warmgray-800 shadow-soft">
+                        {{ 'crazyeight.wished'|trans }} {{ ('crazyeight.color.' ~ view.wishedColor)|trans }}
+                    </span>
+                {% endif %}
+                {% if view.pendingDraw > 0 %}
+                    <span id="pending-draw-{{ view.pendingDraw }}" class="anim-pop rounded-xl bg-terracotta-100 px-3 py-1.5 text-terracotta-700 shadow-soft">
+                        {{ 'crazyeight.pending_draw'|trans({'%count%': view.pendingDraw}) }}
+                    </span>
+                {% endif %}
+            </div>
+        {% endblock %}
+    {% endembed %}
+
+    {# ---------- own hand ---------- #}
+    {% if view.hand is not empty %}
+        <div>
+            <p class="mb-3 text-center text-sm font-extrabold uppercase tracking-wide text-warmgray-400">{{ 'crazyeight.your_hand'|trans }}</p>
+            <div id="ce-handzone" class="flex flex-wrap justify-center gap-3 rounded-2xl transition"
+                 data-dragdrop--zone-drop-target="zone" data-pair="draw"
+                 data-action="dragover->dragdrop--zone-drop#dragOver drop->dragdrop--zone-drop#drop dragleave->dragdrop--zone-drop#dragLeave">
+                {% for card in view.hand %}
+                    <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}" class="text-center"
+                          data-action="{{ card.isWild ? 'submit->choice-dialog#require ' }}submit->optimistic#move"
+                          data-optimistic-to-param="#ce-dropzone" data-optimistic-id-param="ce-top-{{ card.identity }}"
+                          {% if card.isWild %}
+                              data-choice-dialog-dialog-param="#ce-wish-dialog" data-choice-dialog-name-param="wish"
+                          {% endif %}>
+                        <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
+                        <input type="hidden" name="action" value="play">
+                        <input type="hidden" name="card" value="{{ card.index }}">
+                        {% if card.isWild %}<input type="hidden" name="wish" value="">{% endif %}
+                        <button type="submit"
+                                {% if not card.playable %}disabled{% endif %}
+                                {% if card.playable %}
+                                    draggable="true" data-pair="play"
+                                    data-dragdrop--zone-drop-target="source"
+                                    data-action="dragstart->dragdrop--zone-drop#dragStart dragend->dragdrop--zone-drop#dragEnd"
+                                {% endif %}
+                                class="block rounded-xl transition enabled:cursor-grab enabled:hover:-translate-y-1.5 enabled:hover:shadow-lifted
+                                       {{ not card.playable and view.myTurn ? 'opacity-40' }}
+                                       {{ card.playable and card.isWild ? 'ring-2 ring-sunny-300' }}">
+                            {% include 'components/card.html.twig' with card|merge({
+                                key: 'ce-hand-' ~ card.identity,
+                                flip: 'ce-' ~ card.identity,
+                                exit: 'none',
+                            }) only %}
+                        </button>
+                    </form>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
+    {# ---------- actions ---------- #}
+    {% if view.canPass %}
+        <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}" class="text-center">
+            <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
+            <input type="hidden" name="action" value="pass">
+            <button type="submit" class="btn btn-neutral">
+                {{ 'crazyeight.pass'|trans }}
+            </button>
+        </form>
+    {% endif %}
+
+    {# ---------- wish color dialog ---------- #}
+    <dialog id="ce-wish-dialog" data-action="close->choice-dialog#closed"
+            class="m-auto rounded-3xl bg-white p-6 text-center shadow-lifted backdrop:bg-warmgray-800/40">
+        <p class="text-lg font-extrabold text-warmgray-700">{{ 'crazyeight.wish_prompt'|trans }}</p>
+        <div class="mt-4 flex justify-center gap-3">
+            {% for color in view.colors %}
+                <button type="button" data-action="choice-dialog#pick" data-choice-dialog-value-param="{{ color.value }}"
+                        title="{{ color.labelKey|trans }}"
+                        class="grid size-14 place-items-center rounded-2xl shadow-soft transition hover:shadow-lifted
+                               {{ {red: 'bg-terracotta-400', yellow: 'bg-sunny-400', green: 'bg-sage-400', blue: 'bg-softblue-400'}[color.value] }}">
+                </button>
+            {% endfor %}
+        </div>
+    </dialog>
+</div>
