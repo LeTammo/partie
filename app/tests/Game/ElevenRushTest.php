@@ -8,11 +8,11 @@ use App\Game\Core\Card\CustomCard;
 use App\Game\Core\Exception\InvalidMoveException;
 use App\Game\Core\Model\GameState;
 use App\Game\Core\Model\GameStatus;
-use App\Game\Games\ElevenOut\GameDefinition;
-use App\Game\Games\ElevenOut\GameRenderer;
-use App\Game\Games\ElevenOut\GameRules;
+use App\Game\Games\ElevenRush\GameDefinition;
+use App\Game\Games\ElevenRush\GameRenderer;
+use App\Game\Games\ElevenRush\GameRules;
 
-final class ElevenOutTest extends GameTestCase
+final class ElevenRushTest extends GameTestCase
 {
     private GameRules $rules;
     private GameDefinition $game;
