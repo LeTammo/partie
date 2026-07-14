@@ -1,0 +1,64 @@
+# --- Tisch ---
+battleships.placing: 'platziert Flotte'
+battleships.ready: 'bereit'
+battleships.hits: '%hits%/%total% getroffen'
+battleships.remaining: 'Noch %count% Schiffe zu platzieren'
+battleships.rotate: 'Drehen'
+battleships.pick_a_shape: 'Form wählen'
+battleships.randomize: 'Zufällig verteilen'
+battleships.reset: 'Zurücksetzen'
+battleships.waiting_for_opponent: 'Flotte platziert – warte auf deinen Gegner…'
+battleships.your_turn: 'Du bist dran – feuere auf die gegnerischen Gewässer!'
+battleships.opponent_turn: 'Warte auf den Schuss deines Gegners…'
+battleships.your_fleet: 'Deine Flotte'
+battleships.enemy_waters: 'Gegnerische Gewässer'
+
+# --- Formnamen (Tooltips im Auswahlbereich) ---
+battleships.shape.line2: '2-Felder-Schiff'
+battleships.shape.line3: '3-Felder-Schiff'
+battleships.shape.line4: '4-Felder-Schiff'
+battleships.shape.line5: '5-Felder-Schiff'
+battleships.shape.square4: '2x2-Schiff'
+battleships.shape.square6: '2x3-Schiff'
+battleships.shape.l: 'L-förmiges Schiff'
+battleships.shape.v: 'V-förmiges Schiff'
+battleships.shape.s4: 'S-förmiges Schiff'
+battleships.shape.s5: 'Großes S-förmiges Schiff'
+
+# --- Einstellungen ---
+setting.battleships.ships_square6: '2x3-Block-Schiffe'
+setting.battleships.ships_line5: 'Schiffe mit 5 Feldern'
+setting.battleships.ships_v: 'V-förmige Schiffe'
+setting.battleships.ships_s5: 'Große S-förmige Schiffe'
+setting.battleships.ships_l: 'L-förmige Schiffe'
+setting.battleships.ships_line4: 'Schiffe mit 4 Feldern'
+setting.battleships.ships_square4: '2x2-Block-Schiffe'
+setting.battleships.ships_s4: 'S-förmige Schiffe'
+setting.battleships.ships_line3: 'Schiffe mit 3 Feldern'
+setting.battleships.ships_line2: 'Schiffe mit 2 Feldern'
+setting.battleships.grid_width: 'Spielfeldbreite'
+setting.battleships.grid_height: 'Spielfeldhöhe'
+setting.battleships.extra_turn_on_hit: 'Bei Treffer erneut schießen'
+
+# --- Spielverlauf ---
+log.battleships.reset: '%player% setzt die eigene Flotte zurück.'
+log.battleships.ready: '%player% hat die Flotte platziert.'
+log.battleships.battle_started: 'Beide Flotten stehen – die Schlacht beginnt!'
+log.battleships.hit: '%player% trifft!'
+log.battleships.hit_again: '%player% trifft und schießt erneut!'
+log.battleships.miss: '%player% schießt daneben.'
+log.battleships.sunk: '%player% versenkt ein gegnerisches Schiff!'
+
+# --- Fehler ---
+error.battleships.already_ready: 'Deine Flotte steht bereits.'
+error.battleships.unknown_ship: 'Dieses Schiff ist unbekannt oder bereits platziert.'
+error.battleships.invalid_placement: 'Das Schiff passt dort nicht hin.'
+error.battleships.already_fired: 'Auf dieses Feld hast du schon geschossen.'
+
+# --- Spielanleitung ---
+rules: |-
+    Platziere deine Flotte auf deinem eigenen Feld - wähle eine Form aus der Auswahl, drehe sie (Knopf, Mausrad oder durch Ziehen mit dem Finger über das Feld) und tippe dann auf ein Feld, um sie abzusetzen. Oder nutze „Zufällig verteilen", um alle auf einmal zu setzen.
+    Sobald beide Flotten stehen, schießt ihr abwechselnd auf ein Feld des gegnerischen Rasters.
+    Ein Treffer zeigt, dass dort ein Schiff getroffen wurde; sind alle Felder eines Schiffs getroffen, ist es versenkt. Bei einem Fehlschuss wechselt der Zug immer; bei einem Treffer auch, außer der Host hat „Bei Treffer erneut schießen" aktiviert.
+    Versenke die gesamte gegnerische Flotte, bevor deine eigene versenkt wird, um zu gewinnen.
+    Schiffspool, Spielfeldgröße und Hausregeln sind vom Host in den Lobby-Einstellungen konfigurierbar, bevor das Spiel startet.

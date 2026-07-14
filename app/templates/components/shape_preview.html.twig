@@ -1,0 +1,24 @@
+{# A small shape silhouette: filled/empty squares built from a cell list.
+   How to use, see docs/components/engine-and-state.md
+
+   Params:
+   - cells: list of [x, y] (0-indexed, normalized so the shape starts at 0,0)
+   - square: pixel size per cell (default 10)
+   - class:  extra classes for the wrapping grid element
+   - filledClass: classes for a filled cell (default bg-softblue-500)
+#}
+{% set xs = cells|map(c => c[0]) %}
+{% set ys = cells|map(c => c[1]) %}
+{% set cols = max(xs) + 1 %}
+{% set rows = max(ys) + 1 %}
+{% set square = square|default(10) %}
+{% set filled = cells|map(c => c[0] ~ ':' ~ c[1]) %}
+<div class="inline-grid shrink-0 gap-px {{ class|default('') }}"
+     style="grid-template-columns: repeat({{ cols }}, {{ square }}px); grid-template-rows: repeat({{ rows }}, {{ square }}px);"
+     aria-hidden="true">
+    {% for y in range(0, rows - 1) %}
+        {% for x in range(0, cols - 1) %}
+            <span class="rounded-[1px] {{ (x ~ ':' ~ y) in filled ? filledClass|default('bg-softblue-500') : '' }}"></span>
+        {% endfor %}
+    {% endfor %}
+</div>

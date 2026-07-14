@@ -1,0 +1,64 @@
+# --- Table ---
+battleships.placing: 'placing fleet'
+battleships.ready: 'ready'
+battleships.hits: '%hits%/%total% hit'
+battleships.remaining: '%count% ships left to place'
+battleships.rotate: 'Rotate'
+battleships.pick_a_shape: 'Pick a shape'
+battleships.randomize: 'Randomize'
+battleships.reset: 'Reset'
+battleships.waiting_for_opponent: "Fleet placed – waiting for your opponent…"
+battleships.your_turn: 'Your turn – fire at the enemy waters!'
+battleships.opponent_turn: "Waiting for your opponent's shot…"
+battleships.your_fleet: 'Your fleet'
+battleships.enemy_waters: 'Enemy waters'
+
+# --- Shape names (tray tooltips) ---
+battleships.shape.line2: '2-cell ship'
+battleships.shape.line3: '3-cell ship'
+battleships.shape.line4: '4-cell ship'
+battleships.shape.line5: '5-cell ship'
+battleships.shape.square4: '2x2 ship'
+battleships.shape.square6: '2x3 ship'
+battleships.shape.l: 'L-shaped ship'
+battleships.shape.v: 'V-shaped ship'
+battleships.shape.s4: 'S-shaped ship'
+battleships.shape.s5: 'Big S-shaped ship'
+
+# --- Settings ---
+setting.battleships.ships_square6: '2x3 block ships'
+setting.battleships.ships_line5: '5-cell ships'
+setting.battleships.ships_v: 'V-shaped ships'
+setting.battleships.ships_s5: 'Big S-shaped ships'
+setting.battleships.ships_l: 'L-shaped ships'
+setting.battleships.ships_line4: '4-cell ships'
+setting.battleships.ships_square4: '2x2 square ships'
+setting.battleships.ships_s4: 'S-shaped ships'
+setting.battleships.ships_line3: '3-cell ships'
+setting.battleships.ships_line2: '2-cell ships'
+setting.battleships.grid_width: 'Board width'
+setting.battleships.grid_height: 'Board height'
+setting.battleships.extra_turn_on_hit: 'Shoot again after a hit'
+
+# --- Game log ---
+log.battleships.reset: '%player% resets their fleet.'
+log.battleships.ready: '%player% has placed their fleet.'
+log.battleships.battle_started: 'Both fleets are placed - the battle begins!'
+log.battleships.hit: '%player% scores a hit!'
+log.battleships.hit_again: '%player% scores a hit and fires again!'
+log.battleships.miss: '%player% fires and misses.'
+log.battleships.sunk: "%player% sinks one of the opponent's ships!"
+
+# --- Errors ---
+error.battleships.already_ready: 'Your fleet is already placed.'
+error.battleships.unknown_ship: 'That ship is unknown or already placed.'
+error.battleships.invalid_placement: 'That ship does not fit there.'
+error.battleships.already_fired: 'You already fired at that cell.'
+
+# --- How to play ---
+rules: |-
+    Place your fleet on your own board - pick a shape from the tray, rotate it (button, mouse wheel, or by dragging a finger across the board), then tap a cell to drop it. Or use "Randomize" to place them all at once.
+    Once both fleets are placed, take turns firing at a cell of your opponent's grid.
+    A hit lets you know a ship was struck there; sinking every cell of a ship sinks it. Turns alternate on a miss; on a hit, they alternate too unless the host enabled "Shoot again after a hit".
+    Sink every ship in your opponent's fleet before they sink yours to win.
+    The ship pool, board size, and house rules are host-configurable in the lobby settings before the game starts.

@@ -9,7 +9,8 @@ namespace App\Game\Core\Model;
 final readonly class GameSetting
 {
     /**
-     * @param array<string, string>|null $options value (as string) => translation key; required for Enum
+     * @param array<string, string>|null              $options      value (as string) => translation key; required for Enum
+     * @param list<array{0: int, 1: int}>|null         $previewCells a shape's cells, rendered as a small grid next to the label
      */
     public function __construct(
         public string $key,
@@ -19,6 +20,7 @@ final readonly class GameSetting
         public ?array $options = null,
         public ?int $min = null,
         public ?int $max = null,
+        public ?array $previewCells = null,
     ) {
     }
 

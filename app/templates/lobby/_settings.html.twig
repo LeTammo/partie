@@ -5,33 +5,47 @@
               data-controller="autosave" data-action="change->autosave#save">
             <input type="hidden" name="_token" value="{{ csrf_token('lobby') }}">
 
-            {% for setting in game.settings() %}
-                {% set current = lobby.settings[setting.key] ?? setting.default %}
-                <div class="flex items-center justify-between gap-3 rounded-2xl bg-cream px-4 py-3">
-                    <label for="setting-{{ setting.key }}" class="text-sm font-bold text-warmgray-700">
-                        {{ setting.labelKey|trans({}, game.id) }}
-                    </label>
+            <div class="grid gap-3 sm:grid-cols-2">
+                {% for setting in game.settings() %}
+                    {% set current = lobby.settings[setting.key] ?? setting.default %}
+                    <div class="flex items-center justify-between gap-3 rounded-2xl bg-cream px-4 py-3">
+                        <div class="flex items-center gap-3">
+                            {% if setting.previewCells %}
+                                {% include 'components/shape_preview.html.twig' with {cells: setting.previewCells} only %}
+                            {% endif %}
+                            <label for="setting-{{ setting.key }}" class="text-sm font-bold text-warmgray-700">
+                                {{ setting.labelKey|trans({}, game.id) }}
+                            </label>
+                        </div>
 
-                    {% if setting.type.value == 'bool' %}
-                        <input type="hidden" name="{{ setting.key }}" value="0">
-                        <input type="checkbox" id="setting-{{ setting.key }}" name="{{ setting.key }}" value="1"
-                               {{ current ? 'checked' }}
-                               class="size-5 shrink-0 rounded accent-softblue-500">
-                    {% elseif setting.type.value == 'int' %}
-                        <input type="number" id="setting-{{ setting.key }}" name="{{ setting.key }}" value="{{ current }}"
-                               {% if setting.min is not null %}min="{{ setting.min }}"{% endif %}
-                               {% if setting.max is not null %}max="{{ setting.max }}"{% endif %}
-                               class="w-20 shrink-0 rounded-xl bg-white px-3 py-1.5 text-center font-bold shadow-soft focus:outline-none focus:ring-2 focus:ring-softblue-300">
-                    {% elseif setting.type.value == 'enum' %}
-                        <select id="setting-{{ setting.key }}" name="{{ setting.key }}"
-                                class="shrink-0 rounded-xl bg-white px-3 py-1.5 font-bold shadow-soft focus:outline-none focus:ring-2 focus:ring-softblue-300">
-                            {% for value, labelKey in setting.options %}
-                                <option value="{{ value }}" {{ current == value ? 'selected' }}>{{ labelKey|trans }}</option>
-                            {% endfor %}
-                        </select>
-                    {% endif %}
-                </div>
-            {% endfor %}
+                        {% if setting.type.value == 'bool' %}
+                            <input type="hidden" name="{{ setting.key }}" value="0">
+                            <input type="checkbox" id="setting-{{ setting.key }}" name="{{ setting.key }}" value="1"
+                                {{ current ? 'checked' }}
+                                   class="size-5 shrink-0 rounded accent-softblue-500">
+                        {% elseif setting.type.value == 'int' %}
+                            <div class="flex shrink-0 items-center gap-2" data-controller="stepper">
+                                <button type="button" data-action="stepper#decrement"
+                                        class="grid size-7 place-items-center rounded-lg bg-white font-extrabold text-warmgray-600 shadow-soft transition hover:bg-softblue-100">−</button>
+                                <input type="number" id="setting-{{ setting.key }}" name="{{ setting.key }}" value="{{ current }}"
+                                       data-stepper-target="input"
+                                       {% if setting.min is not null %}min="{{ setting.min }}"{% endif %}
+                                    {% if setting.max is not null %}max="{{ setting.max }}"{% endif %}
+                                       class="w-10 shrink-0 rounded-xl bg-white px-1 py-1.5 text-center font-bold shadow-soft focus:outline-none focus:ring-2 focus:ring-softblue-300 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none">
+                                <button type="button" data-action="stepper#increment"
+                                        class="grid size-7 place-items-center rounded-lg bg-white font-extrabold text-warmgray-600 shadow-soft transition hover:bg-softblue-100">+</button>
+                            </div>
+                        {% elseif setting.type.value == 'enum' %}
+                            <select id="setting-{{ setting.key }}" name="{{ setting.key }}"
+                                    class="shrink-0 rounded-xl bg-white px-3 py-1.5 font-bold shadow-soft focus:outline-none focus:ring-2 focus:ring-softblue-300">
+                                {% for value, labelKey in setting.options %}
+                                    <option value="{{ value }}" {{ current == value ? 'selected' }}>{{ labelKey|trans }}</option>
+                                {% endfor %}
+                            </select>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
         </form>
     </div>
 {% endif %}
