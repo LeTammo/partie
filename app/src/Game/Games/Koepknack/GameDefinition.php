@@ -41,7 +41,7 @@ final readonly class GameDefinition extends AbstractGameDefinition
 
     public function getIcon(): string
     {
-        return 'cards';
+        return 'games/koepknack';
     }
 
     public function getMinPlayers(): int

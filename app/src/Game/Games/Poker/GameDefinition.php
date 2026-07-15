@@ -49,7 +49,7 @@ final readonly class GameDefinition extends AbstractGameDefinition implements Au
 
     public function getIcon(): string
     {
-        return 'poker';
+        return 'games/poker';
     }
 
     public function getMinPlayers(): int

@@ -45,7 +45,7 @@ final readonly class GameDefinition extends AbstractGameDefinition
 
     public function getIcon(): string
     {
-        return 'card-stack';
+        return 'games/maumau';
     }
 
     public function getMinPlayers(): int

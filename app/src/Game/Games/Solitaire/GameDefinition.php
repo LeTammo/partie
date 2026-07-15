@@ -41,7 +41,7 @@ final readonly class GameDefinition extends AbstractGameDefinition
 
     public function getIcon(): string
     {
-        return 'solitaire';
+        return 'games/solitaire';
     }
 
     public function getMinPlayers(): int

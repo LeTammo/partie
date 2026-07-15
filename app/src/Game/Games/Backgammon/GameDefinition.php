@@ -41,7 +41,7 @@ final readonly class GameDefinition extends AbstractGameDefinition
 
     public function getIcon(): string
     {
-        return 'backgammon';
+        return 'games/backgammon';
     }
 
     public function getMinPlayers(): int

@@ -46,7 +46,7 @@ final readonly class GameDefinition extends AbstractGameDefinition
 
     public function getIcon(): string
     {
-        return 'checkers';
+        return 'games/checkers';
     }
 
     public function getMinPlayers(): int

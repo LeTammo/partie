@@ -39,7 +39,7 @@ final readonly class GameDefinition extends AbstractGameDefinition
 
     public function getIcon(): string
     {
-        return 'mills';
+        return 'games/mills';
     }
 
     public function getMinPlayers(): int

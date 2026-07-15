@@ -39,7 +39,7 @@ final readonly class GameDefinition extends AbstractGameDefinition
 
     public function getIcon(): string
     {
-        return 'die';
+        return 'games/dicepoker';
     }
 
     public function getMinPlayers(): int

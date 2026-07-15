@@ -40,7 +40,7 @@ final readonly class GameDefinition extends AbstractGameDefinition
 
     public function getIcon(): string
     {
-        return 'durak';
+        return 'games/durak';
     }
 
     public function getMinPlayers(): int

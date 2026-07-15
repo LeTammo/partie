@@ -38,7 +38,7 @@ final readonly class GameDefinition extends AbstractGameDefinition
 
     public function getIcon(): string
     {
-        return 'sort-numeric-up';
+        return 'games/elevenrush';
     }
 
     public function getMinPlayers(): int

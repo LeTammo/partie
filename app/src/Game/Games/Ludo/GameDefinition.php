@@ -36,7 +36,7 @@ final readonly class GameDefinition extends AbstractGameDefinition
 
     public function getIcon(): string
     {
-        return 'ludo';
+        return 'games/ludo';
     }
 
     public function getMinPlayers(): int

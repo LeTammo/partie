@@ -23,7 +23,7 @@ interface GameEngineInterface
     /** Short tagline shown on the dashboard card. */
     public function getDescription(): string;
 
-    /** Icon name, rendered via templates/icons/{name}.svg.twig. */
+    /** Icon name, rendered via templates/icons/games/{name}.svg.twig. */
     public function getIcon(): string;
 
     public function getMinPlayers(): int;

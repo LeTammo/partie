@@ -43,7 +43,7 @@ final readonly class GameDefinition extends AbstractGameDefinition
 
     public function getIcon(): string
     {
-        return 'card-fan';
+        return 'games/rummy';
     }
 
     public function getMinPlayers(): int

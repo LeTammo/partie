@@ -42,7 +42,7 @@ final readonly class GameDefinition extends AbstractGameDefinition
 
     public function getIcon(): string
     {
-        return 'crazyeight';
+        return 'games/crazyeight';
     }
 
     public function getMinPlayers(): int
