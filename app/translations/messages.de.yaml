@@ -47,6 +47,8 @@ game.poker.name: 'Poker'
 game.poker.description: 'Texas Hold''em – zwei eigene Karten, fünf gemeinsame, die beste Hand gewinnt den Pot.'
 game.durak.name: 'Durak'
 game.durak.description: 'Greife mit passenden Werten an, verteidige mit einer höheren Karte oder einem Trumpf – bleib nicht auf Karten sitzen.'
+game.mills.name: 'Mühle'
+game.mills.description: 'Setze und verschiebe deine Steine, bilde Mühlen und schlage die Steine deines Gegners.'
 game.battleships.name: 'Schiffe versenken'
 game.battleships.description: 'Platziere deine Flotte und feuere gezielt – versenke alle Schiffe deines Gegners.'
 

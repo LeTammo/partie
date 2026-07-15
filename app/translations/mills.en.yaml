@@ -1,0 +1,28 @@
+# --- Board ---
+mills.pieces_left: '%count% piece(s) left to place'
+mills.choose_removal: 'You formed a mill – remove one of your opponent''s pieces'
+mills.opponent_removing: 'Your opponent formed a mill and is removing one of your pieces'
+
+# --- Settings ---
+setting.mills.flying_enabled: 'Allow flying at 3 pieces'
+
+# --- Game log ---
+log.mills.placed: '%player% places a piece.'
+log.mills.moved: '%player% slides a piece.'
+log.mills.formed: '%player% forms a mill!'
+log.mills.removed: '%player% removes one of %opponent%''s pieces.'
+
+# --- Errors ---
+error.mills.not_placing: 'Placing is over – slide a piece instead.'
+error.mills.already_placed_all: 'You have already placed all your pieces.'
+error.mills.invalid_point: 'That point is not free.'
+error.mills.still_placing: 'You still have pieces left to place.'
+error.mills.choose_removal: 'Pick one of your opponent''s removable pieces.'
+
+# --- How to play ---
+rules: |-
+    Placing phase: take turns placing your 9 pieces on any free point.
+    Moving phase: once all pieces are placed, slide a piece to an adjacent empty point along the lines.
+    Line up three of your pieces on any marked line - a mill - to remove one of your opponent's pieces (pieces already in a mill are protected unless all of their pieces are in mills).
+    Once you're down to 3 pieces, you may fly to any empty point instead of only an adjacent one.
+    You lose when you have fewer than 3 pieces, or no legal move on your turn.

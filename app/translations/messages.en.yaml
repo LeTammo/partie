@@ -49,6 +49,8 @@ game.durak.name: 'Durak'
 game.durak.description: "Attack with matching ranks, defend with a higher card or a trump – don't be left holding cards."
 game.battleships.name: 'Battleship'
 game.battleships.description: 'Place your fleet, then call your shots – sink every ship to win.'
+game.mills.name: "Nine Men's Morris"
+game.mills.description: "Place, then slide your pieces to form mills and remove your opponent's."
 
 # --- Lobby ---
 lobby.status.waiting: 'waiting for players'

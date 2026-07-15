@@ -1,0 +1,28 @@
+# --- Brett ---
+mills.pieces_left: 'Noch %count% Stein(e) zu setzen'
+mills.choose_removal: 'Du hast eine Mühle gebildet – entferne einen gegnerischen Stein'
+mills.opponent_removing: 'Dein Gegner hat eine Mühle gebildet und entfernt einen deiner Steine'
+
+# --- Einstellungen ---
+setting.mills.flying_enabled: 'Springen bei 3 Steinen erlauben'
+
+# --- Spielverlauf ---
+log.mills.placed: '%player% setzt einen Stein.'
+log.mills.moved: '%player% verschiebt einen Stein.'
+log.mills.formed: '%player% bildet eine Mühle!'
+log.mills.removed: '%player% entfernt einen Stein von %opponent%.'
+
+# --- Fehler ---
+error.mills.not_placing: 'Die Setzphase ist vorbei – verschiebe stattdessen einen Stein.'
+error.mills.already_placed_all: 'Du hast bereits alle deine Steine gesetzt.'
+error.mills.invalid_point: 'Dieser Punkt ist nicht frei.'
+error.mills.still_placing: 'Du musst zuerst alle deine Steine setzen.'
+error.mills.choose_removal: 'Wähle einen entfernbaren gegnerischen Stein.'
+
+# --- Spielanleitung ---
+rules: |-
+    Setzphase: Setze abwechselnd deine 9 Steine auf einen freien Punkt.
+    Zugphase: Sobald alle Steine gesetzt sind, verschiebst du einen Stein entlang der Linien auf einen freien Nachbarpunkt.
+    Bringst du drei deiner Steine auf eine markierte Linie – eine Mühle – darfst du einen gegnerischen Stein entfernen (Steine in einer Mühle sind geschützt, außer der Gegner hat nur noch Steine in Mühlen).
+    Hast du nur noch 3 Steine, darfst du auf jeden freien Punkt springen statt nur auf einen Nachbarn.
+    Du verlierst, wenn du weniger als 3 Steine hast oder am Zug keinen legalen Zug mehr machen kannst.

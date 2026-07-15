@@ -3,7 +3,7 @@
 Partie is a modular toolkit for creating multiplayer board and card games, built on **Symfony 8.1**.  
 There is a shared core of reusable building components and adding a new game means basically only writing its rules.
 
-There are currently 16 playable games:
+There are currently 17 playable games:
 - Tic-Tac-Toe
 - Four in a Row
 - Checkers
@@ -20,6 +20,7 @@ There are currently 16 playable games:
 - Poker
 - Battleship
 - Durak
+- Nine Men's Morris
 
 Stack:
 - Symfony 8.1 (with PHP 8.3)
