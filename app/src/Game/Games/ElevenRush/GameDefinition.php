@@ -28,12 +28,12 @@ final readonly class GameDefinition extends AbstractGameDefinition
 
     public function getName(): string
     {
-        return 'elevenrush.name';
+        return 'game.elevenrush.name';
     }
 
     public function getDescription(): string
     {
-        return 'elevenrush.description';
+        return 'game.elevenrush.description';
     }
 
     public function getIcon(): string

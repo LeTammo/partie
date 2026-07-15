@@ -1,5 +1,3 @@
-elevenrush.name: "Eleven Rush"
-elevenrush.description: "Cleverly discard your number cards into sequences. The first player to empty their hand wins!"
 elevenrush.your_hand: "Your Hand"
 elevenrush.draw: "Draw Card"
 elevenrush.pass: "End Turn"
