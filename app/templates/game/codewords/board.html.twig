@@ -1,0 +1,186 @@
+{% trans_default_domain 'codewords' %}
+<div class="space-y-6">
+    {% if view.phase == 'setup' %}
+        <div class="text-center">
+            <h3 class="text-lg font-extrabold text-warmgray-700">{{ 'codewords.setup.heading'|trans }}</h3>
+            <p class="mt-1 text-sm font-semibold text-warmgray-400">{{ 'codewords.setup.hint'|trans }}</p>
+        </div>
+
+        <div class="grid gap-4 sm:grid-cols-2">
+            {% for team in ['red', 'blue'] %}
+                {% set tone = team == 'red'
+                    ? {bg: 'var(--color-terracotta-50)', fg: 'var(--color-terracotta-700)'}
+                    : {bg: 'var(--color-softblue-50)', fg: 'var(--color-softblue-700)'} %}
+                <div class="rounded-2xl p-4" style="background-color: {{ tone.bg }}">
+                    <h4 class="text-center text-sm font-extrabold uppercase tracking-wide" style="color: {{ tone.fg }}">
+                        {{ ('codewords.team.' ~ team)|trans }}
+                    </h4>
+                    <ul class="mt-3 space-y-1.5">
+                        {% for p in view.players|filter(p => p.team == team) %}
+                            <li class="flex items-center justify-between rounded-xl bg-white px-3 py-1.5 text-sm font-bold text-warmgray-700">
+                                <span>{{ p.nickname }}</span>
+                                <span class="text-xs font-extrabold text-warmgray-400">{{ ('codewords.role.' ~ p.role)|trans }}</span>
+                            </li>
+                        {% endfor %}
+                    </ul>
+
+                    {% if me is not null %}
+                        <div class="mt-3 flex flex-wrap justify-center gap-2">
+                            {% for role in ['informant', 'detective'] %}
+                                {% set available = role == 'informant' ? (team == 'red' ? view.redInformantAvailable : view.blueInformantAvailable) : true %}
+                                {% set mine = view.myTeam == team and view.myRole == role %}
+                                <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
+                                    <input type="hidden" name="action" value="assign">
+                                    <input type="hidden" name="team" value="{{ team }}">
+                                    <input type="hidden" name="role" value="{{ role }}">
+                                    <button type="submit" {% if not available and not mine %}disabled{% endif %}
+                                            class="btn {{ mine ? 'btn-confirm' : 'btn-neutral' }} disabled:cursor-not-allowed disabled:opacity-40">
+                                        {{ ('codewords.role.' ~ role)|trans }}
+                                    </button>
+                                </form>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+
+        {% if me is not null %}
+            <div class="text-center">
+                <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}">
+                    <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
+                    <input type="hidden" name="action" value="begin">
+                    <button type="submit" {% if not view.canBegin %}disabled{% endif %}
+                            class="btn btn-confirm px-8 py-3 text-lg disabled:cursor-not-allowed disabled:opacity-40">
+                        {{ 'codewords.setup.begin'|trans }}
+                    </button>
+                </form>
+                {% if not view.canBegin %}
+                    <p class="mt-2 text-xs font-semibold text-warmgray-400">{{ 'codewords.setup.not_ready'|trans }}</p>
+                {% endif %}
+            </div>
+        {% endif %}
+    {% else %}
+        {% if view.gameOver %}
+            <div class="anim-rise rounded-2xl p-4 text-center"
+                 style="background-color: {{ view.winningTeam == 'red' ? 'var(--color-terracotta-100)' : 'var(--color-softblue-100)' }}">
+                <p class="text-xl font-extrabold" style="color: {{ view.winningTeam == 'red' ? 'var(--color-terracotta-700)' : 'var(--color-softblue-700)' }}">
+                    {{ 'codewords.finished.heading'|trans({'%team%': ('codewords.team.' ~ view.winningTeam)|trans}) }}
+                </p>
+            </div>
+        {% else %}
+            <div class="text-center">
+                <p class="text-lg font-extrabold" style="color: {{ view.activeTeam == 'red' ? 'var(--color-terracotta-500)' : 'var(--color-softblue-500)' }}">
+                    {{ 'codewords.turn.active_team'|trans({'%team%': ('codewords.team.' ~ view.activeTeam)|trans}) }}
+                </p>
+                {% if view.phase == 'clue' %}
+                    <p class="mt-1 text-sm font-semibold text-warmgray-400">
+                        {{ (view.canGiveClue ? 'codewords.turn.your_clue' : 'codewords.turn.waiting_clue')|trans }}
+                    </p>
+                {% endif %}
+                {% if view.myRole == 'informant' %}
+                    <p class="mt-1 text-xs font-semibold text-warmgray-300">{{ 'codewords.hint.informant_sees_all'|trans }}</p>
+                {% endif %}
+            </div>
+
+            {% if view.phase == 'guess' %}
+                <div class="mx-auto flex max-w-xs items-center justify-center gap-3 rounded-2xl bg-white p-4 shadow-soft">
+                    <div class="min-w-0 text-center">
+                        <p class="text-[0.65rem] font-extrabold uppercase tracking-wide text-warmgray-400">{{ 'codewords.clue.label'|trans }}</p>
+                        <p class="truncate text-2xl font-extrabold text-warmgray-700">„{{ view.clue.word }}“</p>
+                    </div>
+                    <div class="shrink-0 text-center">
+                        <div class="grid size-14 place-items-center rounded-2xl text-xl font-extrabold text-white"
+                             style="background-color: {{ view.activeTeam == 'red' ? 'var(--color-terracotta-500)' : 'var(--color-softblue-500)' }}">
+                            {{ view.guessesRemaining }}
+                        </div>
+                        <p class="mt-1 text-[0.6rem] font-extrabold uppercase tracking-wide text-warmgray-400">{{ 'codewords.turn.clicks_left'|trans }}</p>
+                    </div>
+                </div>
+            {% endif %}
+        {% endif %}
+
+        <div class="flex flex-wrap items-center justify-center gap-2 text-xs font-extrabold uppercase tracking-wide">
+            <span class="rounded-xl px-3 py-1.5" style="background-color: var(--color-terracotta-100); color: var(--color-terracotta-700)">
+                {{ 'codewords.remaining'|trans({'%count%': view.redRemaining}) }}
+            </span>
+            <span class="rounded-xl px-3 py-1.5" style="background-color: var(--color-softblue-100); color: var(--color-softblue-700)">
+                {{ 'codewords.remaining'|trans({'%count%': view.blueRemaining}) }}
+            </span>
+        </div>
+
+        <div class="mx-auto grid w-full max-w-3xl grid-cols-5 gap-1.5 sm:gap-2">
+            {% for cell in view.cells %}
+                {% set tone = {
+                    red: {bg: 'var(--color-terracotta-300)', fg: 'var(--color-terracotta-700)'},
+                    blue: {bg: 'var(--color-softblue-300)', fg: 'var(--color-softblue-700)'},
+                    civilian: {bg: 'var(--color-warmgray-200)', fg: 'var(--color-warmgray-700)'},
+                    suspect: {bg: 'var(--color-warmgray-800)', fg: '#ffffff'},
+                }[cell.color]|default({bg: '#ffffff', fg: 'var(--color-warmgray-700)'}) %}
+                {% set tokenParams = {
+                    shape: 'square',
+                    outer: tone.bg,
+                    symbol: cell.word,
+                    symbolColor: tone.fg,
+                    size: 'w-full aspect-[3/2]',
+                    class: 'rounded-xl px-1 text-center text-[0.68rem] leading-[1.1] break-words font-extrabold uppercase sm:text-sm' ~ (cell.revealed ? ' opacity-60' : ''),
+                    key: 'cw-cell-' ~ cell.index,
+                } %}
+                {% if cell.guessable %}
+                    <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}" class="contents">
+                        <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
+                        <input type="hidden" name="action" value="guess">
+                        <input type="hidden" name="index" value="{{ cell.index }}">
+                        <button type="submit" class="cursor-pointer transition hover:shadow-lifted">
+                            {% include 'components/token.html.twig' with tokenParams only %}
+                        </button>
+                    </form>
+                {% else %}
+                    {% include 'components/token.html.twig' with tokenParams only %}
+                {% endif %}
+            {% endfor %}
+        </div>
+
+        {% if view.canGiveClue %}
+            <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}"
+                  class="mx-auto flex max-w-sm flex-wrap items-center justify-center gap-2">
+                <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
+                <input type="hidden" name="action" value="clue">
+                <input type="text" name="word" required maxlength="40" placeholder="{{ 'codewords.clue.word_placeholder'|trans }}"
+                       class="rounded-xl bg-cream px-3 py-2 text-sm font-bold inset-shadow-soft focus:outline-none focus:ring-2 focus:ring-softblue-300">
+                <input type="number" name="count" required min="0" max="9" value="1"
+                       class="w-16 rounded-xl bg-cream px-3 py-2 text-sm font-bold inset-shadow-soft focus:outline-none focus:ring-2 focus:ring-softblue-300">
+                <button type="submit" class="btn btn-confirm">{{ 'codewords.clue.submit'|trans }}</button>
+            </form>
+        {% endif %}
+
+        {% if view.canPass %}
+            <div class="text-center">
+                <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}">
+                    <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
+                    <input type="hidden" name="action" value="pass">
+                    <button type="submit" class="btn btn-neutral">{{ 'codewords.guess.pass'|trans }}</button>
+                </form>
+            </div>
+        {% endif %}
+    {% endif %}
+
+    <div class="flex flex-wrap justify-center gap-3">
+        {% for p in view.players %}
+            {% embed 'components/player_banner.html.twig' with {p: p, class: p.won ? 'ring-2 ring-sage-300' : ''} %}
+                {% block extra %}
+                    {% if p.won %}
+                        {% include 'icons/trophy.svg.twig' with {class: 'size-4 text-sage-500'} only %}
+                    {% endif %}
+                    {% if p.team %}
+                        <span class="text-xs font-extrabold"
+                              style="color: {{ p.team == 'red' ? 'var(--color-terracotta-500)' : 'var(--color-softblue-500)' }}">
+                            {{ ('codewords.team.' ~ p.team)|trans }} · {{ ('codewords.role.' ~ p.role)|trans }}
+                        </span>
+                    {% endif %}
+                {% endblock %}
+            {% endembed %}
+        {% endfor %}
+    </div>
+</div>

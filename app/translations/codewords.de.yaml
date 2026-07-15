@@ -1,0 +1,66 @@
+# --- Team-Wahl ---
+codewords.setup.heading: 'Teams bilden'
+codewords.setup.hint: 'Wählt ein Team und eine Rolle. Jedes Team braucht genau einen Informant und mindestens einen Ermittler.'
+codewords.setup.begin: 'Spiel beginnen'
+codewords.setup.not_ready: 'Alle Spieler müssen einem Team beitreten – jedes Team braucht einen Informant und mindestens einen Ermittler.'
+
+# --- Teams & Rollen ---
+codewords.team.red: 'Team Rot'
+codewords.team.blue: 'Team Blau'
+codewords.role.informant: 'Informant'
+codewords.role.detective: 'Ermittler'
+
+# --- Spielverlauf ---
+codewords.turn.active_team: '%team% ist am Zug'
+codewords.turn.your_clue: 'Gib deinem Team einen Hinweis.'
+codewords.turn.waiting_clue: 'Der Informant überlegt sich einen Hinweis.'
+codewords.turn.clicks_left: 'Klicks übrig'
+codewords.remaining: '%count% übrig'
+codewords.hint.informant_sees_all: 'Als Informant siehst du die Farben aller Wörter.'
+codewords.finished.heading: '%team% gewinnt!'
+
+# --- Hinweis geben & raten ---
+codewords.clue.label: 'Hinweis'
+codewords.clue.word_placeholder: 'Hinweiswort'
+codewords.clue.submit: 'Hinweis geben'
+codewords.guess.pass: 'Zug beenden'
+
+# --- Einstellungen ---
+setting.codewords.word_list: 'Wortliste'
+setting.codewords.word_list.deutsch: 'Deutsch'
+setting.codewords.word_list.deutsch_simpel: 'Deutsch (einfach)'
+setting.codewords.word_list.english: 'Englisch'
+
+# --- Spielprotokoll ---
+log.codewords.joined_team: '%player% spielt als %role% für %team%.'
+log.codewords.started: 'Das Spiel beginnt – %team% gibt den ersten Hinweis.'
+log.codewords.clue_given: '%player% gibt den Hinweis „%word%“ (%count%).'
+log.codewords.guessed: '%player% deckt „%word%“ auf.'
+log.codewords.suspect_revealed: '%player% deckt den Verdächtigen auf – „%word%“!'
+log.codewords.passed: '%player% beendet den Zug.'
+log.codewords.team_won: '%team% hat alle eigenen Wörter gefunden und gewinnt!'
+
+# --- Fehler ---
+error.codewords.not_setup: 'Die Teamwahl ist bereits abgeschlossen.'
+error.codewords.informant_taken: 'Dieses Team hat bereits einen Informant.'
+error.codewords.not_assigned: 'Wähle zuerst ein Team und eine Rolle.'
+error.codewords.players_not_assigned: 'Noch nicht alle Spieler haben ein Team gewählt.'
+error.codewords.teams_not_ready: 'Jedes Team braucht einen Informant und mindestens einen Ermittler.'
+error.codewords.not_clue_phase: 'Gerade wird kein Hinweis erwartet.'
+error.codewords.not_your_clue: 'Nur der Informant des aktiven Teams darf einen Hinweis geben.'
+error.codewords.empty_clue: 'Der Hinweis darf nicht leer sein.'
+error.codewords.invalid_count: 'Die Zahl muss zwischen 0 und 9 liegen.'
+error.codewords.clue_on_board: 'Der Hinweis darf kein Wort auf dem Brett sein.'
+error.codewords.not_guess_phase: 'Gerade kann nicht geraten werden.'
+error.codewords.not_your_guess: 'Nur die Ermittler des aktiven Teams dürfen raten.'
+error.codewords.already_revealed: 'Dieses Wort ist bereits aufgedeckt.'
+
+# --- Spielanleitung ---
+rules: |-
+    Bildet zwei Teams – Rot und Blau. Jedes Team braucht einen Informant, der die geheime Farbkarte kennt, und mindestens einen Ermittler, der rät.
+    Auf dem 5×5-Brett liegen 25 Wörter: einige gehören zu Team Rot, einige zu Team Blau, sieben sind Zivilisten, eines ist der Verdächtige.
+    Der Informant des startenden Teams gibt einen Hinweis: ein Wort und eine Zahl, die angibt, wie viele Brettwörter dazu passen. Der Hinweis darf kein Wort auf dem Brett sein.
+    Die Ermittler dürfen daraufhin bis zu Zahl+1 Wörter aufdecken. Trefft ihr ein eigenes Wort, dürft ihr weiterraten oder freiwillig passen.
+    Deckt ihr ein Wort des gegnerischen Teams oder einen Zivilisten auf, endet euer Zug sofort.
+    Deckt ihr den Verdächtigen auf, verliert euer Team sofort – das andere Team gewinnt.
+    Ein Team gewinnt, sobald alle eigenen Wörter aufgedeckt sind.

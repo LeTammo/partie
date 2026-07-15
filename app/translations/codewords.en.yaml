@@ -1,0 +1,66 @@
+# --- Team setup ---
+codewords.setup.heading: 'Form your teams'
+codewords.setup.hint: 'Pick a team and a role. Each team needs exactly one Informant and at least one Detective.'
+codewords.setup.begin: 'Start game'
+codewords.setup.not_ready: 'Every player must join a team – each team needs an Informant and at least one Detective.'
+
+# --- Teams & roles ---
+codewords.team.red: 'Team Red'
+codewords.team.blue: 'Team Blue'
+codewords.role.informant: 'Informant'
+codewords.role.detective: 'Detective'
+
+# --- Gameplay ---
+codewords.turn.active_team: "%team%'s turn"
+codewords.turn.your_clue: 'Give your team a clue.'
+codewords.turn.waiting_clue: 'The Informant is thinking of a clue.'
+codewords.turn.clicks_left: 'clicks left'
+codewords.remaining: '%count% left'
+codewords.hint.informant_sees_all: "As Informant, you can see every word's color."
+codewords.finished.heading: '%team% wins!'
+
+# --- Giving clues & guessing ---
+codewords.clue.label: 'Clue'
+codewords.clue.word_placeholder: 'Clue word'
+codewords.clue.submit: 'Give clue'
+codewords.guess.pass: 'End turn'
+
+# --- Settings ---
+setting.codewords.word_list: 'Word list'
+setting.codewords.word_list.deutsch: 'German'
+setting.codewords.word_list.deutsch_simpel: 'German (simple)'
+setting.codewords.word_list.english: 'English'
+
+# --- Game log ---
+log.codewords.joined_team: '%player% is playing as %role% for %team%.'
+log.codewords.started: 'The game begins – %team% gives the first clue.'
+log.codewords.clue_given: '%player% gives the clue "%word%" (%count%).'
+log.codewords.guessed: '%player% reveals "%word%".'
+log.codewords.suspect_revealed: '%player% reveals the Suspect – "%word%"!'
+log.codewords.passed: '%player% ends the turn.'
+log.codewords.team_won: '%team% has found all their words and wins!'
+
+# --- Errors ---
+error.codewords.not_setup: 'Team selection is already over.'
+error.codewords.informant_taken: 'This team already has an Informant.'
+error.codewords.not_assigned: 'Pick a team and a role first.'
+error.codewords.players_not_assigned: "Not every player has joined a team yet."
+error.codewords.teams_not_ready: 'Each team needs an Informant and at least one Detective.'
+error.codewords.not_clue_phase: 'No clue is expected right now.'
+error.codewords.not_your_clue: "Only the active team's Informant may give a clue."
+error.codewords.empty_clue: 'The clue cannot be empty.'
+error.codewords.invalid_count: 'The number must be between 0 and 9.'
+error.codewords.clue_on_board: 'The clue cannot be a word on the board.'
+error.codewords.not_guess_phase: "You can't guess right now."
+error.codewords.not_your_guess: "Only the active team's Detectives may guess."
+error.codewords.already_revealed: 'That word is already revealed.'
+
+# --- Rules ---
+rules: |-
+    Form two teams – Red and Blue. Each team needs an Informant, who knows the secret color key, and at least one Detective, who guesses.
+    The 5x5 board holds 25 words: some belong to Team Red, some to Team Blue, seven are Civilians, and one is the Suspect.
+    The starting team's Informant gives a clue: one word and a number saying how many board words relate to it. The clue can't be a word on the board.
+    The Detectives may then reveal up to number+1 words. Reveal one of your own words and you may keep guessing or pass voluntarily.
+    Reveal the other team's word or a Civilian and your turn ends immediately.
+    Reveal the Suspect and your team loses instantly – the other team wins.
+    A team wins the moment all of their own words are revealed.

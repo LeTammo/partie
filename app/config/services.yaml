@@ -27,3 +27,7 @@ services:
     App\Game\Core\Service\LobbyManager:
         arguments:
             $cacheDir: '%kernel.project_dir%/var/lobbies'
+
+    App\Game\Games\Codewords\WordList:
+        arguments:
+            $wordsDir: '%kernel.project_dir%/assets/lib/words'

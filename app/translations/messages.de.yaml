@@ -51,6 +51,8 @@ game.mills.name: 'Mühle'
 game.mills.description: 'Setze und verschiebe deine Steine, bilde Mühlen und schlage die Steine deines Gegners.'
 game.battleships.name: 'Schiffe versenken'
 game.battleships.description: 'Platziere deine Flotte und feuere gezielt – versenke alle Schiffe deines Gegners.'
+game.codewords.name: 'Codewörter'
+game.codewords.description: 'Gib als Informant Hinweise, findet als Ermittler eure Wörter – aber deckt bloß nicht den Verdächtigen auf.'
 
 # --- Lobby ---
 lobby.status.waiting: 'wartet auf Spieler'

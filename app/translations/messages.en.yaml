@@ -51,6 +51,8 @@ game.battleships.name: 'Battleship'
 game.battleships.description: 'Place your fleet, then call your shots – sink every ship to win.'
 game.mills.name: "Nine Men's Morris"
 game.mills.description: "Place, then slide your pieces to form mills and remove your opponent's."
+game.codewords.name: 'Codewords'
+game.codewords.description: "Give clues as the Informant, find your team's words as a Detective – just don't reveal the Suspect."
 
 # --- Lobby ---
 lobby.status.waiting: 'waiting for players'
