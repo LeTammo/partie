@@ -45,6 +45,8 @@ game.backgammon.name: 'Backgammon'
 game.backgammon.description: 'Bring deine Steine ins Ziel, schlage einzelne Steine an die Bar und trag als Erster alle aus.'
 game.poker.name: 'Poker'
 game.poker.description: 'Texas Hold''em – zwei eigene Karten, fünf gemeinsame, die beste Hand gewinnt den Pot.'
+game.durak.name: 'Durak'
+game.durak.description: 'Greife mit passenden Werten an, verteidige mit einer höheren Karte oder einem Trumpf – bleib nicht auf Karten sitzen.'
 game.battleships.name: 'Schiffe versenken'
 game.battleships.description: 'Platziere deine Flotte und feuere gezielt – versenke alle Schiffe deines Gegners.'
 

@@ -19,6 +19,16 @@ final class DeckFactory
     }
 
     /**
+     * 36-card deck (6 to Ace) - Durak.
+     *
+     * @return list<PlayingCard>
+     */
+    public static function deck36(): array
+    {
+        return self::build(minRank: Rank::Six, jokers: 0, copies: 1);
+    }
+
+    /**
      * 52-card deck (2 to Ace).
      *
      * @return list<PlayingCard>

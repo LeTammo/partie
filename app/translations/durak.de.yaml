@@ -1,0 +1,36 @@
+# --- Tisch ---
+durak.your_hand: 'Deine Hand'
+durak.stock: 'Nachziehstapel (%count%)'
+durak.trump: 'Trumpf'
+durak.table: 'Tisch'
+durak.table_empty: 'Noch keine Karten auf dem Tisch – greife mit einer beliebigen Karte an.'
+durak.attacker: 'greift an'
+durak.defender: 'verteidigt'
+durak.done: 'Fertig'
+durak.take: 'Karten nehmen'
+
+# --- Spielverlauf ---
+log.durak.started: 'Durak startet – Trumpf ist %suit%.'
+log.durak.attacked: '%player% greift mit %suit% %rank% an.'
+log.durak.defended: '%player% verteidigt.'
+log.durak.took: '%player% nimmt die Karten.'
+log.durak.beaten: '%player% schlägt den Angriff – die Karten kommen ab.'
+
+# --- Fehler ---
+error.durak.not_attacker: 'Das darf nur der Angreifer.'
+error.durak.not_defender: 'Das darf nur der Verteidiger.'
+error.durak.unknown_card: 'Unbekannte Karte.'
+error.durak.unknown_pair: 'Es gibt gerade nichts zu verteidigen.'
+error.durak.attack_limit: 'Du kannst gerade nicht mit mehr Karten angreifen.'
+error.durak.rank_not_on_table: 'Dieser Kartenwert liegt noch nicht auf dem Tisch.'
+error.durak.cannot_beat: 'Diese Karte schlägt den Angriff nicht.'
+error.durak.nothing_to_take: 'Es gibt nichts zu nehmen.'
+error.durak.not_all_defended: 'Noch nicht jede Angriffskarte wurde geschlagen.'
+
+# --- Spielanleitung ---
+rules: |-
+    Der Angreifer spielt eine Karte; der Verteidiger muss sie mit einer höheren Karte derselben Farbe oder einem Trumpf schlagen, oder alle Karten vom Tisch auf die Hand nehmen.
+    Ist eine Karte geschlagen, darf der Angreifer eine weitere Karte mit einem bereits liegenden Wert nachlegen (bis zu 6 Karten, nie mehr als der Verteidiger auf der Hand hat) – nur der Angreifer darf nachlegen, immer eine Karte auf einmal.
+    Sind alle Karten auf dem Tisch geschlagen, erklärt der Angreifer „fertig" – der Tisch kommt ab und der Verteidiger wird zum neuen Angreifer.
+    Nach jeder Runde füllen beide Spieler ihre Hand vom Nachziehstapel wieder auf 6 Karten auf, der Angreifer zuerst.
+    Sind Nachziehstapel und Trumpfkarte aufgebraucht, ist der Spieler, der als Erster keine Karten mehr hat, sicher – wer als Letzter Karten auf der Hand hält, ist der Durak.

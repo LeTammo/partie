@@ -1,0 +1,110 @@
+{% trans_default_domain 'durak' %}
+<div class="space-y-6" data-controller="optimistic">
+    {# ---------- players ---------- #}
+    <div class="flex flex-wrap justify-center gap-3">
+        {% for p in view.players %}
+            {% embed 'components/player_banner.html.twig' with {p: p} %}
+                {% block extra %}
+                    <span class="inline-flex items-center gap-1 text-sm font-extrabold text-warmgray-400">
+                        {% include 'icons/card-fan.svg.twig' with {class: 'size-4'} only %}
+                        {{ p.cardCount }}
+                        {% if p.isAttacker %}· {{ 'durak.attacker'|trans }}{% endif %}
+                        {% if p.isDefender %}· {{ 'durak.defender'|trans }}{% endif %}
+                    </span>
+                {% endblock %}
+            {% endembed %}
+        {% endfor %}
+    </div>
+
+    {# ---------- stock + trump ---------- #}
+    <div class="flex items-center justify-center gap-6">
+        {% include 'components/pile.html.twig' with {
+            back: view.stockCount > 0,
+            count: view.stockCount,
+            label: 'durak.stock'|trans({'%count%': view.stockCount}),
+        } only %}
+        <div class="text-center">
+            <span class="inline-flex items-center gap-1 rounded-xl bg-white px-3 py-1.5 text-lg font-extrabold shadow-soft {{ view.trumpRed ? 'text-terracotta-500' : 'text-warmgray-800' }}">
+                {{ 'durak.trump'|trans }} {{ view.trumpSuit }}
+            </span>
+        </div>
+    </div>
+
+    {# ---------- attack table ---------- #}
+    {% embed 'components/table_area.html.twig' with {title: 'durak.table'|trans, active: view.pairs is not empty} %}
+        {% block body %}
+            {% if view.pairs is empty %}
+                <p class="text-center text-sm font-bold text-warmgray-300">{{ 'durak.table_empty'|trans }}</p>
+            {% else %}
+                <div class="flex flex-wrap justify-center gap-4">
+                    {% for pair in view.pairs %}
+                        <div class="relative">
+                            {% include 'components/card.html.twig' with pair.attack|merge({
+                                key: 'dk-attack-' ~ pair.index,
+                                flip: 'dk-a-' ~ pair.attack.identity,
+                            }) only %}
+                            {% if pair.defend %}
+                                <div class="absolute -bottom-3 -right-3">
+                                    {% include 'components/card.html.twig' with pair.defend|merge({
+                                        size: 'sm',
+                                        key: 'dk-defend-' ~ pair.index,
+                                        flip: 'dk-d-' ~ pair.defend.identity,
+                                    }) only %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endblock %}
+    {% endembed %}
+
+    {# ---------- own hand ---------- #}
+    {% if view.hand is not empty %}
+        <div>
+            <p class="mb-3 text-center text-sm font-extrabold uppercase tracking-wide text-warmgray-400">{{ 'durak.your_hand'|trans }}</p>
+            <div class="flex flex-wrap justify-center gap-3">
+                {% for card in view.hand %}
+                    {% set playable = card.playableAttack or card.playableDefend %}
+                    <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}" class="text-center">
+                        <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
+                        {% if card.playableDefend %}
+                            <input type="hidden" name="action" value="defend">
+                            <input type="hidden" name="pair" value="{{ view.openPairIndex }}">
+                        {% else %}
+                            <input type="hidden" name="action" value="attack">
+                        {% endif %}
+                        <input type="hidden" name="card" value="{{ card.index }}">
+                        <button type="submit" {% if not playable %}disabled{% endif %}
+                                class="block rounded-xl transition enabled:cursor-pointer enabled:hover:-translate-y-1.5 enabled:hover:shadow-lifted
+                                       {{ not playable and view.myTurn ? 'opacity-40' }}
+                                       {{ card.trump ? 'ring-2 ring-sunny-300' }}">
+                            {% include 'components/card.html.twig' with card|merge({
+                                key: 'dk-hand-' ~ card.identity,
+                                flip: 'dk-hand-' ~ card.identity,
+                            }) only %}
+                        </button>
+                    </form>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
+    {# ---------- actions ---------- #}
+    <div class="flex flex-wrap justify-center gap-3">
+        {% if view.canDone %}
+            <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}">
+                <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
+                <input type="hidden" name="action" value="done">
+                <button type="submit" class="btn btn-primary">{{ 'durak.done'|trans }}</button>
+            </form>
+        {% endif %}
+        {% if view.canTake %}
+            <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}">
+                <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
+                <input type="hidden" name="action" value="take">
+                <button type="submit" class="btn btn-neutral">{{ 'durak.take'|trans }}</button>
+            </form>
+        {% endif %}
+    </div>
+</div>

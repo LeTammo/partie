@@ -30,7 +30,8 @@ new CustomCard('red', '11');
 
 ```php
 DeckFactory::deck32();   // 7 to Ace, shuffled - Mau-Mau, Koepknack
-DeckFactory::deck52();   // 2 to Ace, shuffled - Blackjack, Solitaire
+DeckFactory::deck36();   // 6 to Ace, shuffled - Durak
+DeckFactory::deck52();   // 2 to Ace, shuffled - Blackjack, Solitaire, Poker
 DeckFactory::deck55();   // 2 to Ace + 3 jokers
 DeckFactory::deck110();  // two 2-to-Ace decks + 6 jokers - Rummy
 
@@ -81,8 +82,9 @@ Both presenter shapes render through the same component:
 - `{back: true}` - face-down; `backColor` recolors the back design.
 - `size: 'md'` (default) or `'sm'` - never pass size classes manually.
 - A `{value, color}` map renders the custom face; the color names
-  `red`/`yellow`/`green`/`blue` map to the app palette, anything else
-  renders neutral.
+  `red`/`yellow`/`green`/`blue` map to the app palette, `wild` renders a
+  rotated four-color quadrant face (Crazy Eight's wish cards), anything
+  else renders neutral.
 - A truly one-off front can override the `front` block via `{% embed %}`.
 
 Piles (stock, discard, waste) render via `components/pile.html.twig` - see

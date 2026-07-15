@@ -1,0 +1,36 @@
+# --- Table ---
+durak.your_hand: 'Your hand'
+durak.stock: 'Stock (%count%)'
+durak.trump: 'Trump'
+durak.table: 'Table'
+durak.table_empty: 'No cards on the table yet – attack with any card.'
+durak.attacker: 'attacking'
+durak.defender: 'defending'
+durak.done: 'Done'
+durak.take: 'Take the cards'
+
+# --- Game log ---
+log.durak.started: 'Durak starts – trump is %suit%.'
+log.durak.attacked: '%player% attacks with %suit% %rank%.'
+log.durak.defended: '%player% defends.'
+log.durak.took: '%player% takes the cards.'
+log.durak.beaten: '%player% beats the attack – cards are discarded.'
+
+# --- Errors ---
+error.durak.not_attacker: 'Only the attacker can do that.'
+error.durak.not_defender: 'Only the defender can do that.'
+error.durak.unknown_card: 'Unknown card.'
+error.durak.unknown_pair: 'There is nothing open to defend.'
+error.durak.attack_limit: 'You cannot attack with more cards right now.'
+error.durak.rank_not_on_table: "That card's rank is not on the table yet."
+error.durak.cannot_beat: 'That card cannot beat the attack.'
+error.durak.nothing_to_take: 'There is nothing to take.'
+error.durak.not_all_defended: 'Not every attack card has been beaten yet.'
+
+# --- How to play ---
+rules: |-
+    The attacker plays a card; the defender must beat it with a higher card of the same suit, or any trump, or take every card on the table into their hand.
+    Once a card is beaten, the attacker may add another card of a rank already on the table (up to 6 cards, and never more than the defender's hand size) - only the attacker may add cards, one at a time.
+    When every card on the table is beaten, the attacker declares "done" - the table is discarded and the defender becomes the new attacker.
+    After each round both players refill their hand to 6 cards from the stock, attacker first.
+    Once the stock and trump card are gone, the first player left holding cards when the other empties their hand is the durak.
