@@ -46,7 +46,7 @@ game.backgammon.description: 'Race your checkers home, hit blots to the bar, and
 game.poker.name: 'Poker'
 game.poker.description: "Texas Hold'em – two hole cards, five shared, best hand takes the pot."
 game.durak.name: 'Durak'
-game.durak.description: "Attack with matching ranks, defend with a higher card or a trump – don't be left holding cards."
+game.durak.description: 'Free-form Durak at a simulated table – the app enforces no rules, and cheating is allowed as long as nobody sees it.'
 game.battleships.name: 'Battleship'
 game.battleships.description: 'Place your fleet, then call your shots – sink every ship to win.'
 game.mills.name: "Nine Men's Morris"

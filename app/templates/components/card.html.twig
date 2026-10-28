@@ -11,6 +11,7 @@
    - backColor: back design color (default softblue)
    - size: 'md' (default, h-24 w-16) | 'sm' (h-16 w-11)
    - key/flip/exit: DOM id / FLIP id / exit ghost
+   - attr: extra attributes on the card element (e.g. data-anim-restart)
    - class: extra classes
    - block front: override the face design (use {% embed %} for one-off fronts)
 #}
@@ -23,6 +24,7 @@
     {% if id %} id="{{ id }}"{% endif %}
     {% if flip|default(null) %} data-flip-id="{{ flip }}"{% endif %}
     {% if exit|default(null) %} data-flip-exit="{{ exit }}"{% endif %}
+    {% for name, value in attr|default({}) %} {{ name }}="{{ value }}"{% endfor %}
 {% endset %}
 {% if back|default(false) %}
     <span{{ attrs }} class="{{ base }} !border-0 overflow-hidden" style="background-color: {{ backColor|default('var(--color-softblue-500)') }}" aria-hidden="true">

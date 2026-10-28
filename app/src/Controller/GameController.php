@@ -7,6 +7,7 @@ namespace App\Controller;
 use App\Game\Core\Exception\GameException;
 use App\Game\Core\Exception\InvalidMoveException;
 use App\Game\Core\Model\GameStatus;
+use App\Game\Core\Model\Lobby;
 use App\Game\Core\Service\AutoPlayingEngineInterface;
 use App\Game\Core\Service\GameBroadcaster;
 use App\Game\Core\Service\GameRegistry;
@@ -45,22 +46,24 @@ final class GameController extends AbstractController
 
                 return $this->redirectToRoute('app_lobby_show', ['code' => $code]);
             }
-            if (GameStatus::Running !== $lobby->status || null === $lobby->state) {
-                throw new InvalidMoveException('error.not_running');
-            }
 
-            $game = $this->games->get($lobby->gameId);
+            $playerId = $me->id;
             $payload = $request->request->all();
             unset($payload['_token']);
 
-            $game->applyMove($lobby->state, $me->id, $payload);
+            $lobby = $this->lobbyManager->transact($code, function (Lobby $lobby) use ($playerId, $payload): void {
+                if (GameStatus::Running !== $lobby->status || null === $lobby->state) {
+                    throw new InvalidMoveException('error.not_running');
+                }
 
-            if (GameStatus::Finished === $lobby->state->status) {
-                $lobby->status = GameStatus::Finished;
-                $this->lobbyManager->recordRoundResult($lobby);
-            }
+                $game = $this->games->get($lobby->gameId);
+                $game->applyMove($lobby->state, $playerId, $payload);
 
-            $this->lobbyManager->save($lobby);
+                if (GameStatus::Finished === $lobby->state->status) {
+                    $lobby->status = GameStatus::Finished;
+                    $this->lobbyManager->recordRoundResult($lobby);
+                }
+            });
             $this->broadcaster->broadcast($lobby);
         } catch (GameException $e) {
             $this->addFlash('error', $e->translate($this->translator));
@@ -76,6 +79,8 @@ final class GameController extends AbstractController
             throw $this->createAccessDeniedException('Invalid CSRF token.');
         }
 
+        $expectedStep = $request->request->getInt('step', -1);
+
         try {
             $lobby = $this->lobbyManager->getLobby($code);
         } catch (GameException) {
@@ -85,21 +90,33 @@ final class GameController extends AbstractController
         $game = $this->games->get($lobby->gameId);
         $state = $lobby->state;
 
+        // cheap unlocked pre-check first - most ticks are no-ops (the step
+        // already advanced) and shouldn't pay for a lock
         if (!$game instanceof AutoPlayingEngineInterface
             || null === $state
             || !$game->hasAutoStep($state)
-            || ($state->data['autoStep'] ?? 0) !== $request->request->getInt('step', -1)) {
+            || ($state->data['autoStep'] ?? 0) !== $expectedStep) {
             return new Response(status: Response::HTTP_NO_CONTENT);
         }
 
-        $game->applyAutoStep($state);
-        if (GameStatus::Finished === $state->status) {
-            $lobby->status = GameStatus::Finished;
-            $this->lobbyManager->recordRoundResult($lobby);
-        }
+        $ticked = false;
+        $lobby = $this->lobbyManager->transact($code, function (Lobby $lobby) use ($game, $expectedStep, &$ticked): void {
+            $state = $lobby->state;
+            if (null === $state || !$game->hasAutoStep($state) || ($state->data['autoStep'] ?? 0) !== $expectedStep) {
+                return;
+            }
 
-        $this->lobbyManager->save($lobby);
-        $this->broadcaster->broadcast($lobby);
+            $ticked = true;
+            $game->applyAutoStep($state);
+            if (GameStatus::Finished === $state->status) {
+                $lobby->status = GameStatus::Finished;
+                $this->lobbyManager->recordRoundResult($lobby);
+            }
+        });
+
+        if ($ticked) {
+            $this->broadcaster->broadcast($lobby);
+        }
 
         return new Response(status: Response::HTTP_NO_CONTENT);
     }

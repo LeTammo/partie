@@ -1,0 +1,23 @@
+{# A fan of overlapping cards - another player's hand seen from outside,
+   or any compact run of cards. Vertical fans suit seats at the table's
+   left/right edge.
+   How to use, see docs/components/cards.md
+
+   Parameters:
+   - cards:    list of card parameter maps, each passed straight to
+               card.html.twig (typically {back: true, key: ..., flip: ...})
+   - vertical: overlap the cards in a column instead of a row
+   - overlap:  overlap utility class override
+               (default '-space-x-12' / '-space-y-19')
+   - class:    extra classes on the wrapper
+   - attr:     extra attributes on the wrapper (drop-zone wiring)
+#}
+{% set stack = vertical|default(false)
+    ? 'flex-col ' ~ overlap|default('-space-y-19')
+    : overlap|default('-space-x-12')
+%}
+<div class="flex {{ stack }} {{ class|default('') }}"{% for name, value in attr|default({}) %} {{ name }}="{{ value }}"{% endfor %}>
+    {% for card in cards %}
+        {% include 'components/card.html.twig' with card only %}
+    {% endfor %}
+</div>

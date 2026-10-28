@@ -1,110 +1,251 @@
 {% trans_default_domain 'durak' %}
-<div class="space-y-6" data-controller="optimistic">
-    {# ---------- players ---------- #}
-    <div class="flex flex-wrap justify-center gap-3">
-        {% for p in view.players %}
-            {% embed 'components/player_banner.html.twig' with {p: p} %}
-                {% block extra %}
-                    <span class="inline-flex items-center gap-1 text-sm font-extrabold text-warmgray-400">
-                        {% include 'icons/card-fan.svg.twig' with {class: 'size-4'} only %}
-                        {{ p.cardCount }}
-                        {% if p.isAttacker %}· {{ 'durak.attacker'|trans }}{% endif %}
-                        {% if p.isDefender %}· {{ 'durak.defender'|trans }}{% endif %}
-                    </span>
-                {% endblock %}
-            {% endembed %}
+{% set pieceActions = 'click->dragdrop--piece-move#pick dragstart->dragdrop--piece-move#dragStart dragend->dragdrop--piece-move#dragEnd' %}
+{% set zoneActions = 'click->dragdrop--piece-move#pickZone dragover->dragdrop--piece-move#dragOver drop->dragdrop--piece-move#drop' %}
+{% set flipActions = 'mousedown->card-flip#holdMiddleClick auxclick->card-flip#flip dblclick->card-flip#flip mouseenter->card-flip#arm mouseleave->card-flip#disarm' %}
+{# the current top of a middle pile is both a source (pick it up) and a zone
+   (stack a new card onto it) - "click->pick" and "click->pickZone" must
+   never share one element (pickZone already handles "click my own single
+   source" correctly; pick() would additionally reset the selection first
+   and cause a double-toggle), so leaves use pickZone alone, never pick #}
+{% set leafActions = 'dragstart->dragdrop--piece-move#dragStart dragend->dragdrop--piece-move#dragEnd click->dragdrop--piece-move#pickZone dragover->dragdrop--piece-move#dragOver drop->dragdrop--piece-move#drop' %}
+
+{% macro seat(opp, vertical, zoneActions) %}
+    <div class="flex flex-col items-center gap-2 rounded-2xl p-2 transition"
+         data-dragdrop--piece-move-target="zone" data-zone="hand:{{ opp.id }}" data-mode="none"
+         data-action="{{ zoneActions }}">
+        {% embed 'components/player_banner.html.twig' with {p: opp, variant: 'tile'} %}
+            {% block extra %}
+                <span class="mt-0.5 inline-flex items-center justify-center gap-1 text-sm font-extrabold text-warmgray-400">
+                    {% include 'icons/card-fan.svg.twig' with {class: 'size-4'} only %}
+                    {{ opp.cardUids|length }}
+                </span>
+            {% endblock %}
+        {% endembed %}
+        {% include 'components/card_fan.html.twig' with {
+            vertical: vertical,
+            cards: opp.cardUids|map(uid => {back: true, key: 'dk-' ~ uid, flip: 'dk-' ~ uid}),
+        } only %}
+    </div>
+{% endmacro %}
+
+{# a hidden pile rendered as a full stack of real, individually interactive
+   cards - only the visually topmost one is ever reachable by mouse/touch
+   (the rest sit fully overlapped behind it), so the next draw is already
+   there to click the instant the current top card leaves, with no round
+   trip to wait for. Sourced as "{zoneKey}:<uid>", not "card:<uid>" - drawing
+   from a hidden pile always succeeds server-side and just hands over
+   whatever is actually on top by then, so the specific uid is only ever an
+   optimistic-render hint, never a hard requirement (see GameDefinition). #}
+{% macro pile(layers, zoneKey, count, pieceActions, zoneActions, isPlayer, title, backColor) %}
+    <div class="relative shrink-0">
+        <div class="relative flex -space-x-16"
+             data-dragdrop--piece-move-target="zone" data-zone="{{ zoneKey }}"
+             data-action="{{ zoneActions }}">
+            {% if layers is empty %}
+                <span class="block h-24 w-16 rounded-xl border-2 border-dashed border-warmgray-200"></span>
+            {% endif %}
+            {% for layer in layers %}
+                {% set cardParams = layer|merge({key: 'dk-' ~ layer.uid, flip: 'dk-' ~ layer.uid, backColor: backColor}) %}
+                {% if isPlayer %}
+                    <button type="button" draggable="true" title="{{ title }}"
+                            data-dragdrop--piece-move-target="source" data-source="{{ zoneKey }}:{{ layer.uid }}"
+                            data-action="{{ pieceActions }}"
+                            class="block cursor-grab rounded-xl transition hover:-translate-y-1 hover:shadow-lifted">
+                        {% include 'components/card.html.twig' with cardParams only %}
+                    </button>
+                {% else %}
+                    {% include 'components/card.html.twig' with cardParams only %}
+                {% endif %}
+            {% endfor %}
+        </div>
+        <span class="absolute -right-2 -top-2 rounded-full bg-white px-1.5 py-0.5 text-[11px] font-extrabold text-warmgray-400 shadow-soft">{{ count }}</span>
+    </div>
+{% endmacro %}
+
+{# a chain in the open middle: the base card plus whatever is stacked
+   directly on it, and on that, and so on - rendered as flat siblings (not
+   nested), each one a direct child of this wrapper, offset a little further
+   per position via CSS alone (so a card keeps its offset only while it's
+   actually here - moved into a hand or pile, the rule no longer matches and
+   it renders like any other card there, no cleanup needed). Siblings, not
+   nesting, also means `dragdrop--piece-move`'s `runs` mode (opted into via
+   `data-runs`) does exactly the right thing: picking any card in the chain
+   also picks whichever cards come after it, carrying the pile above it
+   along - "take the top, or take one from underneath and bring the rest". #}
+{% macro middleChain(chain, pieceActions, leafActions, flipActions, isPlayer) %}
+    <div class="relative
+                [&>*:nth-child(2)]:absolute [&>*:nth-child(2)]:-bottom-3 [&>*:nth-child(2)]:-right-3
+                [&>*:nth-child(3)]:absolute [&>*:nth-child(3)]:-bottom-6 [&>*:nth-child(3)]:-right-6
+                [&>*:nth-child(4)]:absolute [&>*:nth-child(4)]:-bottom-9 [&>*:nth-child(4)]:-right-9
+                [&>*:nth-child(5)]:absolute [&>*:nth-child(5)]:-bottom-12 [&>*:nth-child(5)]:-right-12
+                [&>*:nth-child(n+6)]:absolute [&>*:nth-child(n+6)]:-bottom-14 [&>*:nth-child(n+6)]:-right-14"
+         data-runs="true">
+        {% for card in chain %}
+            {% set cardParams = card.faceUp
+                ? card.card|merge({key: 'dk-' ~ card.uid, flip: 'dk-' ~ card.uid, attr: {'data-anim-restart': 'up'}})
+                : {back: true, key: 'dk-' ~ card.uid, flip: 'dk-' ~ card.uid, attr: {'data-anim-restart': 'down'}} %}
+            {% if isPlayer %}
+                <button type="button" draggable="true"
+                        data-dragdrop--piece-move-target="{{ card.isLeaf ? 'source zone' : 'source' }}"
+                        data-source="card:{{ card.uid }}"
+                        {% if card.isLeaf %}data-zone="stack:{{ card.uid }}"{% endif %}
+                        data-flip-uid="{{ card.uid }}"
+                        data-action="{{ card.isLeaf ? leafActions : pieceActions }} {{ flipActions }}"
+                        title="{{ 'durak.flip_hint'|trans }}"
+                        class="block cursor-grab rounded-xl transition hover:-translate-y-1 hover:shadow-lifted">
+                    {% include 'components/card.html.twig' with cardParams only %}
+                </button>
+            {% else %}
+                {% include 'components/card.html.twig' with cardParams only %}
+            {% endif %}
         {% endfor %}
     </div>
+{% endmacro %}
 
-    {# ---------- stock + trump ---------- #}
-    <div class="flex items-center justify-center gap-6">
-        {% include 'components/pile.html.twig' with {
-            back: view.stockCount > 0,
-            count: view.stockCount,
-            label: 'durak.stock'|trans({'%count%': view.stockCount}),
-        } only %}
-        <div class="text-center">
-            <span class="inline-flex items-center gap-1 rounded-xl bg-white px-3 py-1.5 text-lg font-extrabold shadow-soft {{ view.trumpRed ? 'text-terracotta-500' : 'text-warmgray-800' }}">
-                {{ 'durak.trump'|trans }} {{ view.trumpSuit }}
-            </span>
-        </div>
-    </div>
+{% import 'game/durak/table.html.twig' as table %}
 
-    {# ---------- attack table ---------- #}
-    {% embed 'components/table_area.html.twig' with {title: 'durak.table'|trans, active: view.pairs is not empty} %}
-        {% block body %}
-            {% if view.pairs is empty %}
-                <p class="text-center text-sm font-bold text-warmgray-300">{{ 'durak.table_empty'|trans }}</p>
-            {% else %}
-                <div class="flex flex-wrap justify-center gap-4">
-                    {% for pair in view.pairs %}
-                        <div class="relative">
-                            {% include 'components/card.html.twig' with pair.attack|merge({
-                                key: 'dk-attack-' ~ pair.index,
-                                flip: 'dk-a-' ~ pair.attack.identity,
-                            }) only %}
-                            {% if pair.defend %}
-                                <div class="absolute -bottom-3 -right-3">
-                                    {% include 'components/card.html.twig' with pair.defend|merge({
-                                        size: 'sm',
-                                        key: 'dk-defend-' ~ pair.index,
-                                        flip: 'dk-d-' ~ pair.defend.identity,
-                                    }) only %}
+<div data-controller="optimistic dragdrop--piece-move card-flip"
+     data-dragdrop--piece-move-free-drag-value="true"
+     data-dragdrop--piece-move-moves-value="{{ view.moves|json_encode|e('html_attr') }}">
+    <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}" data-dragdrop--piece-move-target="form" class="hidden">
+        <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
+        <input type="hidden" name="action" value="move">
+        <input type="hidden" name="from" data-dragdrop--piece-move-target="from">
+        <input type="hidden" name="to" data-dragdrop--piece-move-target="to">
+    </form>
+    {# shared by every middle card's flip - they can't each carry their own
+       form since a chain's cards must be direct siblings for piece-move's
+       runs mode, and a <form> can't nest inside the source <button> either #}
+    <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}" data-card-flip-target="form" class="hidden">
+        <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
+        <input type="hidden" name="action" value="flip">
+        <input type="hidden" name="uid" data-card-flip-target="uid">
+    </form>
+
+    <div class="flex items-stretch justify-center gap-2 sm:gap-4">
+        {# ---------- seats at the left edge ---------- #}
+        {% if view.seats.left is not empty %}
+            <div class="flex shrink-0 flex-col justify-center gap-6">
+                {% for opp in view.seats.left %}
+                    {{ table.seat(opp, true, zoneActions) }}
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <div class="min-w-0 flex-1 space-y-6">
+            {# ---------- seats at the top edge ---------- #}
+            {% if view.seats.top is not empty %}
+                <div class="flex flex-wrap items-start justify-center gap-8">
+                    {% for opp in view.seats.top %}
+                        {{ table.seat(opp, false, zoneActions) }}
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            {# ---------- the shared table middle ---------- #}
+            {% embed 'components/table_area.html.twig' with {active: view.middle.chains is not empty} %}
+                {% import 'game/durak/table.html.twig' as table %}
+                {% block body %}
+                    <div class="flex flex-wrap items-start justify-center gap-6 sm:gap-8">
+                        {# stock, with the trump card tucked underneath until it's the last one left #}
+                        <div class="relative mr-6 shrink-0">
+                            {% if view.stock.trumpPeek %}
+                                <div class="absolute left-6 top-1/2 -translate-y-1/2 rotate-90">
+                                    {% include 'components/card.html.twig' with view.stock.trumpPeek|merge({key: 'dk-trump'}) only %}
                                 </div>
+                            {% endif %}
+                            {{ table.pile(view.stock.layers, 'stock', view.stock.count, pieceActions, zoneActions, view.isPlayer, 'durak.draw'|trans, null) }}
+                        </div>
+
+                        {# open middle - anyone may add, take, flip or stack a card to defend #}
+                        <div class="group flex min-h-32 min-w-44 flex-1 flex-wrap content-center items-center justify-center gap-4 rounded-2xl p-2 transition"
+                             data-dragdrop--piece-move-target="zone" data-zone="middle"
+                             data-action="{{ zoneActions }}">
+                            {% if view.middle.chains is empty %}
+                                {# hidden the instant an optimistic drop lands a card here, without waiting for the server #}
+                                <p class="text-center text-sm font-bold text-warmgray-300 group-has-[[data-flip-id]]:hidden">{{ 'durak.table_empty'|trans }}</p>
+                            {% endif %}
+                            {% for chain in view.middle.chains %}
+                                {{ table.middleChain(chain, pieceActions, leafActions, flipActions, view.isPlayer) }}
+                            {% endfor %}
+                        </div>
+
+                        {{ table.pile(view.discard.layers, 'discard', view.discard.count, pieceActions, zoneActions, view.isPlayer, 'durak.take_discard'|trans, 'var(--color-warmgray-400)') }}
+                    </div>
+
+                    <div class="mt-4 flex justify-center">
+                        <span class="inline-flex items-center gap-1 rounded-xl bg-white px-3 py-1.5 text-base font-extrabold shadow-soft {{ view.trumpRed ? 'text-terracotta-500' : 'text-warmgray-800' }}">
+                            {{ 'durak.trump'|trans }} {{ view.trumpSuit }}
+                        </span>
+                    </div>
+                {% endblock %}
+            {% endembed %}
+
+            {# ---------- incoming offers ---------- #}
+            {% for offer in view.incomingOffers %}
+                <div class="anim-rise mx-auto flex w-fit max-w-full flex-wrap items-center justify-center gap-4 rounded-2xl bg-sunny-50 p-4 ring-2 ring-sunny-200">
+                    {% include 'components/card.html.twig' with offer.card only %}
+                    <div class="space-y-3 text-center">
+                        <p class="text-sm font-extrabold text-warmgray-700">{{ 'durak.offer_incoming'|trans({'%player%': offer.fromNickname}) }}</p>
+                        <div class="flex justify-center gap-2">
+                            <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}">
+                                <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
+                                <input type="hidden" name="action" value="accept_offer">
+                                <input type="hidden" name="from" value="{{ offer.fromId }}">
+                                <button type="submit" class="btn btn-confirm">{{ 'durak.offer_accept'|trans }}</button>
+                            </form>
+                            <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}">
+                                <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
+                                <input type="hidden" name="action" value="decline_offer">
+                                <input type="hidden" name="from" value="{{ offer.fromId }}">
+                                <button type="submit" class="btn btn-neutral">{{ 'durak.offer_decline'|trans }}</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+
+            {# ---------- own hand ---------- #}
+            {% if view.isPlayer %}
+                <div class="group mx-auto flex min-h-28 flex-wrap items-center justify-center gap-3 rounded-2xl p-2 transition"
+                     data-dragdrop--piece-move-target="zone" data-zone="hand:{{ me.id }}"
+                     data-action="{{ zoneActions }}">
+                    {% if view.hand is empty %}
+                        <p class="text-center text-sm font-bold text-warmgray-300 group-has-[[data-flip-id]]:hidden">{{ 'durak.hand_empty'|trans }}</p>
+                    {% endif %}
+                    {% for card in view.hand %}
+                        <div class="relative">
+                            <button type="button" draggable="true"
+                                    data-dragdrop--piece-move-target="source" data-source="card:{{ card.uid }}"
+                                    data-action="{{ pieceActions }}"
+                                    class="block cursor-grab rounded-xl transition hover:-translate-y-1.5 hover:shadow-lifted">
+                                {% include 'components/card.html.twig' with card.card|merge({key: 'dk-' ~ card.uid, flip: 'dk-' ~ card.uid}) only %}
+                            </button>
+                            {% if card.offeredTo %}
+                                <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}"
+                                      class="absolute -top-2.5 left-1/2 z-20 w-max -translate-x-1/2">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
+                                    <input type="hidden" name="action" value="decline_offer">
+                                    <input type="hidden" name="from" value="{{ me.id }}">
+                                    <button type="submit" title="{{ 'durak.offer_cancel'|trans }}"
+                                            class="flex items-center gap-1 rounded-full bg-sunny-200 px-2.5 py-0.5 text-[10px] font-extrabold text-sunny-700 shadow-soft transition hover:bg-sunny-300">
+                                        {{ 'durak.offer_pending'|trans({'%player%': card.offeredTo}) }} ✕
+                                    </button>
+                                </form>
                             {% endif %}
                         </div>
                     {% endfor %}
                 </div>
             {% endif %}
-        {% endblock %}
-    {% endembed %}
+        </div>
 
-    {# ---------- own hand ---------- #}
-    {% if view.hand is not empty %}
-        <div>
-            <p class="mb-3 text-center text-sm font-extrabold uppercase tracking-wide text-warmgray-400">{{ 'durak.your_hand'|trans }}</p>
-            <div class="flex flex-wrap justify-center gap-3">
-                {% for card in view.hand %}
-                    {% set playable = card.playableAttack or card.playableDefend %}
-                    <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}" class="text-center">
-                        <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
-                        {% if card.playableDefend %}
-                            <input type="hidden" name="action" value="defend">
-                            <input type="hidden" name="pair" value="{{ view.openPairIndex }}">
-                        {% else %}
-                            <input type="hidden" name="action" value="attack">
-                        {% endif %}
-                        <input type="hidden" name="card" value="{{ card.index }}">
-                        <button type="submit" {% if not playable %}disabled{% endif %}
-                                class="block rounded-xl transition enabled:cursor-pointer enabled:hover:-translate-y-1.5 enabled:hover:shadow-lifted
-                                       {{ not playable and view.myTurn ? 'opacity-40' }}
-                                       {{ card.trump ? 'ring-2 ring-sunny-300' }}">
-                            {% include 'components/card.html.twig' with card|merge({
-                                key: 'dk-hand-' ~ card.identity,
-                                flip: 'dk-hand-' ~ card.identity,
-                            }) only %}
-                        </button>
-                    </form>
+        {# ---------- seats at the right edge ---------- #}
+        {% if view.seats.right is not empty %}
+            <div class="flex shrink-0 flex-col justify-center gap-6">
+                {% for opp in view.seats.right %}
+                    {{ table.seat(opp, true, zoneActions) }}
                 {% endfor %}
             </div>
-        </div>
-    {% endif %}
-
-    {# ---------- actions ---------- #}
-    <div class="flex flex-wrap justify-center gap-3">
-        {% if view.canDone %}
-            <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}">
-                <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
-                <input type="hidden" name="action" value="done">
-                <button type="submit" class="btn btn-primary">{{ 'durak.done'|trans }}</button>
-            </form>
-        {% endif %}
-        {% if view.canTake %}
-            <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}">
-                <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
-                <input type="hidden" name="action" value="take">
-                <button type="submit" class="btn btn-neutral">{{ 'durak.take'|trans }}</button>
-            </form>
         {% endif %}
     </div>
 </div>

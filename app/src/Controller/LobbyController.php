@@ -6,6 +6,7 @@ namespace App\Controller;
 
 use App\Game\Core\Exception\GameException;
 use App\Game\Core\Exception\LobbyNotFoundException;
+use App\Game\Core\Model\Lobby;
 use App\Game\Core\Service\GameBroadcaster;
 use App\Game\Core\Service\GameRegistry;
 use App\Game\Core\Service\LobbyManager;
@@ -127,9 +128,14 @@ final class LobbyController extends AbstractController
                 throw new GameException('error.nickname_length');
             }
 
-            $me->nickname = $nickname;
-            $this->lobbyManager->save($lobby);
-            $this->playerSession->remember($lobby->code, $me);
+            $playerId = $me->id;
+            $lobby = $this->lobbyManager->transact($code, function (Lobby $lobby) use ($playerId, $nickname): void {
+                $player = $lobby->playerById($playerId);
+                if (null !== $player) {
+                    $player->nickname = $nickname;
+                }
+            });
+            $this->playerSession->remember($lobby->code, $lobby->playerById($playerId));
             $this->broadcaster->broadcast($lobby);
         } catch (GameException $e) {
             $this->addFlash('error', $e->translate($this->translator));
@@ -149,7 +155,7 @@ final class LobbyController extends AbstractController
             $lobby = $this->lobbyManager->getLobby($code);
             $me = $this->playerSession->playerFor($lobby);
             if (null !== $me) {
-                $this->lobbyManager->heartbeat($lobby, $me->id);
+                $this->lobbyManager->heartbeat($code, $me->id);
             }
         } catch (GameException) {
         }
@@ -174,7 +180,7 @@ final class LobbyController extends AbstractController
             $raw = $request->request->all();
             unset($raw['_token']);
 
-            $this->lobbyManager->updateSettings($lobby, $me->id, $raw);
+            $this->lobbyManager->updateSettings($code, $me->id, $raw);
         } catch (GameException $e) {
             $this->addFlash('error', $e->translate($this->translator));
         }
@@ -196,7 +202,7 @@ final class LobbyController extends AbstractController
                 return $this->redirectToRoute('app_lobby_show', ['code' => $code]);
             }
 
-            $this->lobbyManager->playAgain($lobby, $me->id);
+            $lobby = $this->lobbyManager->playAgain($code, $me->id);
             $this->broadcaster->broadcast($lobby);
         } catch (GameException $e) {
             $this->addFlash('error', $e->translate($this->translator));
@@ -219,7 +225,7 @@ final class LobbyController extends AbstractController
                 return $this->redirectToRoute('app_home');
             }
 
-            $this->lobbyManager->startGame($lobby, $me->id);
+            $lobby = $this->lobbyManager->startGame($code, $me->id);
             $this->broadcaster->broadcast($lobby);
         } catch (GameException $e) {
             $this->addFlash('error', $e->translate($this->translator));
