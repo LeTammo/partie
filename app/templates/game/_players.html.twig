@@ -2,7 +2,8 @@
     <h3 class="text-xs font-extrabold uppercase tracking-wide text-warmgray-400">{{ 'players.title'|trans }}</h3>
     <ul class="mt-3 space-y-2">
         {% for player in lobby.players %}
-            {% set isTurn = lobby.state is not null
+            {% set isTurn = game.hasTurns
+                and lobby.state is not null
                 and lobby.state.status.value == 'running'
                 and lobby.state.currentPlayer.id == player.id %}
             <li class="flex items-center gap-3 rounded-2xl px-3 py-2 transition {{ isTurn ? 'bg-softblue-50 ring-2 ring-softblue-200' : 'bg-cream' }}">

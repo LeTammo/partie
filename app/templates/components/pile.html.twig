@@ -7,7 +7,11 @@
    - top:        card view (CardPresenter::view) shown face-up, or null
    - back:       true shows a face-down card instead of `top`
    - backColor:  face-down design color
-   - count:      stack size (only used by your own label text)
+   - count:      stack size - your label text, and (when > 1) a static
+                 backdrop card peeking out behind the visible one, so a pile
+                 whose top card is a real draggable piece (dragdrop--piece-
+                 move) still looks like a pile the instant that card is
+                 optimistically dragged away, before the server confirms
    - label:      caption under the pile (pass pre-translated text)
    - emptyIcon:  icon name shown in the dashed empty slot (optional)
    - emptyIconClass: classes on that icon (default 'size-5')
@@ -27,7 +31,7 @@
 #}
 {% set face %}
     {% if back|default(false) %}
-        {% include 'components/card.html.twig' with {back: true, backColor: backColor|default(null), key: key|default(null)} only %}
+        {% include 'components/card.html.twig' with {back: true, backColor: backColor|default(null), key: key|default(null), flip: flip|default(null), exit: exit|default(null)} only %}
     {% elseif top|default(null) %}
         {% include 'components/card.html.twig' with top|merge({key: key|default(null), flip: flip|default(null), exit: exit|default(null)}) only %}
     {% else %}
@@ -40,30 +44,40 @@
         </span>
     {% endif %}
 {% endset %}
+{% set stacked = (back|default(false) or top|default(null) is not null) and count|default(0) > 1 %}
 
 <div class="text-center {{ class|default('') }}"{% for name, value in attr|default({}) %} {{ name }}="{{ value }}"{% endfor %}>
-    {% if form|default(null) %}
-        <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}"
-              {% if form.ghostFrom|default(null) %}
-                  data-action="submit->optimistic#ghost"
-                  data-optimistic-from-param="{{ form.ghostFrom }}" data-optimistic-to-param="{{ form.ghostTo }}"
-              {% endif %}>
-            <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
-            <input type="hidden" name="action" value="{{ form.action }}">
-            <button type="submit" {% if form.disabled|default(false) %}disabled{% endif %}
-                    {% for name, value in buttonAttr|default({}) %}{{ name }}="{{ value }}" {% endfor %}
-                    class="block rounded-xl shadow-soft transition enabled:cursor-grab enabled:hover:-translate-y-1 enabled:hover:shadow-lifted disabled:opacity-60"
-                    {% if form.title|default(null) %}title="{{ form.title }}"{% endif %}>
+    <div class="relative inline-block">
+        {% if stacked %}
+            {# a static, non-flip-tracked card peeking out behind - never touched by the
+               morph or by piece-move, so it survives the real top card being dragged away #}
+            <span class="pointer-events-none absolute inset-0 -z-10 translate-x-1 translate-y-1" aria-hidden="true">
+                {% include 'components/card.html.twig' with {back: true, backColor: backColor|default(null)} only %}
+            </span>
+        {% endif %}
+        {% if form|default(null) %}
+            <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}"
+                  {% if form.ghostFrom|default(null) %}
+                      data-action="submit->optimistic#ghost"
+                      data-optimistic-from-param="{{ form.ghostFrom }}" data-optimistic-to-param="{{ form.ghostTo }}"
+                  {% endif %}>
+                <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
+                <input type="hidden" name="action" value="{{ form.action }}">
+                <button type="submit" {% if form.disabled|default(false) %}disabled{% endif %}
+                        {% for name, value in buttonAttr|default({}) %}{{ name }}="{{ value }}" {% endfor %}
+                        class="block rounded-xl shadow-soft transition enabled:cursor-grab enabled:hover:-translate-y-1 enabled:hover:shadow-lifted disabled:opacity-60"
+                        {% if form.title|default(null) %}title="{{ form.title }}"{% endif %}>
+                    {{ face }}
+                </button>
+            </form>
+        {% elseif buttonAttr|default(null) %}
+            <button type="button" {% for name, value in buttonAttr %}{{ name }}="{{ value }}" {% endfor %}class="block cursor-grab">
                 {{ face }}
             </button>
-        </form>
-    {% elseif buttonAttr|default(null) %}
-        <button type="button" {% for name, value in buttonAttr %}{{ name }}="{{ value }}" {% endfor %}class="block cursor-grab">
+        {% else %}
             {{ face }}
-        </button>
-    {% else %}
-        {{ face }}
-    {% endif %}
+        {% endif %}
+    </div>
     {% if label|default(null) %}
         <p class="mt-1.5 text-xs font-extrabold uppercase tracking-wide text-warmgray-400">{{ label }}</p>
     {% endif %}

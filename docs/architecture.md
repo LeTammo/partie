@@ -72,6 +72,17 @@ takes a moment, so the UI reacts immediately and the morph just confirms it.
   round-win tally, both of which outlive any single `GameState` - see
   [components/engine-and-state.md](components/engine-and-state.md) for how
   settings and round replay work.
+- **Concurrent writes**: every request that mutates a lobby (a move, joining,
+  starting, an autoplay tick, ...) must go through
+  `LobbyManager::transact(string $code, callable $callback): Lobby` instead of
+  a bare `getLobby()` + `save()`. It takes an exclusive per-code file lock
+  (`flock`, in `var/lobbies/locks/`), loads the lobby fresh, runs `$callback`,
+  saves, then releases - so two players acting in the same instant serialize
+  instead of one silently overwriting the other's move (a plain
+  read-modify-write has no such guarantee: both requests would read the same
+  snapshot and whichever saved last would win). Free-form games without a
+  turn order (Durak) rely on this the most, since any player may act at any
+  time.
 - **Identity**: `PlayerSession` stores `lobby_player_{CODE} => playerId` in
   the Symfony session. A visitor without a seat sees the lobby as a
   spectator and can grab a seat while it's still `waiting`.

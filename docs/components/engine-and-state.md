@@ -16,6 +16,7 @@ interface GameEngineInterface
     public function getIcon(): string;                // templates/icons/{name}.svg.twig
     public function getMinPlayers(): int;
     public function getMaxPlayers(): int;
+    public function hasTurns(): bool;                 // default true via AbstractGameDefinition
     public function settings(): array;                // list<GameSetting>, default [] via AbstractGameDefinition
     public function createInitialState(array $players, array $settings = []): GameState;
     public function applyMove(GameState $state, string $playerId, array $payload): void;
@@ -46,6 +47,12 @@ All concrete games are `final readonly class ... extends
 AbstractGameDefinition`. Readonly-ness must match across the class
 hierarchy, so `AbstractGameDefinition` is declared `abstract readonly`
 too - don't drop `readonly` from either side.
+
+**Free-form games** (a simulation where every player may act at any time,
+like Durak) override `hasTurns()` to return `false`: the lobby then hides
+the whose-turn banner and the turn markers in the player list, and
+`applyMove` simply skips the `isPlayersTurn` check. `currentTurnIndex`
+stays untouched at `0`.
 
 ## Host-configurable settings
 

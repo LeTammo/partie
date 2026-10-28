@@ -1,4 +1,5 @@
 import { Controller } from '@hotwired/stimulus';
+import * as Turbo from '@hotwired/turbo';
 import { glideFrom } from '../../animation.js';
 import { CELL_SELECTED_CLASS, CELL_TARGET_CLASS } from '../../dragdrop.js';
 
@@ -30,7 +31,9 @@ import { CELL_SELECTED_CLASS, CELL_TARGET_CLASS } from '../../dragdrop.js';
 // - source:     pickable piece, keyed by data-source
 // - zone:       drop target, keyed by data-zone; data-mode="replace" makes
 //               the optimistic drop replace the zone's children (a pile
-//               showing only its top card)
+//               showing only its top card); data-mode="none" submits the
+//               move without touching the DOM (the piece stays where it is
+//               until the server render decides - an offer, a claim)
 export default class extends Controller {
     static targets = ['form', 'from', 'to', 'choice', 'source', 'zone'];
     static values = {
@@ -46,12 +49,41 @@ export default class extends Controller {
     connect() {
         this.selected = null;
         this.dragging = false;
+        this.submitQueue = Promise.resolve();
+        this.pendingSubmits = 0;
+        this.suppressMorph = this.suppressMorph.bind(this);
+        document.addEventListener('turbo:before-render', this.suppressMorph);
         this.autoSelectSingleOrigin();
         this.paint();
     }
 
+    disconnect() {
+        document.removeEventListener('turbo:before-render', this.suppressMorph);
+    }
+
+    // a morph confirms only the ONE request it was generated for - if this
+    // client already has a later action queued behind it (rapid consecutive
+    // moves, each animated optimistically the instant it's clicked, well
+    // before any of them hear back), applying that stale morph would revert
+    // the DOM to "only the first move happened" and then immediately have to
+    // re-advance it again once the next response lands, a visible snap-back.
+    // Skip every morph but the last one in the queue; once it drains, the
+    // final morph reflects every move's cumulative effect at once.
+    suppressMorph(event) {
+        if (this.pendingSubmits > 1 && 'morph' === event.detail.renderMethod) {
+            event.preventDefault();
+        }
+    }
+
+    // a fresh render (an own move's confirmation, or another player's morph
+    // arriving via Mercure) must not cancel a selection that is still valid -
+    // otherwise a fast follow-up click (pick the next card, drop it) can
+    // straddle the exact instant the morph lands and get silently eaten,
+    // making rapid consecutive actions feel randomly "blocked"
     movesValueChanged() {
-        this.selected = null;
+        if (null !== this.selected && !this.movesValue[this.selected]) {
+            this.selected = null;
+        }
         this.autoSelectSingleOrigin();
         this.paint();
     }
@@ -67,7 +99,7 @@ export default class extends Controller {
         this.paint();
     }
 
-    // click on a zone: choice-pick, own-piece toggle, or move submit
+    // click on a zone: choice-pick, completing a pending move, or own-piece toggle
     pickZone(event) {
         const el = event.currentTarget;
         const zone = el.dataset.zone;
@@ -75,6 +107,16 @@ export default class extends Controller {
 
         if (this.hasChoicesValue && zone && this.choicesValue.includes(zone)) {
             this.submitChoice(zone);
+            return;
+        }
+
+        // a pending selection that can legally land here wins over re-picking
+        // this zone's own single piece - otherwise a zone that is both a
+        // one-piece source and a legal destination (Durak: dropping a card
+        // onto the stock, discard or another single-card hand) could never
+        // be dropped onto by click, only by drag
+        if (null !== this.selected && sourceKey !== this.selected && this.isLegalTarget(zone)) {
+            this.submitMove(zone);
             return;
         }
 
@@ -131,29 +173,75 @@ export default class extends Controller {
         const from = this.selected;
         this.animateMove(from, toZone);
 
-        this.fromTarget.value = from;
-        this.toTarget.value = toZone;
-        this.formTarget.requestSubmit();
-
         this.selected = null;
         this.dragging = false;
         this.paint();
+
+        this.enqueueSubmit(() => {
+            this.fromTarget.value = from;
+            this.toTarget.value = toZone;
+        });
     }
 
     submitChoice(key) {
         this.pieceFor(key)?.classList.add('ghost-fade');
-        this.choiceTarget.value = key;
-        this.formTarget.requestSubmit();
+
+        this.enqueueSubmit(() => {
+            this.choiceTarget.value = key;
+        });
+    }
+
+    // rapid consecutive moves must reach the server in the order they were
+    // made: two fetches fired back to back can arrive out of order, getting
+    // the second rejected as "physically impossible" (someone else was
+    // faster) purely because it landed first - even though nothing else was
+    // actually involved. The optimistic move already happened instantly
+    // above; only the network request itself waits its turn.
+    //
+    // a submission can come back with no real fetchResponse at all (an
+    // overloaded dev server, a dropped connection) rather than a clean
+    // success/failure - and there is no way to tell from here whether the
+    // server actually executed the move before answering. Retrying would
+    // risk running a non-idempotent action twice (drawing two cards
+    // instead of one); silently accepting it would leave the optimistic
+    // move stranded if it in fact never landed. Either way the only safe
+    // response is to stop guessing and resync with whatever the server
+    // actually has.
+    enqueueSubmit(fillForm) {
+        this.pendingSubmits++;
+        this.submitQueue = this.submitQueue.then(() => new Promise((resolve) => {
+            const done = (event) => {
+                this.formTarget.removeEventListener('turbo:submit-end', done);
+                clearTimeout(timeout);
+                this.pendingSubmits--;
+                if (!event?.detail?.success) {
+                    Turbo.visit(window.location.href, { action: 'replace' });
+                }
+                resolve();
+            };
+            const timeout = setTimeout(() => done(null), 5000);
+            this.formTarget.addEventListener('turbo:submit-end', done, { once: true });
+            fillForm();
+            this.formTarget.requestSubmit();
+        }));
     }
 
     animateMove(fromKey, toZone) {
         const piece = this.pieceFor(fromKey);
         const target = this.zoneTargets.find((el) => el.dataset.zone === toZone);
-        if (!piece || !target) {
+        if (!piece || !target || target.dataset.mode === 'none') {
             return;
         }
 
-        const moving = this.runsValue
+        // a piece's immediate parent can opt in/out of runs itself
+        // (data-runs="true"/"false"), overriding the controller-wide default -
+        // Durak mixes both a runs zone (a stacked pile in the open middle,
+        // taking a card also takes whatever is stacked on it) and plain
+        // single-card zones (a hand, a stock pile) in the same controller
+        const runs = undefined !== piece.parentElement.dataset.runs
+            ? 'true' === piece.parentElement.dataset.runs
+            : this.runsValue;
+        const moving = runs
             ? [piece, ...Array.from(piece.parentElement.children).slice(
                 Array.from(piece.parentElement.children).indexOf(piece) + 1,
             )]

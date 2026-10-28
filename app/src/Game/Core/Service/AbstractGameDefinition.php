@@ -20,6 +20,11 @@ abstract readonly class AbstractGameDefinition implements GameEngineInterface
         return [];
     }
 
+    public function hasTurns(): bool
+    {
+        return true;
+    }
+
     protected function setting(GameState $state, string $key): string|int|bool|null
     {
         return $state->data['settings'][$key] ?? null;

@@ -30,6 +30,9 @@ interface GameEngineInterface
 
     public function getMaxPlayers(): int;
 
+    /** False for free-form games without a turn order - the lobby hides all turn indicators. */
+    public function hasTurns(): bool;
+
     /** @return list<GameSetting> */
     public function settings(): array;
 

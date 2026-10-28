@@ -151,11 +151,17 @@ Template wiring (the board component does the zone side for you):
 - **Zones** (drop targets): `data-dragdrop--piece-move-target="zone"
   data-zone="{key}"` + the `pickZone`/`dragOver`/`drop` actions. A zone
   with `data-mode="replace"` swaps its content on an optimistic drop (a
-  foundation pile showing only its top card).
+  foundation pile showing only its top card); `data-mode="none"` submits
+  the move without touching the DOM at all - the piece stays where it is
+  until the server render decides (Durak's card offers, where dropping a
+  card on another player only *asks*).
 - **Sources** (pickable pieces): `data-source="{key}"` + the drag actions;
   standalone card buttons also register as `target="source"` with the
   `pick` click action. A grid cell containing exactly one source picks it
-  on click automatically.
+  on click automatically - unless something else is already selected and
+  this zone is a legal target for it, in which case the click completes
+  that move instead (otherwise a zone that is both a one-piece source and
+  a legal destination could never be dropped onto by click, only by drag).
 - **Choices**: `choicesValue` (a list of keys) + a `choice` input target
   turn marked zones into one-click choice submits (Checkers' sacrifice).
 - **Drag feel**: `freeDrag` lets every source be picked up even without a
@@ -168,6 +174,40 @@ Template wiring (the board component does the zone side for you):
   `MoveMap::coordsOf($key)`.
 - Selected/target highlighting uses the `cell-selected`/`cell-target` CSS
   classes automatically.
+- **Rapid consecutive moves** (a free-for-all game like Durak, where one
+  player can draw several cards back to back): the optimistic DOM move
+  happens instantly on every click, but the actual network submissions are
+  queued and sent one at a time, only firing the next once `turbo:submit-end`
+  confirms the previous one landed. Two fetches launched back to back can
+  otherwise arrive at the server out of order, getting the second rejected
+  as impossible before the first one's effect even took hold - this is
+  invisible to the player either way since the UI already reacted. A fresh
+  `moves` render (the confirmation morph, or another player's action
+  arriving via Mercure) never cancels an in-progress selection that is still
+  valid - only a selection that the new map no longer lists gets cleared -
+  so a fast pick-then-drop isn't silently dropped just because a morph
+  happened to land in between. And while more of this client's own moves are
+  still queued behind the one a morph confirms, that morph is skipped
+  entirely - it only knows about the single request it answers, so applying
+  it would visually snap the DOM back to "just that one happened" and then
+  immediately re-advance once the next response lands. Only the last morph
+  in a queued burst is ever allowed through, once every move in it has
+  landed, reconciling everything in one clean step instead of flickering.
+  And if a submission's own `turbo:submit-end` doesn't report a clean
+  success - an overloaded server, a dropped connection - it is never
+  retried: there is no way to tell from the client whether the server
+  already executed that (possibly non-idempotent) move before failing to
+  answer, so retrying could double it up (drawing two cards instead of
+  one). Instead it forces a full `Turbo.visit` resync, trading a flicker
+  for certainty that the client ends up wherever the server actually is.
+- **Per-zone runs**: `runsValue` is the controller-wide default for "picking
+  a source also picks its following DOM siblings", but a piece's own
+  immediate parent can override it locally with `data-runs="true"` or
+  `"false"` - useful when one controller instance mixes a stacked-pile zone
+  (take a card, take whatever's stacked on top of it too) with plain
+  single-card zones (a hand, a stock pile) that must never drag siblings
+  along. Requires the pile's cards to be direct siblings under that parent,
+  same as Solitaire's tableau columns.
 
 `dragdrop--zone-drop` ("dropping submits the source's own form", Mau-Mau)
 and `dragdrop--group-swap` (slot swapping, Koepknack) remain separate -

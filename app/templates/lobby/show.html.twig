@@ -100,13 +100,13 @@
                             </a>
                         </div>
                     </div>
-                {% elseif me is not null and lobby.state.isPlayersTurn(me.id) %}
+                {% elseif game.hasTurns and me is not null and lobby.state.isPlayersTurn(me.id) %}
                     {# keyed by the player at turn: a turn change swaps the node and replays the animation #}
                     <div id="turn-{{ lobby.state.currentPlayer.id }}"
                          class="anim-rise rounded-3xl bg-softblue-50 px-6 py-4 text-center text-lg font-extrabold text-softblue-700 shadow-soft">
                         {{ 'lobby.turn.you'|trans({'%player%': me.nickname}) }}
                     </div>
-                {% else %}
+                {% elseif game.hasTurns %}
                     <div id="turn-{{ lobby.state.currentPlayer.id }}"
                          class="anim-rise rounded-3xl bg-white px-6 py-4 text-center text-lg font-extrabold text-warmgray-400 shadow-soft">
                         {{ 'lobby.turn.waiting'|trans({'%player%': lobby.state.currentPlayer.nickname}) }}

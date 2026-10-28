@@ -24,6 +24,7 @@ final class LobbyManager
     private const array PLAYER_COLORS = ['#8fb3d9', '#9fbf9f', '#d9a08f', '#c9a9d9', '#d9c98f', '#8fd9cb'];
 
     private readonly FilesystemAdapter $cache;
+    private readonly string $lockDir;
 
     public function __construct(
         private readonly GameRegistry $games,
@@ -34,6 +35,51 @@ final class LobbyManager
             defaultLifetime: self::TTL_SECONDS,
             directory: $cacheDir ?: null
         );
+        $this->lockDir = ($cacheDir ?: sys_get_temp_dir().'/partie-lobbies').'/locks';
+    }
+
+    /**
+     * Loads the lobby fresh under an exclusive per-code lock, lets $callback
+     * mutate it, then saves - only releasing the lock once that's done.
+     * Concurrent requests for the same code (any two players acting at the
+     * same time in a free-form game like Durak) queue up instead of racing:
+     * without this, both would read the same snapshot, mutate their own copy,
+     * and whichever saved last would silently discard the other's move.
+     *
+     * @param callable(Lobby): void $callback
+     */
+    public function transact(string $code, callable $callback): Lobby
+    {
+        $handle = $this->acquireLock($code);
+        try {
+            $lobby = $this->getLobby($code);
+            $callback($lobby);
+            $this->save($lobby);
+
+            return $lobby;
+        } finally {
+            $this->releaseLock($handle);
+        }
+    }
+
+    /** @return resource */
+    private function acquireLock(string $code)
+    {
+        if (!is_dir($this->lockDir)) {
+            mkdir($this->lockDir, 0775, true);
+        }
+
+        $handle = fopen($this->lockDir.'/'.strtoupper(trim($code)).'.lock', 'c');
+        flock($handle, LOCK_EX);
+
+        return $handle;
+    }
+
+    /** @param resource $handle */
+    private function releaseLock($handle): void
+    {
+        flock($handle, LOCK_UN);
+        fclose($handle);
     }
 
     public function createLobby(string $gameId, string $nickname): array
@@ -56,95 +102,98 @@ final class LobbyManager
         return [$lobby, $host];
     }
 
+    /**
+     * @return array{Lobby, Player}
+     */
     public function joinLobby(string $code, string $nickname): array
     {
-        $lobby = $this->getLobby($code);
-        $game = $this->games->get($lobby->gameId);
+        $player = null;
+        $lobby = $this->transact($code, function (Lobby $lobby) use ($nickname, &$player): void {
+            $game = $this->games->get($lobby->gameId);
 
-        if (GameStatus::Waiting !== $lobby->status) {
-            throw new GameException('error.match_started');
-        }
-        if (\count($lobby->players) >= $game->getMaxPlayers()) {
-            throw new GameException('error.lobby_full');
-        }
+            if (GameStatus::Waiting !== $lobby->status) {
+                throw new GameException('error.match_started');
+            }
+            if (\count($lobby->players) >= $game->getMaxPlayers()) {
+                throw new GameException('error.lobby_full');
+            }
 
-        $player = $this->createPlayer($nickname, \count($lobby->players));
-        $lobby->addPlayer($player);
-        $lobby->lastSeen[$player->id] = time();
-        $this->save($lobby);
+            $player = $this->createPlayer($nickname, \count($lobby->players));
+            $lobby->addPlayer($player);
+            $lobby->lastSeen[$player->id] = time();
+        });
 
         return [$lobby, $player];
     }
 
-    public function heartbeat(Lobby $lobby, string $playerId): void
+    public function heartbeat(string $code, string $playerId): void
     {
-        if (!$lobby->hasPlayer($playerId)) {
-            return;
-        }
-
-        $lobby->lastSeen[$playerId] = time();
-        $this->save($lobby);
+        $this->transact($code, function (Lobby $lobby) use ($playerId): void {
+            if ($lobby->hasPlayer($playerId)) {
+                $lobby->lastSeen[$playerId] = time();
+            }
+        });
     }
 
-    public function startGame(Lobby $lobby, string $playerId): void
+    public function startGame(string $code, string $playerId): Lobby
     {
-        $game = $this->games->get($lobby->gameId);
+        return $this->transact($code, function (Lobby $lobby) use ($playerId): void {
+            $game = $this->games->get($lobby->gameId);
 
-        if (!$lobby->isHost($playerId)) {
-            throw new GameException('error.host_only');
-        }
-        if (GameStatus::Waiting !== $lobby->status) {
-            throw new GameException('error.already_running');
-        }
-        if (\count($lobby->players) < $game->getMinPlayers()) {
-            throw new GameException('error.min_players', [
-                '%game%' => 't:game.'.$game->getId().'.name',
-                '%count%' => $game->getMinPlayers(),
-            ]);
-        }
+            if (!$lobby->isHost($playerId)) {
+                throw new GameException('error.host_only');
+            }
+            if (GameStatus::Waiting !== $lobby->status) {
+                throw new GameException('error.already_running');
+            }
+            if (\count($lobby->players) < $game->getMinPlayers()) {
+                throw new GameException('error.min_players', [
+                    '%game%' => 't:game.'.$game->getId().'.name',
+                    '%count%' => $game->getMinPlayers(),
+                ]);
+            }
 
-        $lobby->status = GameStatus::Running;
-        $lobby->state = $game->createInitialState($lobby->players, $lobby->settings);
-        $lobby->state->logEvent('log.game_started', ['%game%' => 't:game.'.$game->getId().'.name']);
-
-        $this->save($lobby);
+            $lobby->status = GameStatus::Running;
+            $lobby->state = $game->createInitialState($lobby->players, $lobby->settings);
+            $lobby->state->logEvent('log.game_started', ['%game%' => 't:game.'.$game->getId().'.name']);
+        });
     }
 
     /**
      * @param array<string, mixed> $raw
      */
-    public function updateSettings(Lobby $lobby, string $playerId, array $raw): void
+    public function updateSettings(string $code, string $playerId, array $raw): Lobby
     {
-        if (!$lobby->isHost($playerId)) {
-            throw new GameException('error.host_only');
-        }
-        if (GameStatus::Waiting !== $lobby->status) {
-            throw new GameException('error.already_running');
-        }
+        return $this->transact($code, function (Lobby $lobby) use ($playerId, $raw): void {
+            if (!$lobby->isHost($playerId)) {
+                throw new GameException('error.host_only');
+            }
+            if (GameStatus::Waiting !== $lobby->status) {
+                throw new GameException('error.already_running');
+            }
 
-        $game = $this->games->get($lobby->gameId);
-        $lobby->settings = GameSettingsResolver::resolve($game->settings(), $raw);
-
-        $this->save($lobby);
+            $game = $this->games->get($lobby->gameId);
+            $lobby->settings = GameSettingsResolver::resolve($game->settings(), $raw);
+        });
     }
 
-    public function playAgain(Lobby $lobby, string $playerId): void
+    public function playAgain(string $code, string $playerId): Lobby
     {
-        if (!$lobby->isHost($playerId)) {
-            throw new GameException('error.host_only');
-        }
-        if (GameStatus::Finished !== $lobby->status) {
-            throw new GameException('error.not_finished');
-        }
+        return $this->transact($code, function (Lobby $lobby) use ($playerId): void {
+            if (!$lobby->isHost($playerId)) {
+                throw new GameException('error.host_only');
+            }
+            if (GameStatus::Finished !== $lobby->status) {
+                throw new GameException('error.not_finished');
+            }
 
-        $game = $this->games->get($lobby->gameId);
+            $game = $this->games->get($lobby->gameId);
 
-        ++$lobby->round;
-        $lobby->status = GameStatus::Running;
-        $lobby->state = $game->createInitialState($lobby->players, $lobby->settings);
-        $lobby->state->logEvent('log.game_started', ['%game%' => 't:game.'.$game->getId().'.name']);
-
-        $this->save($lobby);
+            ++$lobby->round;
+            $lobby->status = GameStatus::Running;
+            $lobby->state = $game->createInitialState($lobby->players, $lobby->settings);
+            $lobby->state->logEvent('log.game_started', ['%game%' => 't:game.'.$game->getId().'.name']);
+        });
     }
 
     public function recordRoundResult(Lobby $lobby): void

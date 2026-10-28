@@ -46,7 +46,7 @@ game.backgammon.description: 'Bring deine Steine ins Ziel, schlage einzelne Stei
 game.poker.name: 'Poker'
 game.poker.description: 'Texas Hold''em – zwei eigene Karten, fünf gemeinsame, die beste Hand gewinnt den Pot.'
 game.durak.name: 'Durak'
-game.durak.description: 'Greife mit passenden Werten an, verteidige mit einer höheren Karte oder einem Trumpf – bleib nicht auf Karten sitzen.'
+game.durak.description: 'Freies Durak am simulierten Tisch – die App prüft keine Regeln, geschummelt werden darf, solange es keiner sieht.'
 game.mills.name: 'Mühle'
 game.mills.description: 'Setze und verschiebe deine Steine, bilde Mühlen und schlage die Steine deines Gegners.'
 game.battleships.name: 'Schiffe versenken'

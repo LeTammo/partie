@@ -79,6 +79,8 @@ Both presenter shapes render through the same component:
 
 - `key`/`flip`/`exit` - DOM id, FLIP id, exit-ghost animation (see
   [ui-kit.md](ui-kit.md)).
+- `attr` - extra attributes on the card element itself (e.g.
+  `data-anim-restart` so a flipped card replays its entry animation).
 - `{back: true}` - face-down; `backColor` recolors the back design.
 - `size: 'md'` (default) or `'sm'` - never pass size classes manually.
 - A `{value, color}` map renders the custom face; the color names
@@ -89,6 +91,98 @@ Both presenter shapes render through the same component:
 
 Piles (stock, discard, waste) render via `components/pile.html.twig` - see
 [zones-and-tables.md](zones-and-tables.md).
+
+## Another player's hand: `card_fan.html.twig`
+
+A fan of overlapping cards - the compact way to show a hand you can't see
+into, or any tight run of cards. `vertical: true` suits seats at the left/
+right table edge:
+
+```twig
+{% include 'components/card_fan.html.twig' with {
+    vertical: true,
+    cards: opp.cardUids|map(uid => {back: true, key: 'dk-' ~ uid, flip: 'dk-' ~ uid}),
+} only %}
+```
+
+Each entry is a full parameter map handed to `card.html.twig`, so fans can
+also show faces, mix in `attr`s, or override `exit`. `overlap` overrides
+the default overlap utility class, `attr` adds wrapper attributes (drop-
+zone wiring).
+
+## Anonymous card identities (uids) for open movement
+
+When *every* card should visibly travel between zones for *every* viewer -
+including face-down ones - real card identities can't be used as FLIP ids:
+they would leak the face through the DOM. Instead, tag each card with an
+opaque uid at deal time and use `'prefix-' ~ uid` as `key`/`flip`
+everywhere it renders, face up or down:
+
+```php
+$deck = array_map(
+    static fn (PlayingCard $card): array => ['uid' => bin2hex(random_bytes(4)), 'card' => $card],
+    DeckFactory::deck36(),
+);
+```
+
+Every zone change then glides automatically across the morph for all
+players (a draw slides off the stock into the drawing player's fan) with
+zero animation code. Assign a *fresh* uid when a hand-over should stay
+inconspicuous instead of gliding (Durak's slipped cards).
+
+## Flipping a card in place: the `card-flip` controller
+
+Alternate-input submit for "turn this card over": middle-click,
+double-click, or hovering the card and pressing a key (default `f`)
+submits a flip. Attach the controller once to the game root. Two ways to
+wire the actual submission - pick whichever fits the card's own markup:
+
+**The card sits inside its own form** (simplest, when the card isn't
+already something else too):
+
+```twig
+<div data-controller="card-flip">
+    <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}" class="contents">
+        <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
+        <input type="hidden" name="action" value="flip">
+        <input type="hidden" name="uid" value="{{ c.uid }}">
+        <button type="button"
+                data-action="mousedown->card-flip#holdMiddleClick auxclick->card-flip#flip dblclick->card-flip#flip
+                             mouseenter->card-flip#arm mouseleave->card-flip#disarm">
+            {% include 'components/card.html.twig' with {..., attr: {'data-anim-restart': c.faceUp ? 'up' : 'down'}} only %}
+        </button>
+    </form>
+</div>
+```
+
+**The card has no form of its own** - e.g. it's a plain `piece-move`
+source/zone button and wrapping it would break that (a `<form>` can't
+nest inside a `<button>`, and `piece-move`'s `runs` needs the button to be
+a direct sibling of its pile-mates, not nested in a form). Give the card
+`data-flip-uid="{{ uid }}"` instead, and wire one shared hidden form via
+the `form`/`uid` targets once per game root:
+
+```twig
+<div data-controller="card-flip">
+    <form method="post" action="{{ path('app_game_move', {code: lobby.code}) }}"
+          data-card-flip-target="form" class="hidden">
+        <input type="hidden" name="_token" value="{{ csrf_token('game') }}">
+        <input type="hidden" name="action" value="flip">
+        <input type="hidden" name="uid" data-card-flip-target="uid">
+    </form>
+
+    <button type="button" data-flip-uid="{{ c.uid }}"
+            data-action="mousedown->card-flip#holdMiddleClick auxclick->card-flip#flip dblclick->card-flip#flip
+                         mouseenter->card-flip#arm mouseleave->card-flip#disarm">
+        {% include 'components/card.html.twig' with {...} only %}
+    </button>
+</div>
+```
+
+`data-card-flip-key-value` changes the hotkey. The `data-anim-restart`
+stamp makes the morph replay the card's entry animation when the face
+changes (see [ui-kit.md](ui-kit.md)). The button stays `type="button"` so
+a plain click remains free for selection (e.g. `piece-move`'s `pick`).
 
 ## Selecting cards from a hand: the `cards` controller
 
