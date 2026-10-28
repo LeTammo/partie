@@ -16,6 +16,7 @@
 	encode zstd br gzip
 
 	mercure {
+		protocol_version_compatibility 8
 		publisher_jwt {env.MERCURE_PUBLISHER_JWT_KEY}
 		subscriber_jwt {env.MERCURE_SUBSCRIBER_JWT_KEY}
 		# Lobby topics are public (unguessable 6-letter codes);

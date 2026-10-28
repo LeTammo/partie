@@ -10,6 +10,7 @@ services:
       MERCURE_PUBLISHER_JWT_KEY: '!ChangeThisMercureHubJWTSecretKey!'
       MERCURE_SUBSCRIBER_JWT_KEY: '!ChangeThisMercureHubJWTSecretKey!'
       MERCURE_EXTRA_DIRECTIVES: |
+        protocol_version_compatibility 8
         cors_origins http://127.0.0.1:8000 http://localhost:8000
     command: /usr/bin/caddy run --config /etc/caddy/dev.Caddyfile
     ports:
